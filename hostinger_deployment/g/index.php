@@ -1,7 +1,8 @@
 <?php
 /**
- * Guard Patrol Entry & Authentication Portal
- * Validates Site QR token and logs in patrolling security officer
+ * Guard & Field Supervisor Patrol Entry & Authentication Portal
+ * Validates Site QR token and logs in patrolling security officer or supervisor
+ * Ultimate Security Services (USS)
  */
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/db.php';
@@ -13,37 +14,44 @@ $db = get_db();
 $error = '';
 $site = null;
 
-// Retrieve QR token from URL parameter
-$token = trim($_GET['token'] ?? '');
+// Retrieve QR token from URL parameter (?token=... or ?qr=...)
+$token = trim($_GET['token'] ?? $_GET['qr'] ?? '');
 
-// If token provided, look up site using keyed HMAC hash
+// If token provided, look up site using permanent active_qr_token or unique site code
 if (!empty($token)) {
-    $tokenHmac = hash_qr_token($token);
-    $stmt = $db->prepare("SELECT * FROM sites WHERE (token_hmac = ? OR active_qr_token = ?) AND is_active = 1 LIMIT 1");
-    $stmt->execute([$tokenHmac, $token]);
-    $site = $stmt->fetch();
-    if ($site) {
-        // Automatically populate HMAC and encrypted vault if not yet stored
-        if (empty($site['token_hmac']) || empty($site['token_encrypted'])) {
-            $db->prepare("UPDATE sites SET token_hmac = ?, token_encrypted = ? WHERE id = ?")->execute([
-                $tokenHmac,
-                encrypt_field($token),
-                $site['id']
-            ]);
+    try {
+        $stmt = $db->prepare("SELECT * FROM sites WHERE (active_qr_token = ? OR code = ?) AND is_active = 1 LIMIT 1");
+        $stmt->execute([$token, $token]);
+        $site = $stmt->fetch();
+        if (!$site) {
+            $error = "This QR code token is invalid, revoked, or the site is currently inactive. Please report to the Super Admin.";
         }
-    } else {
-        $error = "This QR code token is invalid, revoked, or the site is currently inactive. Please report to the Super Admin.";
+    } catch (Exception $e) {
+        $error = "Unable to connect to checkpoint. Please retry or contact system administrator.";
     }
 }
 
-// INSTANT QR CONNECT: If guard is already authenticated on this phone and scans a QR poster, switch checkpoint and connect immediately with zero delay!
+// Supervisor Bridge: If supervisor is already authenticated and scans this checkpoint QR
+if (!empty($_SESSION['uss_supervisor_logged_in']) && !empty($_SESSION['supervisor_id'])) {
+    if (empty($_SESSION['uss_guard_logged_in'])) {
+        $_SESSION['uss_guard_logged_in'] = true;
+        $_SESSION['guard_id'] = $_SESSION['supervisor_id'];
+        $_SESSION['guard_name'] = $_SESSION['supervisor_name'] ?? 'Field Supervisor';
+        $_SESSION['guard_staff_id'] = $_SESSION['supervisor_staff_id'] ?? '';
+        $_SESSION['guard_designation'] = 'Field Supervisor';
+    }
+}
+
+// INSTANT QR CONNECT: If guard or supervisor is already authenticated on this phone and scans a QR poster, switch checkpoint and connect immediately with zero delay!
 if (!empty($_SESSION['uss_guard_logged_in']) && !empty($_SESSION['guard_id'])) {
     if ($site) {
-        $stmtAuth = $db->prepare("SELECT id FROM guard_site_assignments WHERE guard_id = ? AND site_id = ? LIMIT 1");
-        $stmtAuth->execute([$_SESSION['guard_id'], $site['id']]);
-        if (!$stmtAuth->fetch()) {
-            $db->prepare("INSERT INTO guard_site_assignments (guard_id, site_id) VALUES (?, ?)")->execute([$_SESSION['guard_id'], $site['id']]);
-        }
+        try {
+            $stmtAuth = $db->prepare("SELECT id FROM guard_site_assignments WHERE guard_id = ? AND site_id = ? LIMIT 1");
+            $stmtAuth->execute([$_SESSION['guard_id'], $site['id']]);
+            if (!$stmtAuth->fetch()) {
+                $db->prepare("INSERT INTO guard_site_assignments (guard_id, site_id) VALUES (?, ?)")->execute([$_SESSION['guard_id'], $site['id']]);
+            }
+        } catch (Exception $e) {}
         $_SESSION['current_site_id'] = $site['id'];
         $_SESSION['current_site_code'] = $site['code'];
         $_SESSION['current_site_name'] = $site['name'];
@@ -56,7 +64,7 @@ if (!empty($_SESSION['uss_guard_logged_in']) && !empty($_SESSION['guard_id'])) {
     }
 }
 
-// Handle Guard Login
+// Handle Guard / Supervisor Login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = strtolower(trim($_POST['username'] ?? ''));
     $password = (string)($_POST['password'] ?? '');
@@ -64,29 +72,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($username) || empty($password)) {
         $error = "Please enter your Officer Staff ID / Username and Password.";
     } else {
-        // Fetch Guard by Username or Staff ID
+        // Fetch Guard or Supervisor by Username or Staff ID
         $stmtGuard = $db->prepare("SELECT * FROM guards WHERE (LOWER(username) = ? OR UPPER(staff_id) = ?) AND is_active = 1 LIMIT 1");
         $stmtGuard->execute([$username, strtoupper($username)]);
         $guard = $stmtGuard->fetch();
 
-        // Verify password with Argon2id + Pepper (with legacy Bcrypt fallback and whitespace resilience)
+        // Verify password with Argon2id + Pepper (with legacy fallback and whitespace resilience)
         $isValidPass = $guard && verify_password_argon2id($password, $guard['password_hash']);
 
         if (!$guard || !$isValidPass) {
             $error = "Invalid Officer credentials. Please verify your Staff ID / Username and Password.";
             log_audit('GUARD_LOGIN_FAILED', 'GUARD', null, ['username' => $username], 'GUARD');
         } else {
-            // Guard authenticated successfully!
+            // Guard / Supervisor authenticated successfully!
             // Retrieve assigned post(s) configured by Admin
             $currentSite = null;
 
             if ($site) {
-                // If guard scanned a checkpoint QR poster, grant instant checkpoint access and record assignment
-                $stmtAuth = $db->prepare("SELECT id FROM guard_site_assignments WHERE guard_id = ? AND site_id = ? LIMIT 1");
-                $stmtAuth->execute([$guard['id'], $site['id']]);
-                if (!$stmtAuth->fetch()) {
-                    $db->prepare("INSERT INTO guard_site_assignments (guard_id, site_id) VALUES (?, ?)")->execute([$guard['id'], $site['id']]);
-                }
+                // If scanned a checkpoint QR poster, grant instant checkpoint access and record assignment
+                try {
+                    $stmtAuth = $db->prepare("SELECT id FROM guard_site_assignments WHERE guard_id = ? AND site_id = ? LIMIT 1");
+                    $stmtAuth->execute([$guard['id'], $site['id']]);
+                    if (!$stmtAuth->fetch()) {
+                        $db->prepare("INSERT INTO guard_site_assignments (guard_id, site_id) VALUES (?, ?)")->execute([$guard['id'], $site['id']]);
+                    }
+                } catch (Exception $e) {}
                 $currentSite = $site;
             } else {
                 // Look up assigned post from admin configuration
@@ -104,7 +114,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Auto-assign to first active site if no post assigned yet
                     $fallbackSite = $db->query("SELECT * FROM sites WHERE is_active = 1 ORDER BY id ASC LIMIT 1")->fetch();
                     if ($fallbackSite) {
-                        $db->prepare("INSERT INTO guard_site_assignments (guard_id, site_id) VALUES (?, ?)")->execute([$guard['id'], $fallbackSite['id']]);
+                        try {
+                            $db->prepare("INSERT INTO guard_site_assignments (guard_id, site_id) VALUES (?, ?)")->execute([$guard['id'], $fallbackSite['id']]);
+                        } catch (Exception $e) {}
                         $currentSite = $fallbackSite;
                     } else {
                         $error = "Access Denied: Officer {$guard['full_name']} has no assigned post. Please create a patrol site first in Admin.";
@@ -117,20 +129,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($currentSite) {
-                // Start Guard Session
+                // Start Session
                 $_SESSION['uss_guard_logged_in'] = true;
                 $_SESSION['guard_id'] = $guard['id'];
                 $_SESSION['guard_staff_id'] = $guard['staff_id'];
                 $_SESSION['guard_name'] = $guard['full_name'];
                 $_SESSION['guard_username'] = $guard['username'];
-                $_SESSION['guard_designation'] = $guard['designation'];
+                $_SESSION['guard_designation'] = !empty($guard['is_supervisor']) ? 'Field Supervisor' : ($guard['designation'] ?: 'Security Officer');
                 $_SESSION['current_site_id'] = $currentSite['id'];
                 $_SESSION['current_site_code'] = $currentSite['code'];
                 $_SESSION['current_site_name'] = $currentSite['name'];
                 $_SESSION['guard_last_activity'] = time();
 
+                // If user is also a supervisor, set supervisor session
+                if (!empty($guard['is_supervisor'])) {
+                    $_SESSION['uss_supervisor_logged_in'] = true;
+                    $_SESSION['supervisor_id'] = $guard['id'];
+                    $_SESSION['supervisor_staff_id'] = $guard['staff_id'];
+                    $_SESSION['supervisor_name'] = $guard['full_name'];
+                    $_SESSION['supervisor_camp_id'] = $guard['assigned_camp_id'] ?? null;
+                }
+
                 // Update last login timestamp
-                $db->prepare("UPDATE guards SET last_login_at = NOW() WHERE id = ?")->execute([$guard['id']]);
+                try {
+                    $db->prepare("UPDATE guards SET last_login_at = NOW() WHERE id = ?")->execute([$guard['id']]);
+                } catch (Exception $e) {}
 
                 log_audit('GUARD_LOGIN', 'GUARD', $guard['id'], ['site_code' => $currentSite['code'], 'site_name' => $currentSite['name']], 'GUARD', $guard['id'], $guard['full_name']);
 
@@ -205,9 +228,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <div class="section-card">
-        <h3 style="font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 16px; text-align: center;">
-            👮 Security Officer Sign In
+        <h3 style="font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 6px; text-align: center;">
+            👮 Security Guard &amp; 👔 Supervisor Sign In
         </h3>
+        <p style="font-size: 12.5px; color: var(--g-text-muted); text-align: center; margin-bottom: 18px;">
+            Enter Staff ID / Username to access the Online Incident Report Form
+        </p>
 
         <form method="POST" action="">
             <div style="margin-bottom: 16px;">
@@ -229,6 +255,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Enter Incident Form &rarr;
             </button>
         </form>
+
+        <div style="text-align: center; margin-top: 18px; padding-top: 14px; border-top: 1px dashed rgba(255,255,255,0.1);">
+            <a href="<?= APP_URL ?>/sup/login.php<?= $token ? '?token=' . urlencode($token) : '' ?>" style="color: var(--g-accent, #38bdf8); font-size: 13px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <span>👔 Switch to Supervisor Mobile Patrol Shift Cockpit &rarr;</span>
+            </a>
+        </div>
     </div>
 
     <div style="text-align: center; margin-top: 24px; font-size: 12.5px; font-weight: 600; color: var(--g-text-muted);">

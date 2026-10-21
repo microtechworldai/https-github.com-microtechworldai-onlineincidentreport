@@ -39,13 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_site'])) {
         } else {
             $cleanCode = preg_replace('/[^a-z0-9]/', '', strtolower($code));
             $token = 'uss_qr_' . ($cleanCode ?: 'site') . '_' . bin2hex(random_bytes(10));
-            $tokenHmac = hash_qr_token($token);
-            $tokenEncrypted = encrypt_field($token);
             $insertStmt = $db->prepare("
-                INSERT INTO sites (name, code, type, address, latitude, longitude, client_name, client_contact, active_qr_token, token_hmac, token_encrypted, is_active, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())
+                INSERT INTO sites (name, code, type, address, latitude, longitude, client_name, client_contact, active_qr_token, is_active, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())
             ");
-            $insertStmt->execute([$name, $code, $type, $address, $latitude, $longitude, $clientName, $clientContact, $token, $tokenHmac, $tokenEncrypted]);
+            $insertStmt->execute([$name, $code, $type, $address, $latitude, $longitude, $clientName, $clientContact, $token]);
             log_audit('CREATE_SITE', 'SITE', $code, ['name' => $name, 'code' => $code, 'lat' => $latitude, 'lng' => $longitude]);
             $msg = "Site '{$name}' created successfully with active cryptographic QR token and GPS coordinates.";
         }
@@ -91,9 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_site'])) {
 if (isset($_GET['action']) && $_GET['action'] === 'regen_qr' && isset($_GET['id'])) {
     $siteId = (int)$_GET['id'];
     $newToken = 'uss_qr_' . bin2hex(random_bytes(14));
-    $tokenHmac = hash_qr_token($newToken);
-    $tokenEncrypted = encrypt_field($newToken);
-    $db->prepare("UPDATE sites SET active_qr_token = ?, token_hmac = ?, token_encrypted = ?, updated_at = NOW() WHERE id = ?")->execute([$newToken, $tokenHmac, $tokenEncrypted, $siteId]);
+    $db->prepare("UPDATE sites SET active_qr_token = ?, updated_at = NOW() WHERE id = ?")->execute([$newToken, $siteId]);
     log_audit('REGENERATE_SITE_QR', 'SITE', $siteId, 'Cryptographic QR token revoked and replaced by Super Admin');
     $msg = "QR Code token regenerated. Any previous physical poster has been invalidated and revoked.";
 }

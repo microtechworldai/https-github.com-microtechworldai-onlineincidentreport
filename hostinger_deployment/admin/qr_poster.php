@@ -59,18 +59,11 @@ if (strpos($qrBaseUrl, 'trycloudflare.com') !== false && strpos($qrBaseUrl, 'htt
     $qrBaseUrl = 'https://' . substr($qrBaseUrl, 7);
 }
 
-$rawToken = '';
-if (!empty($site['token_encrypted'])) {
-    $rawToken = decrypt_field($site['token_encrypted']);
-}
+$rawToken = !empty($site['active_qr_token']) ? $site['active_qr_token'] : '';
 if (empty($rawToken)) {
-    $rawToken = $site['active_qr_token'] ?: ('uss_qr_' . preg_replace('/[^a-z0-9]/', '', strtolower($site['code'])) . '_' . bin2hex(random_bytes(10)));
-    $db->prepare("UPDATE sites SET token_hmac = ?, token_encrypted = ?, active_qr_token = ? WHERE id = ?")->execute([
-        hash_qr_token($rawToken),
-        encrypt_field($rawToken),
-        $rawToken,
-        $site['id']
-    ]);
+    $cleanCode = preg_replace('/[^a-z0-9]/', '', strtolower($site['code'] ?: 'site'));
+    $rawToken = 'uss_qr_' . ($cleanCode ?: 'site') . '_' . bin2hex(random_bytes(10));
+    $db->prepare("UPDATE sites SET active_qr_token = ?, updated_at = NOW() WHERE id = ?")->execute([$rawToken, $site['id']]);
 }
 
 $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);

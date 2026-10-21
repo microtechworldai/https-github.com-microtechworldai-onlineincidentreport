@@ -151,8 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_camp_in'])) {
 // 2. SITE QR LOGIC
 // ====================================================================
 if ($siteToken) {
-    $stmt = $db->prepare("SELECT * FROM sites WHERE active_qr_token = ? AND is_active = 1 LIMIT 1");
-    $stmt->execute([$siteToken]);
+    $stmt = $db->prepare("SELECT * FROM sites WHERE (active_qr_token = ? OR code = ?) AND is_active = 1 LIMIT 1");
+    $stmt->execute([$siteToken, $siteToken]);
     $siteData = $stmt->fetch();
 
     if (!$siteData) {
@@ -544,9 +544,14 @@ if ($openVisit) {
         <div class="alert alert-danger" style="margin-bottom: 20px; font-size: 13.5px; line-height: 1.5;">
             <?= htmlspecialchars($error) ?>
         </div>
-        <a href="<?= APP_URL ?>/sup/duty.php" class="btn btn-primary" style="width: 100%; text-align: center; padding: 12px;">
+        <a href="<?= APP_URL ?>/sup/duty.php" class="btn btn-primary" style="width: 100%; text-align: center; padding: 12px; margin-bottom: 10px;">
             Go to Active Duty Cockpit
         </a>
+        <?php if (!empty($siteData)): ?>
+        <a href="<?= APP_URL ?>/g/submit.php?site_id=<?= $siteData['id'] ?>" class="btn btn-secondary" style="width: 100%; text-align: center; padding: 12px; font-weight: 700; background: #0284c7; color: #fff; text-decoration: none; border-radius: 8px; display: block;">
+            🚨 Open Incident Report Form for <?= htmlspecialchars($siteData['name']) ?>
+        </a>
+        <?php endif; ?>
 
     <?php elseif ($campData): ?>
         <!-- ==================== CAMP CHECKPOINT ==================== -->
