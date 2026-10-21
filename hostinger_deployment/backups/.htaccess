@@ -1,0 +1,7 @@
+# Completely deny direct web browser access to backup archives
+Order deny,allow
+Deny from all
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>

@@ -1,0 +1,23 @@
+{
+  "short_name": "USS Patrol",
+  "name": "Ultimate Security Services - Incident Report System",
+  "icons": [
+    {
+      "src": "/assets/uss-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/uss-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/g",
+  "background_color": "#0F2042",
+  "theme_color": "#0F2042",
+  "display": "standalone",
+  "orientation": "portrait"
+}

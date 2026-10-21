@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # Reverse proxy with automatic Let's Encrypt SSL for custom domain (APP_DOMAIN)
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    environment:
+      - APP_DOMAIN=${APP_DOMAIN:-incidents.mydomain.com}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+
+  # Frontend Web App (Nginx static build or Vite production)
+  web:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.web
+    restart: unless-stopped
+    expose:
+      - "80"
+
+  # Backend REST API
+  api:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.api
+    restart: unless-stopped
+    expose:
+      - "4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - APP_DOMAIN=${APP_DOMAIN:-incidents.mydomain.com}
+      - CORS_ORIGIN=https://${APP_DOMAIN:-incidents.mydomain.com}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres_secure_pass}@postgres:5432/${POSTGRES_DB:-uss_incidents}
+      - SUPERADMIN_USERNAME=${SUPERADMIN_USERNAME:-superadmin}
+      - SUPERADMIN_PASSWORD=${SUPERADMIN_PASSWORD:-ChangeMeNow123!}
+      - SUPERADMIN_NAME=${SUPERADMIN_NAME:-USS Operations Director}
+      - JWT_ADMIN_SECRET=${JWT_ADMIN_SECRET:-replace_with_strong_secret_key_in_production_1}
+      - JWT_GUARD_SECRET=${JWT_GUARD_SECRET:-replace_with_strong_secret_key_in_production_2}
+      - STORAGE_DRIVER=${STORAGE_DRIVER:-local}
+      - LOCAL_UPLOAD_DIR=/app/uploads
+      - TZ=Asia/Dubai
+    volumes:
+      - api_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # PostgreSQL Relational Database
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_secure_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-uss_incidents}
+      TZ: Asia/Dubai
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/backup.sh:/usr/local/bin/backup.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-uss_incidents}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  caddy_data:
+  caddy_config:
+  postgres_data:
+  api_uploads:

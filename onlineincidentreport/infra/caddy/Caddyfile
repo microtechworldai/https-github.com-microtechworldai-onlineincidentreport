@@ -1,0 +1,42 @@
+{
+    # Global options
+    email ops@ultimatesecurity.ae
+}
+
+{$APP_DOMAIN:localhost} {
+    # Encode responses with gzip or zstd
+    encode gzip zstd
+
+    # Security Headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' blob:; frame-ancestors 'none';"
+    }
+
+    # API and uploads proxying
+    handle /api/* {
+        reverse_proxy api:4000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    handle /uploads/* {
+        reverse_proxy api:4000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Web frontend proxying (Single Page Application fallback)
+    handle {
+        reverse_proxy web:80
+    }
+}

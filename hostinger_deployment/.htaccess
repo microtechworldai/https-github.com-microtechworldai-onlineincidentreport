@@ -1,0 +1,107 @@
+# ====================================================================
+# ULTIMATE SECURITY SERVICES - HOSTINGER PRODUCTION .HTACCESS
+# Apache / LiteSpeed Web Server Configuration
+# ====================================================================
+
+# 1. Disable Directory Index Browsing
+Options -Indexes
+
+# 2. Prevent Access to Hidden & Sensitive Files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "(^#.*#|\.(bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist)|~)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect database.sql and lock file
+<Files "database.sql">
+    Order allow,deny
+    Deny from all
+</Files>
+<Files "install.lock">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# 3. Security & Performance HTTP Response Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Connection "keep-alive"
+
+    # Cache static CSS, JS, and Images for fast mobile rendering
+    <FilesMatch "\.(css|js|png|jpg|jpeg|gif|webp|svg|woff2|woff|ttf|ico)$">
+        Header set Cache-Control "max-age=604800, public"
+    </FilesMatch>
+</IfModule>
+
+# 4. Ultra-Fast GZIP / Deflate Compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# 5. Browser Caching Rules
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType application/x-javascript "access plus 1 week"
+    ExpiresDefault "access plus 2 days"
+</IfModule>
+
+# 6. URL Rewriting & Clean Routing
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Route /g/{token} to /g/index.php?token={token}
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^g/([a-zA-Z0-9_\-]+)/?$ g/index.php?token=$1 [QSA,L]
+</IfModule>
+
+# 7. PHP Upload & Resource Limits (Hostinger & LiteSpeed compatible)
+<IfModule mod_php.c>
+    php_value upload_max_filesize 64M
+    php_value post_max_size 64M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+    php_value memory_limit 512M
+</IfModule>
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 64M
+    php_value post_max_size 64M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+    php_value memory_limit 512M
+</IfModule>
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 64M
+    php_value post_max_size 64M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+    php_value memory_limit 512M
+</IfModule>
