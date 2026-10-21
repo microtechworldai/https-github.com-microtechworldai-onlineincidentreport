@@ -300,8 +300,20 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
                                     <a href="<?= APP_URL ?>/admin/daily_report.php?site_id=<?= $s['id'] ?>" class="btn btn-secondary btn-sm" title="Sitewise Daily Security Incident Consolidated Report">
                                         📑 Report
                                     </a>
+                                    <?php 
+                                        $siteToken = !empty($s['token_encrypted']) ? decrypt_field($s['token_encrypted']) : $s['active_qr_token'];
+                                        $siteGuardUrl = APP_URL . '/g/index.php?token=' . urlencode($siteToken);
+                                    ?>
+                                    <button type="button" class="btn btn-sm" style="background: #0284c7; color: #fff; font-weight: 700;" onclick='openQuickQrModal(<?= json_encode([
+                                        "id" => $s["id"],
+                                        "name" => $s["name"],
+                                        "code" => $s["code"],
+                                        "url" => $siteGuardUrl
+                                    ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' title="View & Download Site QR Code">
+                                        📱 QR Code
+                                    </button>
                                     <a href="<?= APP_URL ?>/admin/qr_poster.php?id=<?= $s['id'] ?>" target="_blank" class="btn btn-primary btn-sm" title="Print A4 Checkpoint QR Poster">
-                                        🖨️ QR Poster
+                                        🖨️ Poster
                                     </a>
                                     <a href="<?= APP_URL ?>/admin/sites.php?action=regen_qr&id=<?= $s['id'] ?>" class="btn btn-secondary btn-sm" onclick="return confirm('Regenerate QR token? This will permanently invalidate the old physical poster.');" title="Regenerate QR">
                                         🔄 Token
@@ -519,7 +531,79 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
     </div>
 </div>
 
+<!-- Quick Site QR Code Modal -->
+<div id="quickQrModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div class="card" style="max-width: 440px; width: 100%; text-align: center; background: #0f172a; border: 1px solid #334155; border-radius: 16px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 id="modalQrTitle" style="margin: 0; font-size: 17px; color: #38bdf8; font-weight: 800;">Site Checkpoint QR</h3>
+            <button type="button" onclick="document.getElementById('quickQrModal').style.display='none'" style="background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+        
+        <div style="background: #ffffff; padding: 14px; border-radius: 12px; display: inline-block; box-shadow: 0 8px 24px rgba(0,0,0,0.25); margin-bottom: 14px;">
+            <img id="modalQrImg" src="" alt="Site QR Code" width="230" height="230" style="display: block; border-radius: 6px; margin: 0 auto;" crossOrigin="anonymous">
+        </div>
+        
+        <div id="modalQrCodeBadge" style="font-family: monospace; font-weight: 800; font-size: 13.5px; color: #38bdf8; margin-bottom: 14px; background: rgba(56, 189, 248, 0.1); padding: 4px 12px; border-radius: 6px; display: inline-block;"></div>
+        
+        <div style="margin-bottom: 16px; text-align: left;">
+            <label style="display: block; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 6px;">Direct Guard Patrol Link</label>
+            <div style="display: flex; gap: 6px;">
+                <input type="text" id="modalQrUrl" class="form-control" readonly style="font-size: 11px; font-family: monospace; background: #1e293b; color: #cbd5e1; border: 1px solid #475569;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="copyModalQrLink()" style="white-space: nowrap;">📋 Copy</button>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a id="modalPrintPosterLink" href="#" target="_blank" class="btn btn-primary btn-sm" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; font-weight: 700;">
+                🖨️ A4 Poster
+            </a>
+            <button type="button" class="btn btn-sm" onclick="downloadModalQrPng()" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; background: #10b981; color: white; font-weight: 700; border: none; border-radius: 8px; cursor: pointer;">
+                💾 Download PNG
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('quickQrModal').style.display='none'">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
+let currentModalQr = null;
+
+function openQuickQrModal(data) {
+    currentModalQr = data;
+    document.getElementById('modalQrTitle').textContent = data.name;
+    document.getElementById('modalQrCodeBadge').textContent = 'SITE CODE: ' + data.code;
+    document.getElementById('modalQrUrl').value = data.url;
+    document.getElementById('modalQrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=' + encodeURIComponent(data.url);
+    document.getElementById('modalPrintPosterLink').href = '<?= APP_URL ?>/admin/qr_poster.php?id=' + data.id;
+    document.getElementById('quickQrModal').style.display = 'flex';
+}
+
+function copyModalQrLink() {
+    const input = document.getElementById('modalQrUrl');
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(input.value).then(function() {
+            alert('Copied site patrol URL to clipboard:\n' + input.value);
+        });
+    } else {
+        input.select();
+        document.execCommand('copy');
+        alert('Copied site patrol URL!');
+    }
+}
+
+function downloadModalQrPng() {
+    if (!currentModalQr) return;
+    const a = document.createElement('a');
+    a.href = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=' + encodeURIComponent(currentModalQr.url);
+    a.download = 'QR_Checkpoint_' + currentModalQr.code + '.png';
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
 function openEditSiteModal(site) {
     document.getElementById('edit_site_id').value = site.id || '';
     document.getElementById('edit_site_name').value = site.name || '';
@@ -535,3 +619,4 @@ function openEditSiteModal(site) {
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
+

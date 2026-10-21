@@ -25,12 +25,10 @@ if (!$site) {
     die("Site not found.");
 }
 
-// 1. Detect active Cloudflare HTTPS Tunnel and local LAN IP addresses
 $publicTunnelUrl = get_active_tunnel_url();
 $lanIps = get_lan_ips();
 $isLocalDev = !empty($isLocal);
 
-// 2. Determine target base URL for QR code
 $port = $_SERVER['SERVER_PORT'] ?? '8080';
 $portSuffix = ($port && $port != '80' && $port != '443') ? ':' . $port : '';
 
@@ -45,21 +43,18 @@ if (!empty($selectedHost)) {
         $qrBaseUrl = $protocol . $selectedHost;
     }
 } elseif (!empty($publicTunnelUrl)) {
-    // Priority #1: Active Public HTTPS Tunnel (works on any phone worldwide on 4G/5G/Wi-Fi with SSL)
     $qrBaseUrl = $publicTunnelUrl;
     $selectedHost = $publicTunnelUrl;
 } elseif (strpos($_SERVER['HTTP_HOST'] ?? '', 'trycloudflare.com') !== false) {
     $qrBaseUrl = 'https://' . $_SERVER['HTTP_HOST'];
     $selectedHost = $qrBaseUrl;
 } elseif ($isLocalDev && !empty($lanIps)) {
-    // Priority #2: Wi-Fi LAN IP
     $selectedHost = in_array('10.2.129.2', $lanIps) ? ('10.2.129.2' . $portSuffix) : ($lanIps[0] . $portSuffix);
     $qrBaseUrl = "http://" . $selectedHost;
 } else {
     $qrBaseUrl = APP_URL;
 }
 
-// Guarantee tunnel URLs are strictly HTTPS
 if (strpos($qrBaseUrl, 'trycloudflare.com') !== false && strpos($qrBaseUrl, 'http://') === 0) {
     $qrBaseUrl = 'https://' . substr($qrBaseUrl, 7);
 }
@@ -69,16 +64,17 @@ if (!empty($site['token_encrypted'])) {
     $rawToken = decrypt_field($site['token_encrypted']);
 }
 if (empty($rawToken)) {
-    $rawToken = $site['active_qr_token'];
-    // Update vault for this site
-    $db->prepare("UPDATE sites SET token_hmac = ?, token_encrypted = ? WHERE id = ?")->execute([
+    $rawToken = $site['active_qr_token'] ?: ('uss_qr_' . preg_replace('/[^a-z0-9]/', '', strtolower($site['code'])) . '_' . bin2hex(random_bytes(10)));
+    $db->prepare("UPDATE sites SET token_hmac = ?, token_encrypted = ?, active_qr_token = ? WHERE id = ?")->execute([
         hash_qr_token($rawToken),
         encrypt_field($rawToken),
+        $rawToken,
         $site['id']
     ]);
 }
 
 $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
+$qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=" . urlencode($guardUrl);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -121,16 +117,23 @@ $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
             z-index: 100;
         }
 
-        .btn-print {
-            background: #0284c7;
+        .btn-action {
             color: #fff;
             border: none;
-            padding: 10px 22px;
+            padding: 10px 20px;
             border-radius: 8px;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 13.5px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            transition: transform 0.15s ease;
+        }
+        .btn-action:hover {
+            transform: translateY(-1px);
         }
 
         /* A4 Page Canvas */
@@ -149,7 +152,6 @@ $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
             position: relative;
         }
 
-        /* Decorative Header */
         .poster-header {
             width: 100%;
             text-align: center;
@@ -181,7 +183,6 @@ $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
             margin-top: 4px;
         }
 
-        /* Site Highlight Box */
         .site-box {
             width: 100%;
             background: #f1f5f9;
@@ -212,7 +213,6 @@ $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
             letter-spacing: 1px;
         }
 
-        /* QR Frame */
         .qr-frame {
             background: #fff;
             padding: 20px;
@@ -225,10 +225,11 @@ $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
             margin: 10px 0;
         }
 
-        #qrcodeCanvas {
+        #qrImage, #qrcodeCanvas {
             width: 260px !important;
             height: 260px !important;
             display: block;
+            border-radius: 8px;
         }
 
         .qr-caption {
@@ -240,7 +241,6 @@ $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
             letter-spacing: 1px;
         }
 
-        /* Instruction Steps */
         .instruction-box {
             width: 100%;
             display: grid;
@@ -284,7 +284,6 @@ $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
             line-height: 1.3;
         }
 
-        /* Footer */
         .poster-footer {
             width: 100%;
             border-top: 2px solid #e2e8f0;
@@ -324,11 +323,14 @@ $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
         </div>
         <?php if (!empty($publicTunnelUrl) || !empty($lanIps)): ?>
             <div style="background: rgba(14, 165, 233, 0.15); border: 1px solid #0284c7; padding: 4px 12px; border-radius: 6px; font-size: 12.5px; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
-                <span>📱 <strong>QR Host for Phone Scan:</strong></span>
+                <span>📱 <strong>QR Target Host:</strong></span>
                 <select onchange="location.href='?id=<?= $id ?>&host=' + encodeURIComponent(this.value);" style="background: #0f172a; color: #fff; border: 1px solid #0284c7; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                    <option value="<?= htmlspecialchars(APP_URL) ?>" <?= ($qrBaseUrl === APP_URL) ? 'selected' : '' ?>>
+                        🌐 Live Domain (<?= htmlspecialchars(parse_url(APP_URL, PHP_URL_HOST)) ?>)
+                    </option>
                     <?php if (!empty($publicTunnelUrl)): ?>
-                        <option value="<?= htmlspecialchars($publicTunnelUrl) ?>" <?= ($selectedHost === $publicTunnelUrl || $qrBaseUrl === $publicTunnelUrl) ? 'selected' : '' ?>>
-                            ⚡ Cloudflare Public HTTPS (Any Phone, 4G/5G, Wi-Fi)
+                        <option value="<?= htmlspecialchars($publicTunnelUrl) ?>" <?= ($selectedHost === $publicTunnelUrl) ? 'selected' : '' ?>>
+                            ⚡ Cloudflare Tunnel (HTTPS)
                         </option>
                     <?php endif; ?>
                     <?php foreach ($lanIps as $lip): ?>
@@ -337,15 +339,14 @@ $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
                             <?= htmlspecialchars($hVal) ?> (Local Wi-Fi)
                         </option>
                     <?php endforeach; ?>
-                    <option value="localhost<?= $portSuffix ?>" <?= (strpos($selectedHost, 'localhost') !== false) ? 'selected' : '' ?>>
-                        localhost<?= $portSuffix ?> (PC only)
-                    </option>
                 </select>
             </div>
         <?php endif; ?>
     </div>
-    <div style="display: flex; gap: 12px;">
-        <button class="btn-print" onclick="window.print();">🖨️ Print Poster (A4)</button>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn-action" onclick="downloadQrCode();" style="background: #10b981;">💾 Download QR</button>
+        <button class="btn-action" onclick="copyPatrolLink();" style="background: #6366f1;">📋 Copy Link</button>
+        <button class="btn-action" onclick="window.print();" style="background: #0284c7;">🖨️ Print Poster (A4)</button>
         <button style="background: transparent; color: #fff; border: 1px solid #475569; padding: 10px 18px; border-radius: 8px; cursor: pointer;" onclick="window.close();">Close</button>
     </div>
 </div>
@@ -366,9 +367,10 @@ $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
         <div class="site-code-badge">SITE CODE: <?= htmlspecialchars($site['code']) ?></div>
     </div>
 
-    <!-- QR Code Centerpiece -->
+    <!-- QR Code Centerpiece: Dual-mode Guaranteed Rendering -->
     <div class="qr-frame">
-        <canvas id="qrcodeCanvas"></canvas>
+        <img id="qrImage" src="<?= htmlspecialchars($qrApiUrl) ?>" alt="Security Checkpoint QR Code" crossOrigin="anonymous">
+        <canvas id="qrcodeCanvas" style="display: none;"></canvas>
         <div class="qr-caption">Scan With Phone Camera To Report Incident</div>
     </div>
 
@@ -412,12 +414,13 @@ $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
 </div>
 
 <script>
-// Generate High-Resolution QR Code onto Canvas
+// Client-side Canvas rendering enhancement
 window.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('qrcodeCanvas');
+    const img = document.getElementById('qrImage');
     const qrData = '<?= addslashes($guardUrl) ?>';
     
-    if (typeof QRCode !== 'undefined') {
+    if (typeof QRCode !== 'undefined' && typeof QRCode.toCanvas === 'function') {
         QRCode.toCanvas(canvas, qrData, {
             width: 260,
             margin: 2,
@@ -427,10 +430,41 @@ window.addEventListener('DOMContentLoaded', function() {
             },
             errorCorrectionLevel: 'H'
         }, function (error) {
-            if (error) console.error(error);
+            if (!error) {
+                // Smoothly replace external image with local canvas render
+                canvas.style.display = 'block';
+                img.style.display = 'none';
+            }
         });
     }
 });
+
+function downloadQrCode() {
+    const canvas = document.getElementById('qrcodeCanvas');
+    const img = document.getElementById('qrImage');
+    const a = document.createElement('a');
+    a.download = 'QR_Checkpoint_<?= htmlspecialchars($site['code']) ?>.png';
+    if (canvas && canvas.style.display !== 'none' && canvas.toDataURL) {
+        a.href = canvas.toDataURL('image/png');
+    } else {
+        a.href = img.src;
+        a.target = '_blank';
+    }
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function copyPatrolLink() {
+    const url = '<?= addslashes($guardUrl) ?>';
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(function() {
+            alert('Patrol Checkpoint URL copied to clipboard:\n' + url);
+        });
+    } else {
+        prompt('Copy this patrol link:', url);
+    }
+}
 </script>
 
 </body>

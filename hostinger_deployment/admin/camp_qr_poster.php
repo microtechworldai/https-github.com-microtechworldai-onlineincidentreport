@@ -320,7 +320,8 @@ $supervisorUrl = $qrBaseUrl . '/sup/index.php?camp=' . urlencode($camp['qr_token
     </div>
 
     <div class="qr-frame">
-        <div id="qrcodeCanvas"></div>
+        <img id="qrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=<?= urlencode($supervisorUrl) ?>" alt="Camp Checkpoint QR Code" width="250" height="250" style="display:block; margin:0 auto; background:#fff; border-radius:8px;" crossOrigin="anonymous">
+        <canvas id="qrcodeCanvas" style="display: none; width: 250px; height: 250px;"></canvas>
         <div class="qr-caption">Scan to Start Patrol (Camp Out) or End Duty (Camp In)</div>
     </div>
 
@@ -354,17 +355,27 @@ $supervisorUrl = $qrBaseUrl . '/sup/index.php?camp=' . urlencode($camp['qr_token
 </div>
 
 <script>
-window.onload = function() {
-    new QRCode(document.getElementById("qrcodeCanvas"), {
-        text: <?= json_encode($supervisorUrl) ?>,
-        width: 250,
-        height: 250,
-        colorDark : "#0f172a",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
-    });
-};
+window.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('qrcodeCanvas');
+    const img = document.getElementById('qrImage');
+    const qrData = '<?= addslashes($supervisorUrl) ?>';
+    
+    if (typeof QRCode !== 'undefined' && typeof QRCode.toCanvas === 'function') {
+        QRCode.toCanvas(canvas, qrData, {
+            width: 250,
+            margin: 2,
+            color: { dark: '#0f172a', light: '#ffffff' },
+            errorCorrectionLevel: 'H'
+        }, function (error) {
+            if (!error) {
+                canvas.style.display = 'block';
+                img.style.display = 'none';
+            }
+        });
+    }
+});
 </script>
 
 </body>
 </html>
+
