@@ -20,7 +20,7 @@ $origName = 'evidence_document';
 $mimeType = 'application/octet-stream';
 
 if ($photoId > 0) {
-    $stmt = $db->prepare("SELECT file_path, original_filename, mime_type, file_hash FROM incident_photos WHERE id = ? LIMIT 1");
+    $stmt = $db->prepare("SELECT file_path, original_filename, mime_type FROM incident_photos WHERE id = ? LIMIT 1");
     $stmt->execute([$photoId]);
     $photo = $stmt->fetch();
     if (!$photo) {

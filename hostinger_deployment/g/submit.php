@@ -179,42 +179,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($incidentId) {
-            // 4. Process Uploaded Photos safely into private store with integrity hash
+            // 4. Process Uploaded Photos safely into storage (matching database schema)
             if (!empty($_FILES['photos']['name'][0])) {
                 $totalFiles = count($_FILES['photos']['name']);
-                $stmtPhoto = $db->prepare("
-                    INSERT INTO incident_photos (incident_id, file_path, original_filename, file_size, file_hash, mime_type, latitude, longitude, caption, sort_order, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-                ");
+                try {
+                    $stmtPhoto = $db->prepare("
+                        INSERT INTO incident_photos (incident_id, file_path, original_filename, file_size, mime_type, latitude, longitude, caption, sort_order, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                    ");
 
-                for ($i = 0; $i < min($totalFiles, MAX_PHOTOS_PER_INCIDENT); $i++) {
-                    if (!empty($_FILES['photos']['tmp_name'][$i]) && is_uploaded_file($_FILES['photos']['tmp_name'][$i])) {
-                        try {
-                            $processed = process_and_save_photo(
-                                $_FILES['photos']['tmp_name'][$i],
-                                $_FILES['photos']['name'][$i]
-                            );
-                            if ($processed) {
-                                $caption = !empty($_POST['photo_captions'][$i]) ? trim($_POST['photo_captions'][$i]) : 'Incident scene evidence';
-                                $lat = !empty($_POST['photo_latitudes'][$i]) ? trim($_POST['photo_latitudes'][$i]) : '25.1610° N';
-                                $lng = !empty($_POST['photo_longitudes'][$i]) ? trim($_POST['photo_longitudes'][$i]) : '55.4120° E';
-                                $stmtPhoto->execute([
-                                    $incidentId,
-                                    $processed['relative_path'],
-                                    $_FILES['photos']['name'][$i],
-                                    $processed['size'],
-                                    $processed['file_hash'] ?? '',
-                                    $processed['mime'],
-                                    $lat,
-                                    $lng,
-                                    $caption,
-                                    $i
-                                ]);
+                    for ($i = 0; $i < min($totalFiles, MAX_PHOTOS_PER_INCIDENT); $i++) {
+                        if (!empty($_FILES['photos']['tmp_name'][$i]) && is_uploaded_file($_FILES['photos']['tmp_name'][$i])) {
+                            try {
+                                $processed = process_and_save_photo(
+                                    $_FILES['photos']['tmp_name'][$i],
+                                    $_FILES['photos']['name'][$i]
+                                );
+                                if ($processed && !empty($processed['relative_path'])) {
+                                    $caption = !empty($_POST['photo_captions'][$i]) ? trim($_POST['photo_captions'][$i]) : 'Incident scene evidence';
+                                    $lat = !empty($_POST['photo_latitudes'][$i]) ? trim($_POST['photo_latitudes'][$i]) : '25.1610° N';
+                                    $lng = !empty($_POST['photo_longitudes'][$i]) ? trim($_POST['photo_longitudes'][$i]) : '55.4120° E';
+                                    $stmtPhoto->execute([
+                                        $incidentId,
+                                        $processed['relative_path'],
+                                        $_FILES['photos']['name'][$i],
+                                        $processed['size'],
+                                        $processed['mime'],
+                                        $lat,
+                                        $lng,
+                                        $caption,
+                                        $i
+                                    ]);
+                                }
+                            } catch (Throwable $photoEx) {
+                                error_log("Photo upload error for incident {$incidentId}: " . $photoEx->getMessage());
                             }
-                        } catch (Exception $photoEx) {
-                            error_log("Photo upload warning for incident {$incidentId}: " . $photoEx->getMessage());
                         }
                     }
+                } catch (Throwable $photoBatchEx) {
+                    error_log("Photo batch prepare warning for incident {$incidentId}: " . $photoBatchEx->getMessage());
                 }
             }
 

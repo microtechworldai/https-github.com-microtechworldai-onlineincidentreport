@@ -382,6 +382,13 @@ function process_and_save_photo($tmpName, $originalName) {
     if (!is_dir($fullDir)) {
         @mkdir($fullDir, 0755, true);
     }
+    if (!is_dir($fullDir) || !is_writable($fullDir)) {
+        $uploadsBase = defined('UPLOADS_PATH') ? UPLOADS_PATH : (defined('ROOT_PATH') ? (ROOT_PATH . '/uploads') : (__DIR__ . '/../uploads'));
+        $fullDir = rtrim($uploadsBase, '/\\') . DIRECTORY_SEPARATOR . 'photos' . DIRECTORY_SEPARATOR . $subDir;
+        if (!is_dir($fullDir)) {
+            @mkdir($fullDir, 0755, true);
+        }
+    }
 
     $filename = 'inc_' . date('Ymd_His') . '_' . bin2hex(random_bytes(8)) . '.' . $fileExt;
     $targetPath = $fullDir . DIRECTORY_SEPARATOR . $filename;
