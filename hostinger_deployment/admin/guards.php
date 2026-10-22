@@ -141,6 +141,46 @@ if (isset($_GET['action']) && $_GET['action'] === 'toggle' && isset($_GET['id'])
     $msg = "Guard account status updated.";
 }
 
+// Handle Delete Guard Account
+if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+    $guardId = (int)$_GET['id'];
+    
+    $stmtG = $db->prepare("SELECT staff_id, full_name, username FROM guards WHERE id = ? LIMIT 1");
+    $stmtG->execute([$guardId]);
+    $gData = $stmtG->fetch();
+
+    if ($gData) {
+        try {
+            // Delete site authorizations
+            $db->prepare("DELETE FROM guard_site_assignments WHERE guard_id = ?")->execute([$guardId]);
+            
+            // Disassociate from filed incidents (preserves historical incident reports)
+            $db->prepare("UPDATE incidents SET guard_id = NULL WHERE guard_id = ?")->execute([$guardId]);
+
+            // Disassociate from supervisor duties / visits if supervisor
+            $db->prepare("UPDATE supervisor_duties SET supervisor_id = NULL WHERE supervisor_id = ?")->execute([$guardId]);
+            $db->prepare("UPDATE supervisor_visits SET supervisor_id = NULL WHERE supervisor_id = ?")->execute([$guardId]);
+
+            // Delete guard record
+            $db->prepare("DELETE FROM guards WHERE id = ?")->execute([$guardId]);
+
+            log_audit('DELETE_GUARD', 'GUARD', $guardId, [
+                'staff_id' => $gData['staff_id'],
+                'full_name' => $gData['full_name'],
+                'username' => $gData['username']
+            ]);
+            $msg = "Guard account '{$gData['full_name']}' ({$gData['staff_id']}) was permanently deleted.";
+            $msgType = 'success';
+        } catch (Exception $e) {
+            $msg = "Failed to delete guard: " . $e->getMessage();
+            $msgType = 'danger';
+        }
+    } else {
+        $msg = "Guard account not found or already deleted.";
+        $msgType = 'danger';
+    }
+}
+
 // Search & Pagination for 2,000+ Guards
 $search = trim($_GET['search'] ?? '');
 $where = [];
@@ -328,6 +368,9 @@ require_once __DIR__ . '/../includes/header.php';
                                     </button>
                                     <a href="<?= APP_URL ?>/admin/guards.php?action=toggle&id=<?= $g['id'] ?>" class="btn btn-secondary btn-sm">
                                         <?= $g['is_active'] ? 'Suspend' : 'Activate' ?>
+                                    </a>
+                                    <a href="<?= APP_URL ?>/admin/guards.php?action=delete&id=<?= $g['id'] ?>" class="btn btn-secondary btn-sm" onclick="return confirm('Permanently delete guard account <?= htmlspecialchars(addslashes($g['full_name'])) ?> (<?= htmlspecialchars(addslashes($g['staff_id'])) ?>)?\n\nThis will remove their login access permanently.');" style="background: rgba(239, 68, 68, 0.15); color: #fb7185; border: 1px solid rgba(239, 68, 68, 0.3);" title="Permanently Delete Officer Account">
+                                        🗑️ Delete
                                     </a>
                                 </div>
                             </td>
@@ -547,9 +590,14 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 24px; border-top: 1px solid var(--border-subtle); padding-top: 16px;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes & Assign Post</button>
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('editGuardModal').style.display='none'">Cancel</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 24px; border-top: 1px solid var(--border-subtle); padding-top: 16px;">
+                <a id="editModalDeleteBtn" href="#" class="btn btn-secondary btn-sm" onclick="return confirm('Permanently delete this guard account? This cannot be undone.');" style="background: rgba(239, 68, 68, 0.15); color: #fb7185; border: 1px solid rgba(239, 68, 68, 0.3); padding: 8px 14px;">
+                    🗑️ Delete Guard
+                </a>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('editGuardModal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes & Assign Post</button>
+                </div>
             </div>
         </form>
     </div>
@@ -607,6 +655,7 @@ function openEditGuardModal(g) {
     document.getElementById('editUsername').value = g.username;
     document.getElementById('editIsSupervisor').checked = (g.is_supervisor == 1);
     document.getElementById('editAssignedCampId').value = g.assigned_camp_id || '';
+    document.getElementById('editModalDeleteBtn').href = '<?= APP_URL ?>/admin/guards.php?action=delete&id=' + g.id;
 
     // Clear all site checkboxes
     document.querySelectorAll('.edit-site-checkbox').forEach(cb => cb.checked = false);
