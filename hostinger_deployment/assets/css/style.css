@@ -606,25 +606,27 @@ body {
   height: 44px;
   min-width: 44px;
   border-radius: 10px;
-  background: rgba(2, 132, 199, 0.08);
-  border: 1.5px solid rgba(2, 132, 199, 0.25);
+  background: transparent !important;
+  border: none !important;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  padding: 5px;
+  padding: 2px;
   box-sizing: border-box;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: none !important;
   overflow: hidden;
 }
 
 [data-theme="light"] .brand-logo-frame {
-  background: #f0f9ff;
-  border-color: #bae6fd;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 [data-theme="dark"] .brand-logo-frame {
-  background: rgba(2, 132, 199, 0.12);
-  border-color: rgba(56, 189, 248, 0.3);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .brand-logo-frame img,

@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `system_settings` (
   `website` VARCHAR(150) NULL DEFAULT 'https://www.sprinzo.in',
   `logo_url` VARCHAR(255) NULL DEFAULT 'assets/images/logo.png',
   `timezone` VARCHAR(100) NOT NULL DEFAULT 'Asia/Dubai',
+  `supervisor_remarks_min_length` INT NOT NULL DEFAULT 20,
   `shift_options` TEXT NULL,
   `cause_options` TEXT NULL,
   `disciplinary_options` TEXT NULL,
@@ -354,7 +355,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ====================================================================
 
 -- Default Settings
-INSERT INTO `system_settings` (`id`, `company_name`, `tagline`, `address_line`, `phone`, `email`, `website`, `logo_url`, `timezone`, `shift_options`, `cause_options`, `disciplinary_options`, `incident_options`, `notified_options`)
+INSERT INTO `system_settings` (`id`, `company_name`, `tagline`, `address_line`, `phone`, `email`, `website`, `logo_url`, `timezone`, `supervisor_remarks_min_length`, `shift_options`, `cause_options`, `disciplinary_options`, `incident_options`, `notified_options`)
 VALUES (
   'default-settings',
   'ULTIMATE SECURITY SERVICES',
@@ -365,6 +366,7 @@ VALUES (
   'https://www.sprinzo.in',
   'assets/images/logo.png',
   'Asia/Dubai',
+  20,
   '["Day", "Night"]',
   '["Incident", "Disciplinary", "Others"]',
   '["Sleeping", "Poor Grooming", "Argument", "Missing", "Misbehavior", "Uniform", "Late Reporting", "Mobile", "Others"]',

@@ -17,80 +17,177 @@ $msgType = 'success';
 
 // Handle Save Settings
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
-    $companyName = trim($_POST['company_name'] ?? 'ULTIMATE SECURITY SERVICES');
-    $tagline = trim($_POST['tagline'] ?? '');
-    $address = trim($_POST['address_line'] ?? '');
-    $phone = trim($_POST['phone'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $website = trim($_POST['website'] ?? '');
-    $timezone = trim($_POST['timezone'] ?? 'Asia/Dubai');
-    $remarksMinLength = max(1, intval($_POST['supervisor_remarks_min_length'] ?? 20));
-
-    // Parse textarea lines to JSON arrays
-    $shifts = array_filter(array_map('trim', explode("\n", $_POST['shift_options'] ?? '')));
-    $causes = array_filter(array_map('trim', explode("\n", $_POST['cause_options'] ?? '')));
-    $disciplinary = array_filter(array_map('trim', explode("\n", $_POST['disciplinary_options'] ?? '')));
-    $incidents = array_filter(array_map('trim', explode("\n", $_POST['incident_options'] ?? '')));
-    $notified = array_filter(array_map('trim', explode("\n", $_POST['notified_options'] ?? '')));
-
-    // Handle Logo Replacement (Upload, Custom URL, or Reset)
-    $logoUrl = null;
-    if (!empty($_POST['reset_default_logo'])) {
-        $logoUrl = 'assets/images/logo.png';
-    } elseif (!empty($_FILES['company_logo']['name'])) {
-        $logoTmp = $_FILES['company_logo']['tmp_name'];
-        $logoExt = strtolower(pathinfo($_FILES['company_logo']['name'], PATHINFO_EXTENSION));
-        if (in_array($logoExt, ['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif'])) {
-            $destPath = UPLOADS_PATH . '/logo_' . time() . '.' . $logoExt;
-            if (move_uploaded_file($logoTmp, $destPath)) {
-                $logoUrl = 'uploads/' . basename($destPath);
-            }
+    try {
+        // 1. Ensure uploads directory exists and is writable
+        if (!is_dir(UPLOADS_PATH)) {
+            @mkdir(UPLOADS_PATH, 0755, true);
         }
-    } elseif (!empty($_POST['logo_url_manual'])) {
-        $logoUrl = trim($_POST['logo_url_manual']);
+
+        // 2. Self-healing DB check: Ensure table and columns exist
+        try {
+            $db->exec("
+                CREATE TABLE IF NOT EXISTS `system_settings` (
+                  `id` VARCHAR(50) NOT NULL PRIMARY KEY,
+                  `company_name` VARCHAR(255) NOT NULL DEFAULT 'ULTIMATE SECURITY SERVICES',
+                  `tagline` VARCHAR(255) NOT NULL DEFAULT 'Total Security Solutions',
+                  `address_line` TEXT NULL,
+                  `phone` VARCHAR(100) NOT NULL DEFAULT '+971 4 251 0050',
+                  `email` VARCHAR(100) NOT NULL DEFAULT 'ops@ultimatesecurity.ae',
+                  `website` VARCHAR(150) NULL DEFAULT 'https://www.sprinzo.in',
+                  `logo_url` VARCHAR(255) NULL DEFAULT 'assets/images/logo.png',
+                  `timezone` VARCHAR(100) NOT NULL DEFAULT 'Asia/Dubai',
+                  `supervisor_remarks_min_length` INT NOT NULL DEFAULT 20,
+                  `shift_options` TEXT NULL,
+                  `cause_options` TEXT NULL,
+                  `disciplinary_options` TEXT NULL,
+                  `incident_options` TEXT NULL,
+                  `notified_options` TEXT NULL,
+                  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+            ");
+        } catch (Exception $e) {}
+
+        try {
+            $db->exec("ALTER TABLE system_settings ADD COLUMN supervisor_remarks_min_length INT NOT NULL DEFAULT 20");
+        } catch (Exception $e) {}
+
+        // 3. Ensure the 'default-settings' row exists
+        $stmtChk = $db->query("SELECT id, logo_url FROM system_settings WHERE id = 'default-settings' LIMIT 1");
+        $existingRow = $stmtChk ? $stmtChk->fetch() : null;
+        if (!$existingRow) {
+            $db->exec("
+                INSERT INTO system_settings (id, company_name, logo_url) 
+                VALUES ('default-settings', 'ULTIMATE SECURITY SERVICES', 'assets/images/logo.png')
+                ON DUPLICATE KEY UPDATE id = id
+            ");
+            $existingRow = ['id' => 'default-settings', 'logo_url' => 'assets/images/logo.png'];
+        }
+
+        $companyName = trim($_POST['company_name'] ?? 'ULTIMATE SECURITY SERVICES');
+        $tagline = trim($_POST['tagline'] ?? '');
+        $address = trim($_POST['address_line'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $website = trim($_POST['website'] ?? '');
+        $timezone = trim($_POST['timezone'] ?? 'Asia/Dubai');
+        $remarksMinLength = max(1, intval($_POST['supervisor_remarks_min_length'] ?? 20));
+
+        // Parse textarea lines to JSON arrays
+        $shifts = array_filter(array_map('trim', explode("\n", $_POST['shift_options'] ?? '')));
+        $causes = array_filter(array_map('trim', explode("\n", $_POST['cause_options'] ?? '')));
+        $disciplinary = array_filter(array_map('trim', explode("\n", $_POST['disciplinary_options'] ?? '')));
+        $incidents = array_filter(array_map('trim', explode("\n", $_POST['incident_options'] ?? '')));
+        $notified = array_filter(array_map('trim', explode("\n", $_POST['notified_options'] ?? '')));
+
+        // Handle Logo Replacement (Upload, Custom URL, or Reset)
+        $logoUrl = $existingRow['logo_url'] ?: 'assets/images/logo.png';
+        if (!empty($_POST['reset_default_logo'])) {
+            $logoUrl = 'assets/images/logo.png';
+        } elseif (!empty($_FILES['company_logo']['name']) && is_uploaded_file($_FILES['company_logo']['tmp_name'])) {
+            $logoTmp = $_FILES['company_logo']['tmp_name'];
+            $logoExt = strtolower(pathinfo($_FILES['company_logo']['name'], PATHINFO_EXTENSION));
+            if (in_array($logoExt, ['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif'])) {
+                $destFileName = 'logo_' . time() . '.' . $logoExt;
+                $destPath = UPLOADS_PATH . '/' . $destFileName;
+                if (move_uploaded_file($logoTmp, $destPath)) {
+                    $logoUrl = 'uploads/' . $destFileName;
+
+                    // Automatically make transparent if uploaded image has white/near-white background
+                    if (in_array($logoExt, ['png', 'jpg', 'jpeg']) && function_exists('imagecreatefromstring')) {
+                        $raw = @file_get_contents($destPath);
+                        $src = $raw ? @imagecreatefromstring($raw) : null;
+                        if ($src) {
+                            $w = imagesx($src);
+                            $h = imagesy($src);
+                            $tl = imagecolorat($src, 0, 0);
+                            $r = ($tl >> 16) & 0xFF;
+                            $g = ($tl >> 8) & 0xFF;
+                            $b = $tl & 0xFF;
+                            if ($r >= 235 && $g >= 235 && $b >= 235) {
+                                $dst = imagecreatetruecolor($w, $h);
+                                imagealphablending($dst, false);
+                                imagesavealpha($dst, true);
+                                $trans = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+                                imagefilledrectangle($dst, 0, 0, $w, $h, $trans);
+                                for ($x = 0; $x < $w; $x++) {
+                                    for ($y = 0; $y < $h; $y++) {
+                                        $pixel = imagecolorat($src, $x, $y);
+                                        $pr = ($pixel >> 16) & 0xFF;
+                                        $pg = ($pixel >> 8) & 0xFF;
+                                        $pb = $pixel & 0xFF;
+                                        if (min($pr, $pg, $pb) >= 245) {
+                                            imagesetpixel($dst, $x, $y, $trans);
+                                        } elseif (min($pr, $pg, $pb) >= 230 && abs($pr - $pg) < 15 && abs($pg - $pb) < 15) {
+                                            $alpha = (int)round(((min($pr, $pg, $pb) - 230) / (255 - 230)) * 127);
+                                            imagesetpixel($dst, $x, $y, imagecolorallocatealpha($dst, $pr, $pg, $pb, $alpha));
+                                        } else {
+                                            imagesetpixel($dst, $x, $y, imagecolorallocatealpha($dst, $pr, $pg, $pb, 0));
+                                        }
+                                    }
+                                }
+                                $pngDest = UPLOADS_PATH . '/logo_' . time() . '_trans.png';
+                                if (imagepng($dst, $pngDest, 9)) {
+                                    $logoUrl = 'uploads/' . basename($pngDest);
+                                }
+                                imagedestroy($dst);
+                            }
+                            imagedestroy($src);
+                        }
+                    }
+                }
+            }
+        } elseif (!empty($_POST['logo_url_manual'])) {
+            $logoUrl = trim($_POST['logo_url_manual']);
+        }
+
+        $sql = "
+            UPDATE system_settings SET
+                company_name = ?,
+                tagline = ?,
+                address_line = ?,
+                phone = ?,
+                email = ?,
+                website = ?,
+                timezone = ?,
+                supervisor_remarks_min_length = ?,
+                shift_options = ?,
+                cause_options = ?,
+                disciplinary_options = ?,
+                incident_options = ?,
+                notified_options = ?,
+                logo_url = ?,
+                updated_at = NOW()
+            WHERE id = 'default-settings'
+        ";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([
+            $companyName,
+            $tagline,
+            $address,
+            $phone,
+            $email,
+            $website,
+            $timezone,
+            $remarksMinLength,
+            json_encode(array_values($shifts), JSON_UNESCAPED_UNICODE),
+            json_encode(array_values($causes), JSON_UNESCAPED_UNICODE),
+            json_encode(array_values($disciplinary), JSON_UNESCAPED_UNICODE),
+            json_encode(array_values($incidents), JSON_UNESCAPED_UNICODE),
+            json_encode(array_values($notified), JSON_UNESCAPED_UNICODE),
+            $logoUrl
+        ]);
+
+        log_audit('UPDATE_SETTINGS', 'SETTINGS', 'default-settings', 'Updated system branding, options and supervisor remarks minimum length');
+        $msg = "Company setup & branding successfully saved!";
+        $msgType = 'success';
+    } catch (Exception $e) {
+        $msg = "Failed to save settings: " . $e->getMessage();
+        $msgType = 'danger';
     }
-
-    $sql = "
-        UPDATE system_settings SET
-            company_name = ?,
-            tagline = ?,
-            address_line = ?,
-            phone = ?,
-            email = ?,
-            website = ?,
-            timezone = ?,
-            supervisor_remarks_min_length = ?,
-            shift_options = ?,
-            cause_options = ?,
-            disciplinary_options = ?,
-            incident_options = ?,
-            notified_options = ?,
-            " . ($logoUrl !== null ? "logo_url = " . $db->quote($logoUrl) . ", " : "") . "
-            updated_at = NOW()
-        WHERE id = 'default-settings'
-    ";
-    $stmt = $db->prepare($sql);
-    $stmt->execute([
-        $companyName,
-        $tagline,
-        $address,
-        $phone,
-        $email,
-        $website,
-        $timezone,
-        $remarksMinLength,
-        json_encode(array_values($shifts), JSON_UNESCAPED_UNICODE),
-        json_encode(array_values($causes), JSON_UNESCAPED_UNICODE),
-        json_encode(array_values($disciplinary), JSON_UNESCAPED_UNICODE),
-        json_encode(array_values($incidents), JSON_UNESCAPED_UNICODE),
-        json_encode(array_values($notified), JSON_UNESCAPED_UNICODE)
-    ]);
-
-    log_audit('UPDATE_SETTINGS', 'SETTINGS', 'default-settings', 'Updated system branding, options and supervisor remarks minimum length');
-    $msg = "System settings successfully updated!";
 }
 
-$settings = get_system_settings();
+// Force reload fresh from database so updated values are immediately reflected
+$settings = get_system_settings(true);
 
 require_once __DIR__ . '/../includes/header.php';
 ?>

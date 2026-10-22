@@ -253,9 +253,9 @@ function verify_audit_log_chain() {
 /**
  * Fetch System Settings
  */
-function get_system_settings() {
+function get_system_settings($forceRefresh = false) {
     static $settings = null;
-    if ($settings !== null) {
+    if ($settings !== null && !$forceRefresh) {
         return $settings;
     }
 
