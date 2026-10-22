@@ -211,6 +211,7 @@ $offset = ($page - 1) * $perPage;
 $sql = "
     SELECT g.*,
            (SELECT COUNT(*) FROM incidents i WHERE i.guard_id = g.id AND i.deleted_at IS NULL) as reports_filed,
+           (SELECT COUNT(*) FROM guard_site_assignments a WHERE a.guard_id = g.id) as assigned_sites_count,
            (SELECT GROUP_CONCAT(s.code SEPARATOR ', ') 
             FROM guard_site_assignments a 
             JOIN sites s ON s.id = a.site_id 
@@ -341,11 +342,15 @@ require_once __DIR__ . '/../includes/header.php';
                                 <code style="color: var(--accent-cyan);"><?= htmlspecialchars($g['username']) ?></code>
                             </td>
                             <td>
-                                <?php if (!empty($g['assigned_site_names'])): ?>
-                                    <strong style="color: #38bdf8; font-size: 13px;"><?= htmlspecialchars($g['assigned_site_names']) ?></strong>
-                                    <div style="font-family: monospace; font-size: 11px; color: var(--text-dim); margin-top: 2px;">Code: <?= htmlspecialchars($g['assigned_site_codes']) ?></div>
+                                <?php 
+                                $sitesCount = (int)($g['assigned_sites_count'] ?? (!empty($g['assigned_site_ids']) ? count(explode(',', $g['assigned_site_ids'])) : 0));
+                                ?>
+                                <?php if ($sitesCount > 0): ?>
+                                    <strong style="color: #0284c7; font-size: 13.5px; font-weight: 800;" title="<?= htmlspecialchars($g['assigned_site_names'] ?? '') ?>">
+                                        <?= $sitesCount ?> <?= $sitesCount === 1 ? 'Site' : 'Sites' ?> Assigned
+                                    </strong>
                                 <?php else: ?>
-                                    <span style="color: var(--accent-rose); font-size: 11.5px; font-weight: 700;">⚠️ No Post Assigned</span>
+                                    <span style="color: #dc2626; font-size: 12px; font-weight: 700;">0 Sites Assigned</span>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -353,9 +358,9 @@ require_once __DIR__ . '/../includes/header.php';
                             </td>
                             <td>
                                 <?php if ($g['is_active']): ?>
-                                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">Active</span>
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.16); color: #065f46 !important; font-weight: 800; border: 1px solid #059669; padding: 4px 10px; border-radius: 6px;">Active</span>
                                 <?php else: ?>
-                                    <span class="badge" style="background: rgba(244, 63, 94, 0.15); color: #fb7185;">Suspended</span>
+                                    <span class="badge" style="background: rgba(244, 63, 94, 0.15); color: #be123c !important; font-weight: 800; border: 1px solid #f43f5e; padding: 4px 10px; border-radius: 6px;">Suspended</span>
                                 <?php endif; ?>
                             </td>
                             <td style="text-align: right;">
