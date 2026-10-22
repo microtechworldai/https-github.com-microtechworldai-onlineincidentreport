@@ -28,9 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_guard'])) {
     if (empty($staffId) || empty($fullName) || empty($username) || empty($password)) {
         $msg = "Staff ID, Full Name, Username, and Password are required.";
         $msgType = 'danger';
-    } elseif (empty($selectedSites)) {
-        $msg = "Please assign at least one authorized site checkpoint to this guard.";
-        $msgType = 'danger';
     } else {
         // Check uniqueness
         $chk = $db->prepare("SELECT id FROM guards WHERE staff_id = ? OR username = ? LIMIT 1");
@@ -38,33 +35,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_guard'])) {
         if ($chk->fetch()) {
             $msg = "A guard account with this Staff ID or Username already exists.";
             $msgType = 'danger';
-            $passHash = hash_password_argon2id($password);
-            $isSupervisor = !empty($_POST['is_supervisor']) ? 1 : 0;
-            $assignedCampId = !empty($_POST['assigned_camp_id']) ? (int)$_POST['assigned_camp_id'] : null;
-            $insertGuard = $db->prepare("
-                INSERT INTO guards (staff_id, full_name, designation, is_supervisor, assigned_camp_id, username, password_hash, is_active, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())
-            ");
-            $insertGuard->execute([$staffId, $fullName, $designation, $isSupervisor, $assignedCampId, $username, $passHash]);
-            $guardId = (int)$db->lastInsertId();
+        } else {
+            try {
+                $passHash = hash_password_argon2id($password);
+                $isSupervisor = !empty($_POST['is_supervisor']) ? 1 : 0;
+                $assignedCampId = !empty($_POST['assigned_camp_id']) ? (int)$_POST['assigned_camp_id'] : null;
+                $insertGuard = $db->prepare("
+                    INSERT INTO guards (staff_id, full_name, designation, is_supervisor, assigned_camp_id, username, password_hash, is_active, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())
+                ");
+                $insertGuard->execute([$staffId, $fullName, $designation, $isSupervisor, $assignedCampId, $username, $passHash]);
+                $guardId = (int)$db->lastInsertId();
 
-            // Insert site authorizations
-            $stmtAssign = $db->prepare("INSERT INTO guard_site_assignments (guard_id, site_id) VALUES (?, ?)");
-            foreach ($selectedSites as $sId) {
-                $stmtAssign->execute([$guardId, (int)$sId]);
+                // Insert site authorizations if selected
+                if (!empty($selectedSites)) {
+                    $stmtAssign = $db->prepare("INSERT INTO guard_site_assignments (guard_id, site_id) VALUES (?, ?)");
+                    foreach ($selectedSites as $sId) {
+                        $sId = (int)$sId;
+                        if ($sId > 0) {
+                            $stmtAssign->execute([$guardId, $sId]);
+                        }
+                    }
+                }
+
+                log_audit('CREATE_GUARD', 'GUARD', $guardId, ['staff_id' => $staffId, 'username' => $username]);
+                $msg = "Guard account '{$fullName}' ({$staffId}) created successfully!";
+                $msgType = 'success';
+
+                // Prepare credential slip for one-time display
+                $newCredsSlip = [
+                    'staff_id' => $staffId,
+                    'name' => $fullName,
+                    'designation' => $designation,
+                    'username' => $username,
+                    'password' => $password
+                ];
+            } catch (Exception $e) {
+                $msg = "Failed to create guard account: " . $e->getMessage();
+                $msgType = 'danger';
             }
-
-            log_audit('CREATE_GUARD', 'GUARD', $guardId, ['staff_id' => $staffId, 'username' => $username]);
-            $msg = "Guard account created successfully!";
-
-            // Prepare credential slip for one-time display
-            $newCredsSlip = [
-                'staff_id' => $staffId,
-                'name' => $fullName,
-                'designation' => $designation,
-                'username' => $username,
-                'password' => $password
-            ];
         }
     }
 }
@@ -93,9 +102,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_guard'])) {
 
     if (empty($staffId) || empty($fullName) || empty($username)) {
         $msg = "Staff ID, Full Name, and Username are required.";
-        $msgType = 'danger';
-    } elseif (empty($selectedSites)) {
-        $msg = "Please assign at least one authorized checkpoint site to this guard.";
         $msgType = 'danger';
     } else {
         // Check uniqueness for other guards
