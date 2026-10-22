@@ -29,13 +29,19 @@ if (!$selectedSiteId && !empty($sites)) {
 }
 
 $siteInfo = null;
+$allIncidents = [];
 $incidents = [];
+$totalConsolidatedCount = 0;
 $criticalCount = 0;
 $highCount = 0;
 $medCount = 0;
 $lowCount = 0;
 $dayCount = 0;
 $nightCount = 0;
+$perPage = 10;
+$page = 1;
+$totalPages = 1;
+$offset = 0;
 
 if ($selectedSiteId) {
     $stmtSite = $db->prepare("SELECT * FROM sites WHERE id = ? LIMIT 1");
@@ -50,9 +56,10 @@ if ($selectedSiteId) {
         ORDER BY i.incident_time ASC
     ");
     $stmtInc->execute([$selectedSiteId, $selectedDate]);
-    $incidents = $stmtInc->fetchAll();
+    $allIncidents = $stmtInc->fetchAll();
+    $totalConsolidatedCount = count($allIncidents);
 
-    foreach ($incidents as $inc) {
+    foreach ($allIncidents as $inc) {
         if ($inc['priority'] === 'Critical') $criticalCount++;
         elseif ($inc['priority'] === 'High') $highCount++;
         elseif ($inc['priority'] === 'Medium') $medCount++;
@@ -61,6 +68,12 @@ if ($selectedSiteId) {
         if (strtolower($inc['shift']) === 'day') $dayCount++;
         else $nightCount++;
     }
+
+    // Consolidated Incident Pagination (10 per page, buttons 1, 2, 3, 4, 5, 6...)
+    $totalPages = max(1, (int)ceil($totalConsolidatedCount / $perPage));
+    $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+    $offset = ($page - 1) * $perPage;
+    $incidents = array_slice($allIncidents, $offset, $perPage);
 }
 
 require_once __DIR__ . '/../includes/header.php';
@@ -105,7 +118,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
                     Client: <strong><?= htmlspecialchars($siteInfo['client_name'] ?: 'Corporate Client') ?></strong> &bull; 
                     Contact: <?= htmlspecialchars($siteInfo['client_contact'] ?: 'ops@' . strtolower($siteInfo['code']) . '.ae') ?> &bull; 
-                    Total Recorded Incidents: <strong style="color: <?= count($incidents) > 0 ? '#38bdf8' : '#34d399' ?>;"><?= count($incidents) ?></strong>
+                    Total Recorded Incidents: <strong style="color: <?= $totalConsolidatedCount > 0 ? '#38bdf8' : '#34d399' ?>;"><?= $totalConsolidatedCount ?></strong>
                     <?php if (!empty($siteInfo['latitude']) || !empty($siteInfo['longitude'])): ?>
                         &bull; <span style="color: #38bdf8; font-weight: 600;">📍 GPS: <?= htmlspecialchars($siteInfo['latitude'] ?? '') ?>, <?= htmlspecialchars($siteInfo['longitude'] ?? '') ?></span>
                     <?php endif; ?>
@@ -123,46 +136,62 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
-    <!-- Quick Stats Grid -->
+    <!-- Quick Stats Grid (Vibrant Colorful Metric Cards) -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; margin-bottom: 24px;">
-        <div class="card" style="padding: 14px; text-align: center; border-left: 3px solid #38bdf8;">
-            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 700;">Total Incidents</div>
-            <div style="font-size: 24px; font-weight: 900; margin-top: 2px;"><?= count($incidents) ?></div>
+        <!-- 1. TOTAL INCIDENTS (Vibrant Cyan / Sapphire Blue) -->
+        <div class="card" style="padding: 16px 12px; text-align: center; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important; border: 1.5px solid rgba(255,255,255,0.25) !important; border-radius: 12px; box-shadow: 0 8px 20px -3px rgba(2, 132, 199, 0.45); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #e0f2fe; font-weight: 800; letter-spacing: 0.5px;">Total Incidents</div>
+            <div style="font-size: 26px; font-weight: 900; margin-top: 4px; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.25);"><?= $totalConsolidatedCount ?></div>
         </div>
-        <div class="card" style="padding: 14px; text-align: center; border-left: 3px solid #f87171;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #f87171; font-weight: 700;">Critical</div>
-            <div style="font-size: 24px; font-weight: 900; margin-top: 2px; color: #f87171;"><?= $criticalCount ?></div>
+
+        <!-- 2. CRITICAL (Vibrant Crimson Red) -->
+        <div class="card" style="padding: 16px 12px; text-align: center; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important; border: 1.5px solid rgba(255,255,255,0.25) !important; border-radius: 12px; box-shadow: 0 8px 20px -3px rgba(239, 68, 68, 0.45); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #fee2e2; font-weight: 800; letter-spacing: 0.5px;">Critical</div>
+            <div style="font-size: 26px; font-weight: 900; margin-top: 4px; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.25);"><?= $criticalCount ?></div>
         </div>
-        <div class="card" style="padding: 14px; text-align: center; border-left: 3px solid #fb923c;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #fb923c; font-weight: 700;">High</div>
-            <div style="font-size: 24px; font-weight: 900; margin-top: 2px; color: #fb923c;"><?= $highCount ?></div>
+
+        <!-- 3. HIGH (Vibrant Deep Orange) -->
+        <div class="card" style="padding: 16px 12px; text-align: center; background: linear-gradient(135deg, #f97316 0%, #c2410c 100%) !important; border: 1.5px solid rgba(255,255,255,0.25) !important; border-radius: 12px; box-shadow: 0 8px 20px -3px rgba(249, 115, 22, 0.45); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #ffedd5; font-weight: 800; letter-spacing: 0.5px;">High</div>
+            <div style="font-size: 26px; font-weight: 900; margin-top: 4px; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.25);"><?= $highCount ?></div>
         </div>
-        <div class="card" style="padding: 14px; text-align: center; border-left: 3px solid #facc15;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #facc15; font-weight: 700;">Medium</div>
-            <div style="font-size: 24px; font-weight: 900; margin-top: 2px; color: #facc15;"><?= $medCount ?></div>
+
+        <!-- 4. MEDIUM (Vibrant Amber / Gold) -->
+        <div class="card" style="padding: 16px 12px; text-align: center; background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%) !important; border: 1.5px solid rgba(255,255,255,0.25) !important; border-radius: 12px; box-shadow: 0 8px 20px -3px rgba(245, 158, 11, 0.45); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #fef3c7; font-weight: 800; letter-spacing: 0.5px;">Medium</div>
+            <div style="font-size: 26px; font-weight: 900; margin-top: 4px; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.25);"><?= $medCount ?></div>
         </div>
-        <div class="card" style="padding: 14px; text-align: center; border-left: 3px solid #4ade80;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #4ade80; font-weight: 700;">Low</div>
-            <div style="font-size: 24px; font-weight: 900; margin-top: 2px; color: #4ade80;"><?= $lowCount ?></div>
+
+        <!-- 5. LOW (Vibrant Emerald Green) -->
+        <div class="card" style="padding: 16px 12px; text-align: center; background: linear-gradient(135deg, #10b981 0%, #047857 100%) !important; border: 1.5px solid rgba(255,255,255,0.25) !important; border-radius: 12px; box-shadow: 0 8px 20px -3px rgba(16, 185, 129, 0.45); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #d1fae5; font-weight: 800; letter-spacing: 0.5px;">Low</div>
+            <div style="font-size: 26px; font-weight: 900; margin-top: 4px; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.25);"><?= $lowCount ?></div>
         </div>
-        <div class="card" style="padding: 14px; text-align: center; border-left: 3px solid #94a3b8;">
-            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 700;">Day Shift</div>
-            <div style="font-size: 24px; font-weight: 900; margin-top: 2px;"><?= $dayCount ?></div>
+
+        <!-- 6. DAY SHIFT (Vibrant Sky Blue / Teal) -->
+        <div class="card" style="padding: 16px 12px; text-align: center; background: linear-gradient(135deg, #0284c7 0%, #0891b2 100%) !important; border: 1.5px solid rgba(255,255,255,0.25) !important; border-radius: 12px; box-shadow: 0 8px 20px -3px rgba(8, 145, 178, 0.45); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #e0f2fe; font-weight: 800; letter-spacing: 0.5px;">Day Shift</div>
+            <div style="font-size: 26px; font-weight: 900; margin-top: 4px; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.25);"><?= $dayCount ?></div>
         </div>
-        <div class="card" style="padding: 14px; text-align: center; border-left: 3px solid #818cf8;">
-            <div style="font-size: 11px; text-transform: uppercase; color: #818cf8; font-weight: 700;">Night Shift</div>
-            <div style="font-size: 24px; font-weight: 900; margin-top: 2px; color: #818cf8;"><?= $nightCount ?></div>
+
+        <!-- 7. NIGHT SHIFT (Vibrant Royal Indigo / Purple) -->
+        <div class="card" style="padding: 16px 12px; text-align: center; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%) !important; border: 1.5px solid rgba(255,255,255,0.25) !important; border-radius: 12px; box-shadow: 0 8px 20px -3px rgba(99, 102, 241, 0.45); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #e0e7ff; font-weight: 800; letter-spacing: 0.5px;">Night Shift</div>
+            <div style="font-size: 26px; font-weight: 900; margin-top: 4px; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.25);"><?= $nightCount ?></div>
         </div>
     </div>
 
     <!-- Table of Incidents on that Date -->
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
             <h3 style="font-size: 16px; font-weight: 800;">
                 Consolidated Incidents for <?= date('d-M-Y', strtotime($selectedDate)) ?>
             </h3>
             <span style="font-size: 12.5px; color: var(--text-muted);">
-                Showing all <strong><?= count($incidents) ?></strong> logged incident<?= count($incidents) !== 1 ? 's' : '' ?>
+                Showing <strong><?= count($incidents) ?></strong> of <strong><?= $totalConsolidatedCount ?></strong> logged incident<?= $totalConsolidatedCount !== 1 ? 's' : '' ?>
+                <?php if ($totalPages > 1): ?>
+                    &bull; <span style="color: #fbbf24; font-weight: 700;">Page <?= $page ?> of <?= $totalPages ?></span>
+                <?php endif; ?>
             </span>
         </div>
 
@@ -186,17 +215,27 @@ require_once __DIR__ . '/../includes/header.php';
                         <tr>
                             <td colspan="9" style="text-align: center; padding: 45px 20px;">
                                 <div style="font-size: 28px; margin-bottom: 8px;">🛡️</div>
-                                <div style="font-size: 15px; font-weight: 800; color: #34d399; margin-bottom: 4px;">
-                                    NIL INCIDENTS LOGGED &bull; ALL PATROLS CLEAR
-                                </div>
-                                <div style="font-size: 13px; color: var(--text-dim); max-width: 500px; margin: 0 auto;">
-                                    No security incidents or disciplinary infractions were logged for <strong><?= htmlspecialchars($siteInfo['name']) ?></strong> on <strong><?= format_date($selectedDate) ?></strong>.
-                                </div>
-                                <div style="margin-top: 14px;">
-                                    <a href="<?= APP_URL ?>/admin/report_site_daily_incident_pdf.php?site_id=<?= $siteInfo['id'] ?>&date=<?= $selectedDate ?>" target="_blank" class="btn btn-secondary btn-sm">
-                                        📄 Print NIL Incidents Certificate (PDF)
-                                    </a>
-                                </div>
+                                <?php if ($totalConsolidatedCount === 0): ?>
+                                    <div style="font-size: 15px; font-weight: 800; color: #34d399; margin-bottom: 4px;">
+                                        NIL INCIDENTS LOGGED &bull; ALL PATROLS CLEAR
+                                    </div>
+                                    <div style="font-size: 13px; color: var(--text-dim); max-width: 500px; margin: 0 auto;">
+                                        No security incidents or disciplinary infractions were logged for <strong><?= htmlspecialchars($siteInfo['name']) ?></strong> on <strong><?= format_date($selectedDate) ?></strong>.
+                                    </div>
+                                    <div style="margin-top: 14px;">
+                                        <a href="<?= APP_URL ?>/admin/report_site_daily_incident_pdf.php?site_id=<?= $siteInfo['id'] ?>&date=<?= $selectedDate ?>" target="_blank" class="btn btn-secondary btn-sm">
+                                            📄 Print NIL Incidents Certificate (PDF)
+                                        </a>
+                                    </div>
+                                <?php else: ?>
+                                    <div style="font-size: 15px; font-weight: 800; color: #fbbf24; margin-bottom: 4px;">
+                                        NO INCIDENTS ON PAGE <?= $page ?>
+                                    </div>
+                                    <div style="font-size: 13px; color: var(--text-dim); margin-top: 8px;">
+                                        There are <?= $totalConsolidatedCount ?> total incidents logged for this date.
+                                        <a href="?site_id=<?= urlencode($siteInfo['id']) ?>&date=<?= urlencode($selectedDate) ?>&page=1" class="btn btn-primary btn-sm" style="margin-left: 6px;">Go to Page 1</a>
+                                    </div>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php else: ?>
@@ -245,6 +284,56 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Pagination for Consolidated Incidents: Pages 1, 2, 3, 4, 5, 6... -->
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+            <div style="font-size: 13px; color: var(--text-muted);">
+                Showing <strong style="color: #fff;"><?= $totalConsolidatedCount > 0 ? ($offset + 1) : 0 ?></strong>–<strong style="color: #fff;"><?= min($totalConsolidatedCount, $offset + count($incidents)) ?></strong> of <strong style="color: #fff;"><?= number_format($totalConsolidatedCount) ?></strong> consolidated incident<?= $totalConsolidatedCount !== 1 ? 's' : '' ?>
+                <?php if ($totalPages > 1): ?>
+                    <span style="color: #fbbf24; font-weight: 700; margin-left: 6px;">(Page <?= $page ?> of <?= $totalPages ?>)</span>
+                <?php endif; ?>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <?php
+                $paginationParams = $_GET;
+                $buildConsolidatedUrl = function($p) use ($paginationParams) {
+                    $paginationParams['page'] = $p;
+                    return '?' . http_build_query($paginationParams);
+                };
+                $displayPages = max(6, $totalPages);
+                ?>
+
+                <!-- First / Prev -->
+                <?php if ($page > 1): ?>
+                    <a href="<?= htmlspecialchars($buildConsolidatedUrl(1)) ?>" class="btn btn-secondary btn-sm" title="First Page" style="font-weight: 700;">&laquo;</a>
+                    <a href="<?= htmlspecialchars($buildConsolidatedUrl($page - 1)) ?>" class="btn btn-secondary btn-sm" title="Previous Page" style="font-weight: 700;">&lsaquo; Prev</a>
+                <?php else: ?>
+                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&laquo;</span>
+                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&lsaquo; Prev</span>
+                <?php endif; ?>
+
+                <!-- Numbered Pages 1, 2, 3, 4, 5, 6... -->
+                <?php for ($p = 1; $p <= $displayPages; $p++): ?>
+                    <?php if ($p <= $totalPages || $p <= 6): ?>
+                        <a href="<?= htmlspecialchars($buildConsolidatedUrl($p)) ?>" 
+                           class="btn <?= $p === $page ? 'btn-primary' : 'btn-secondary' ?> btn-sm" 
+                           style="min-width: 34px; text-align: center; font-weight: <?= $p === $page ? '800' : '600' ?>; <?= $p === $page ? 'background: #081426 !important; color: #fbbf24 !important; border: 1.5px solid #fbbf24 !important;' : '' ?>">
+                            <?= $p ?>
+                        </a>
+                    <?php endif; ?>
+                <?php endfor; ?>
+
+                <!-- Next / Last -->
+                <?php if ($page < $totalPages): ?>
+                    <a href="<?= htmlspecialchars($buildConsolidatedUrl($page + 1)) ?>" class="btn btn-secondary btn-sm" title="Next Page" style="font-weight: 700;">Next &rsaquo;</a>
+                    <a href="<?= htmlspecialchars($buildConsolidatedUrl($totalPages)) ?>" class="btn btn-secondary btn-sm" title="Last Page" style="font-weight: 700;">&raquo;</a>
+                <?php else: ?>
+                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">Next &rsaquo;</span>
+                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&raquo;</span>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 <?php endif; ?>
