@@ -107,6 +107,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_management']))
     $msg = "Management sign-off and report status updated successfully.";
 }
 
+// Handle Updating Photo Caption (Image by Image in Dashboard)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_photo_caption'])) {
+    $photoId = (int)($_POST['photo_id'] ?? 0);
+    $newCaption = trim($_POST['caption'] ?? '');
+    if ($photoId > 0) {
+        $stmtCap = $db->prepare("UPDATE incident_photos SET caption = ? WHERE id = ? AND incident_id = ?");
+        $stmtCap->execute([$newCaption, $photoId, $id]);
+        log_audit('UPDATE_PHOTO_CAPTION', 'INCIDENT_PHOTO', $photoId, ['caption' => $newCaption]);
+        
+        if (!empty($_POST['ajax'])) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'photo_id' => $photoId, 'caption' => $newCaption]);
+            exit;
+        }
+        $msg = "Photo caption updated successfully.";
+    }
+}
+
 // Handle Adding Internal Note
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_note'])) {
     $noteText = trim($_POST['note_text'] ?? '');
@@ -321,28 +339,62 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php if (empty($photos)): ?>
                     <p style="font-size: 13px; color: var(--text-dim); font-style: italic;">No photographic evidence was attached to this report.</p>
                 <?php else: ?>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;">
                         <?php foreach ($photos as $p): ?>
-                            <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden;">
-                                <a href="<?= APP_URL ?>/<?= htmlspecialchars($p['file_path']) ?>" target="_blank">
-                                    <img src="<?= APP_URL ?>/<?= htmlspecialchars($p['file_path']) ?>" alt="Evidence Photo" style="width: 100%; height: 160px; object-fit: cover; display: block; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                                </a>
-                                <div style="padding: 10px; font-size: 11.5px; color: var(--text-muted);">
-                                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;" title="<?= htmlspecialchars($p['original_filename']) ?>">
-                                        📷 <?= htmlspecialchars($p['original_filename']) ?>
-                                    </div>
-                                    <?php 
-                                        $pLat = !empty($p['latitude']) ? $p['latitude'] : ($incident['site_latitude'] ?? '');
-                                        $pLng = !empty($p['longitude']) ? $p['longitude'] : ($incident['site_longitude'] ?? '');
-                                        if (!empty($pLat) || !empty($pLng)):
-                                    ?>
-                                        <div style="color: #38bdf8; font-size: 11px; margin-top: 3px; font-weight: 600;">
-                                            📍 <?= htmlspecialchars($pLat) ?>, <?= htmlspecialchars($pLng) ?>
+                            <?php 
+                                $photoViewUrl = APP_URL . '/admin/serve_file.php?photo_id=' . (int)$p['id'];
+                            ?>
+                            <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <a href="<?= $photoViewUrl ?>" target="_blank" title="Click to view full high-res photo">
+                                        <img src="<?= $photoViewUrl ?>" alt="Evidence Photo" style="width: 100%; height: 165px; object-fit: cover; display: block; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'" onerror="this.onerror=null; this.src='<?= APP_URL ?>/<?= htmlspecialchars($p['file_path']) ?>';">
+                                    </a>
+                                    <div style="padding: 10px 10px 4px 10px; font-size: 11.5px; color: var(--text-muted);">
+                                        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: #fff;" title="<?= htmlspecialchars($p['original_filename']) ?>">
+                                            📷 <?= htmlspecialchars($p['original_filename']) ?>
                                         </div>
-                                    <?php endif; ?>
-                                    <div style="color: var(--text-dim); font-size: 10.5px; margin-top: 2px;">
-                                        <?= round($p['file_size'] / 1024) ?> KB &bull; <?= format_datetime($p['created_at']) ?>
+                                        <?php 
+                                            $pLat = !empty($p['latitude']) ? $p['latitude'] : ($incident['site_latitude'] ?? '');
+                                            $pLng = !empty($p['longitude']) ? $p['longitude'] : ($incident['site_longitude'] ?? '');
+                                            if (!empty($pLat) || !empty($pLng)):
+                                        ?>
+                                            <div style="color: #38bdf8; font-size: 11px; margin-top: 3px; font-weight: 600;">
+                                                📍 <?= htmlspecialchars($pLat) ?>, <?= htmlspecialchars($pLng) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div style="color: var(--text-dim); font-size: 10.5px; margin-top: 2px;">
+                                            <?= round($p['file_size'] / 1024) ?> KB &bull; <?= format_datetime($p['created_at']) ?>
+                                        </div>
                                     </div>
+                                </div>
+
+                                <!-- Edit Caption Feature Image by Image in Dashboard -->
+                                <div style="padding: 8px 10px 10px 10px; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.08);">
+                                    <form method="POST" action="" onsubmit="savePhotoCaptionAjax(event, this);" style="margin: 0;">
+                                        <input type="hidden" name="update_photo_caption" value="1">
+                                        <input type="hidden" name="photo_id" value="<?= (int)$p['id'] ?>">
+                                        <label style="font-size: 10.5px; text-transform: uppercase; color: #fbbf24; font-weight: 800; display: block; margin-bottom: 4px; letter-spacing: 0.5px;">
+                                            🏷️ Edit Photo Caption
+                                        </label>
+                                        <div style="display: flex; gap: 4px; align-items: center;">
+                                            <input type="text" name="caption" class="form-control" 
+                                                   value="<?= htmlspecialchars($p['caption'] ?? '') ?>" 
+                                                   placeholder="Enter photo caption..." 
+                                                   style="font-size: 12px; padding: 4px 8px; height: 32px; font-weight: 600; flex: 1; color: #000 !important; background: #fff !important; border: 1.5px solid #0f172a !important;">
+                                            <button type="submit" class="btn btn-primary btn-sm" 
+                                                    style="font-size: 11.5px; padding: 4px 10px; height: 32px; white-space: nowrap; font-weight: 700;">
+                                                💾 Save
+                                            </button>
+                                        </div>
+                                        <div class="caption-status" style="display: none; font-size: 11px; color: #10b981; font-weight: 800; margin-top: 3px;">
+                                            ✓ Caption Saved!
+                                        </div>
+                                        <?php if (!empty($p['caption'])): ?>
+                                            <div class="caption-preview" style="font-size: 11px; color: #fbbf24; font-weight: 700; margin-top: 4px; line-height: 1.3;">
+                                                Current: <?= htmlspecialchars($p['caption']) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </form>
                                 </div>
                             </div>
                         <?php endforeach; ?>

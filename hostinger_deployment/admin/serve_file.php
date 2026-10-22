@@ -41,11 +41,29 @@ if (empty($fileRel)) {
 $fileRel = str_replace(['..', "\0"], '', $fileRel);
 $fileRel = ltrim($fileRel, '/\\');
 
-$fullPath = ROOT_PATH . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $fileRel);
-$realTarget = realpath($fullPath);
-$realRoot = realpath(ROOT_PATH);
+$cleanNorm = str_replace('\\', '/', $fileRel);
+$candidates = [
+    ROOT_PATH . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $fileRel),
+    ROOT_PATH . '/' . ltrim($cleanNorm, '/'),
+    ROOT_PATH . '/storage/private/' . ltrim(preg_replace('#^storage/private/#i', '', $cleanNorm), '/'),
+    ROOT_PATH . '/uploads/' . ltrim(preg_replace('#^uploads/#i', '', $cleanNorm), '/'),
+    ROOT_PATH . '/storage/private/photos/' . basename($cleanNorm),
+    ROOT_PATH . '/uploads/photos/' . basename($cleanNorm),
+];
 
-if (!$realTarget || strpos($realTarget, $realRoot) !== 0 || !file_exists($realTarget)) {
+$realTarget = false;
+foreach ($candidates as $cand) {
+    if (file_exists($cand)) {
+        $rp = realpath($cand);
+        if ($rp && file_exists($rp)) {
+            $realTarget = $rp;
+            break;
+        }
+    }
+}
+
+$realRoot = realpath(ROOT_PATH);
+if (!$realTarget || !file_exists($realTarget)) {
     http_response_code(404);
     die("File not found in secure storage.");
 }
