@@ -1106,7 +1106,11 @@ $companyDisplayName = !empty($settings['company_name'])
                 <div style="border: 2px solid #000; padding: 5px; background: #fff; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; height: 76mm; overflow: hidden;">
                     <!-- Photo Frame with perfect edge-to-edge fit -->
                     <div style="width: 100%; height: 53mm; overflow: hidden; background: #0f172a; border: 1.5px solid #000; display: flex; align-items: center; justify-content: center;">
-                        <img src="<?= $photoSrc ?>" alt="Evidence <?= $globalIdx + 1 ?>" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block;" onerror="if(this.src.indexOf('serve_file.php')===-1 && <?= (int)$p['id'] ?> > 0){ this.src='<?= APP_URL ?>/admin/serve_file.php?photo_id=<?= (int)$p['id'] ?>'; }">
+                        <img src="<?= $photoSrc ?>" alt="Evidence <?= $globalIdx + 1 ?>" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block;" onerror="if(this.src.indexOf('serve_file.php')===-1 && <?= (int)$p['id'] ?> > 0){ this.src='<?= APP_URL ?>/admin/serve_file.php?photo_id=<?= (int)$p['id'] ?>'; } else { this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex'; }">
+                        <div style="display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fca5a5; font-weight: 800; font-size: 9pt; padding: 8px; line-height: 1.4;">
+                            &#9888; Photo file not found on server<br>
+                            <span style="color: #cbd5e1; font-weight: normal; font-size: 7.5pt; word-break: break-all;"><?= htmlspecialchars(basename(str_replace('\\', '/', (string)$p['file_path']))) ?></span>
+                        </div>
                     </div>
                     <!-- Evidence Details -->
                     <div style="margin-top: 4px; font-size: 8.5pt; line-height: 1.4;">
