@@ -204,6 +204,52 @@ require_once __DIR__ . '/../includes/header.php';
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination for Dashboard Incidents: Pages 1, 2, 3, 4, 5, 6... -->
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div style="font-size: 13px; color: var(--text-muted);">
+            Showing <strong style="color: #fff;"><?= $totalIncidentsCount > 0 ? ($offset + 1) : 0 ?></strong>–<strong style="color: #fff;"><?= min($totalIncidentsCount, $offset + count($recentIncidents)) ?></strong> of <strong style="color: #fff;"><?= number_format($totalIncidentsCount) ?></strong> incident reports
+            <?php if ($totalPages > 1): ?>
+                <span style="color: #fbbf24; font-weight: 700; margin-left: 6px;">(Page <?= $page ?> of <?= $totalPages ?>)</span>
+            <?php endif; ?>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <?php
+            $dashParams = $_GET;
+            $buildDashUrl = function($p) use ($dashParams) {
+                $dashParams['page'] = $p;
+                return '?' . http_build_query($dashParams);
+            };
+            $displayPages = max(6, $totalPages);
+            ?>
+
+            <!-- Previous Button -->
+            <?php if ($page > 1): ?>
+                <a href="<?= htmlspecialchars($buildDashUrl($page - 1)) ?>" class="btn btn-secondary btn-sm" title="Previous Page" style="font-weight: 700;">&lsaquo; Prev</a>
+            <?php else: ?>
+                <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&lsaquo; Prev</span>
+            <?php endif; ?>
+
+            <!-- Numbered Page Buttons 1, 2, 3, 4, 5, 6... -->
+            <?php for ($p = 1; $p <= $displayPages; $p++): ?>
+                <?php if ($p <= $totalPages || $p <= 6): ?>
+                    <a href="<?= htmlspecialchars($buildDashUrl($p)) ?>" 
+                       class="btn <?= $p === $page ? 'btn-primary' : 'btn-secondary' ?> btn-sm" 
+                       style="min-width: 34px; text-align: center; font-weight: <?= $p === $page ? '800' : '600' ?>; <?= $p === $page ? 'background: #081426 !important; color: #fbbf24 !important; border: 1.5px solid #fbbf24 !important;' : '' ?>">
+                        <?= $p ?>
+                    </a>
+                <?php endif; ?>
+            <?php endfor; ?>
+
+            <!-- Next Button -->
+            <?php if ($page < $totalPages): ?>
+                <a href="<?= htmlspecialchars($buildDashUrl($page + 1)) ?>" class="btn btn-secondary btn-sm" title="Next Page" style="font-weight: 700;">Next &rsaquo;</a>
+            <?php else: ?>
+                <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">Next &rsaquo;</span>
+            <?php endif; ?>
+        </div>
+    </div>
 </div>
 
 <!-- Floating Real-Time Incident Toast Notification -->

@@ -363,69 +363,63 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
 
-    <?php if ($totalPages > 1 || $totalIncidents > 25): ?>
-        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
-            <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted);">
-                <span>Rows per page:</span>
-                <select onchange="window.location.href=this.value" class="form-control" style="width: auto; padding: 4px 10px; font-size: 13px;">
-                    <?php 
-                    $currParams = $_GET;
-                    foreach ([25, 50, 100, 250] as $opt): 
-                        $currParams['per_page'] = $opt;
-                        $currParams['page'] = 1;
-                        $url = '?' . http_build_query($currParams);
-                    ?>
-                        <option value="<?= htmlspecialchars($url) ?>" <?= $perPage == $opt ? 'selected' : '' ?>><?= $opt ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                <?php
-                $paginationParams = $_GET;
-                $buildPageUrl = function($p) use ($paginationParams) {
-                    $paginationParams['page'] = $p;
-                    return '?' . http_build_query($paginationParams);
-                };
+    <!-- Incident Reports Area Pagination: Pages 1, 2, 3, 4, 5, 6... -->
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted);">
+            <span>Rows per page:</span>
+            <select onchange="window.location.href=this.value" class="form-control" style="width: auto; padding: 4px 10px; font-size: 13px;">
+                <?php 
+                $currParams = $_GET;
+                foreach ([10, 25, 50, 100, 250] as $opt): 
+                    $currParams['per_page'] = $opt;
+                    $currParams['page'] = 1;
+                    $url = '?' . http_build_query($currParams);
                 ?>
+                    <option value="<?= htmlspecialchars($url) ?>" <?= $perPage == $opt ? 'selected' : '' ?>><?= $opt ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
 
-                <!-- First / Prev -->
-                <?php if ($page > 1): ?>
-                    <a href="<?= htmlspecialchars($buildPageUrl(1)) ?>" class="btn btn-secondary btn-sm" title="First Page">&laquo;</a>
-                    <a href="<?= htmlspecialchars($buildPageUrl($page - 1)) ?>" class="btn btn-secondary btn-sm" title="Previous Page">&lsaquo;</a>
-                <?php else: ?>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&laquo;</span>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&lsaquo;</span>
-                <?php endif; ?>
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <?php
+            $paginationParams = $_GET;
+            $buildPageUrl = function($p) use ($paginationParams) {
+                $paginationParams['page'] = $p;
+                return '?' . http_build_query($paginationParams);
+            };
+            $displayPages = max(6, $totalPages);
+            ?>
 
-                <!-- Window of numbered pages -->
-                <?php
-                $startPage = max(1, $page - 2);
-                $endPage = min($totalPages, $page + 2);
-                if ($startPage > 1) {
-                    echo '<span style="padding: 0 4px; color: var(--text-dim);">...</span>';
-                }
-                for ($p = $startPage; $p <= $endPage; $p++):
-                ?>
-                    <a href="<?= htmlspecialchars($buildPageUrl($p)) ?>" class="btn <?= $p === $page ? 'btn-primary' : 'btn-secondary' ?> btn-sm" style="min-width: 32px; text-align: center;">
+            <!-- First / Prev -->
+            <?php if ($page > 1): ?>
+                <a href="<?= htmlspecialchars($buildPageUrl(1)) ?>" class="btn btn-secondary btn-sm" title="First Page">&laquo;</a>
+                <a href="<?= htmlspecialchars($buildPageUrl($page - 1)) ?>" class="btn btn-secondary btn-sm" title="Previous Page">&lsaquo;</a>
+            <?php else: ?>
+                <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&laquo;</span>
+                <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&lsaquo;</span>
+            <?php endif; ?>
+
+            <!-- Numbered Pages 1, 2, 3, 4, 5, 6... -->
+            <?php for ($p = 1; $p <= $displayPages; $p++): ?>
+                <?php if ($p <= $totalPages || $p <= 6): ?>
+                    <a href="<?= htmlspecialchars($buildPageUrl($p)) ?>" 
+                       class="btn <?= $p === $page ? 'btn-primary' : 'btn-secondary' ?> btn-sm" 
+                       style="min-width: 34px; text-align: center; font-weight: <?= $p === $page ? '800' : '600' ?>; <?= $p === $page ? 'background: #081426 !important; color: #fbbf24 !important; border: 1.5px solid #fbbf24 !important;' : '' ?>">
                         <?= $p ?>
                     </a>
-                <?php endfor; ?>
-                <?php if ($endPage < $totalPages): ?>
-                    <span style="padding: 0 4px; color: var(--text-dim);">...</span>
                 <?php endif; ?>
+            <?php endfor; ?>
 
-                <!-- Next / Last -->
-                <?php if ($page < $totalPages): ?>
-                    <a href="<?= htmlspecialchars($buildPageUrl($page + 1)) ?>" class="btn btn-secondary btn-sm" title="Next Page">&rsaquo;</a>
-                    <a href="<?= htmlspecialchars($buildPageUrl($totalPages)) ?>" class="btn btn-secondary btn-sm" title="Last Page">&raquo;</a>
-                <?php else: ?>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&rsaquo;</span>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&raquo;</span>
-                <?php endif; ?>
-            </div>
+            <!-- Next / Last -->
+            <?php if ($page < $totalPages): ?>
+                <a href="<?= htmlspecialchars($buildPageUrl($page + 1)) ?>" class="btn btn-secondary btn-sm" title="Next Page">&rsaquo;</a>
+                <a href="<?= htmlspecialchars($buildPageUrl($totalPages)) ?>" class="btn btn-secondary btn-sm" title="Last Page">&raquo;</a>
+            <?php else: ?>
+                <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&rsaquo;</span>
+                <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&raquo;</span>
+            <?php endif; ?>
         </div>
-    <?php endif; ?>
+    </div>
 </div>
 
 <!-- Floating Real-Time Incident Toast Notification -->
