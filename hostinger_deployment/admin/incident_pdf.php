@@ -645,7 +645,14 @@ $companyDisplayName = !empty($settings['company_name'])
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
                         <td style="width: 32%; padding: 2.5px 0;" class="meta-label">Site Name :</td>
-                        <td style="width: 68%; padding: 2.5px 0;" class="meta-value"><?= htmlspecialchars($incident['site_name']) ?></td>
+                          <td style="width: 68%; padding: 2.5px 0;" class="meta-value">
+                              <?= htmlspecialchars($incident['site_name']) ?>
+                              <?php if (!empty($incident['site_latitude']) || !empty($incident['site_longitude'])): ?>
+                                  <span style="font-size: 8pt; font-weight: normal; color: #475569; margin-left: 4px;">
+                                      (GPS: <?= htmlspecialchars($incident['site_latitude'] ?? '') ?>, <?= htmlspecialchars($incident['site_longitude'] ?? '') ?>)
+                                  </span>
+                              <?php endif; ?>
+                          </td>
                     </tr>
                     <tr>
                         <td style="padding: 2.5px 0;" class="meta-label">Person Reporting :</td>
@@ -878,6 +885,11 @@ $companyDisplayName = !empty($settings['company_name'])
                     <div style="margin-top: 4px; font-size: 8.5pt; line-height: 1.4;">
                         <div style="font-weight: bold; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                             Photo #<?= $globalIdx + 1 ?>: Lat: <?= $latStr ?>, Long: <?= $lngStr ?>
+                          <?php if (!empty($p['original_filename'])): ?>
+                              <div style="font-size: 7.5pt; color: #0f172a; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px;" title="<?= htmlspecialchars($p['original_filename']) ?>">
+                                  File: <?= htmlspecialchars($p['original_filename']) ?>
+                              </div>
+                          <?php endif; ?>
                         </div>
                         <div style="font-weight: bold; color: #b91c1c; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                             Caption: <?= htmlspecialchars($p['caption'] ?: 'Site inspection photographic evidence') ?>

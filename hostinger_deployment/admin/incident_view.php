@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_note'])) {
 
 // Fetch Incident Record
 $stmt = $db->prepare("
-    SELECT i.*, s.client_name, s.client_contact 
+    SELECT i.*, s.client_name, s.client_contact, s.latitude as site_latitude, s.longitude as site_longitude, s.code as site_official_code
     FROM incidents i 
     LEFT JOIN sites s ON s.id = i.site_id 
     WHERE i.id = ? 
@@ -194,6 +194,11 @@ require_once __DIR__ . '/../includes/header.php';
                     <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Patrol Site</div>
                     <strong style="font-size: 14px;"><?= htmlspecialchars($incident['site_name']) ?></strong>
                     <div style="font-size: 11px; color: var(--accent-cyan); font-family: monospace;"><?= htmlspecialchars($incident['site_code']) ?></div>
+                    <?php if (!empty($incident['site_latitude']) || !empty($incident['site_longitude'])): ?>
+                        <div style="font-size: 11px; color: #38bdf8; font-weight: 600; margin-top: 3px;">
+                            📍 GPS: <?= htmlspecialchars($incident['site_latitude'] ?? '') ?>, <?= htmlspecialchars($incident['site_longitude'] ?? '') ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div>
@@ -288,9 +293,18 @@ require_once __DIR__ . '/../includes/header.php';
                                     <img src="<?= APP_URL ?>/<?= htmlspecialchars($p['file_path']) ?>" alt="Evidence Photo" style="width: 100%; height: 160px; object-fit: cover; display: block; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
                                 </a>
                                 <div style="padding: 10px; font-size: 11.5px; color: var(--text-muted);">
-                                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;">
-                                        <?= htmlspecialchars($p['original_filename']) ?>
+                                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;" title="<?= htmlspecialchars($p['original_filename']) ?>">
+                                        📷 <?= htmlspecialchars($p['original_filename']) ?>
                                     </div>
+                                    <?php 
+                                        $pLat = !empty($p['latitude']) ? $p['latitude'] : ($incident['site_latitude'] ?? '');
+                                        $pLng = !empty($p['longitude']) ? $p['longitude'] : ($incident['site_longitude'] ?? '');
+                                        if (!empty($pLat) || !empty($pLng)):
+                                    ?>
+                                        <div style="color: #38bdf8; font-size: 11px; margin-top: 3px; font-weight: 600;">
+                                            📍 <?= htmlspecialchars($pLat) ?>, <?= htmlspecialchars($pLng) ?>
+                                        </div>
+                                    <?php endif; ?>
                                     <div style="color: var(--text-dim); font-size: 10.5px; margin-top: 2px;">
                                         <?= round($p['file_size'] / 1024) ?> KB &bull; <?= format_datetime($p['created_at']) ?>
                                     </div>

@@ -297,13 +297,20 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
                                         📑 Report
                                     </a>
                                     <?php 
-                                        $siteToken = !empty($s['token_encrypted']) ? decrypt_field($s['token_encrypted']) : $s['active_qr_token'];
+                                        $siteToken = !empty($s['active_qr_token']) ? $s['active_qr_token'] : '';
+                                        if (empty($siteToken)) {
+                                            $cleanC = preg_replace('/[^a-z0-9]/', '', strtolower($s['code'] ?: 'site'));
+                                            $siteToken = 'uss_qr_' . ($cleanC ?: 'site') . '_' . bin2hex(random_bytes(10));
+                                            $db->prepare("UPDATE sites SET active_qr_token = ? WHERE id = ?")->execute([$siteToken, $s['id']]);
+                                        }
                                         $siteGuardUrl = APP_URL . '/g/index.php?token=' . urlencode($siteToken);
                                     ?>
                                     <button type="button" class="btn btn-sm" style="background: #0284c7; color: #fff; font-weight: 700;" onclick='openQuickQrModal(<?= json_encode([
                                         "id" => $s["id"],
                                         "name" => $s["name"],
                                         "code" => $s["code"],
+                                        "latitude" => $s["latitude"] ?? "",
+                                        "longitude" => $s["longitude"] ?? "",
                                         "url" => $siteGuardUrl
                                     ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' title="View & Download Site QR Code">
                                         📱 QR Code
@@ -539,7 +546,8 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
             <img id="modalQrImg" src="" alt="Site QR Code" width="230" height="230" style="display: block; border-radius: 6px; margin: 0 auto;" crossOrigin="anonymous">
         </div>
         
-        <div id="modalQrCodeBadge" style="font-family: monospace; font-weight: 800; font-size: 13.5px; color: #38bdf8; margin-bottom: 14px; background: rgba(56, 189, 248, 0.1); padding: 4px 12px; border-radius: 6px; display: inline-block;"></div>
+        <div id="modalQrCodeBadge" style="font-family: monospace; font-weight: 800; font-size: 13.5px; color: #38bdf8; margin-bottom: 8px; background: rgba(56, 189, 248, 0.1); padding: 4px 12px; border-radius: 6px; display: inline-block;"></div>
+        <div id="modalQrGpsBadge" style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 12px; display: none;"></div>
         
         <div style="margin-bottom: 16px; text-align: left;">
             <label style="display: block; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 6px;">Direct Guard Patrol Link</label>
@@ -570,6 +578,13 @@ function openQuickQrModal(data) {
     currentModalQr = data;
     document.getElementById('modalQrTitle').textContent = data.name;
     document.getElementById('modalQrCodeBadge').textContent = 'SITE CODE: ' + data.code;
+    const gpsEl = document.getElementById('modalQrGpsBadge');
+    if (data.latitude || data.longitude) {
+        gpsEl.style.display = 'block';
+        gpsEl.textContent = '📍 GPS: ' + (data.latitude || 'N/A') + ' | ' + (data.longitude || 'N/A');
+    } else {
+        gpsEl.style.display = 'none';
+    }
     document.getElementById('modalQrUrl').value = data.url;
     document.getElementById('modalQrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=' + encodeURIComponent(data.url);
     document.getElementById('modalPrintPosterLink').href = '<?= APP_URL ?>/admin/qr_poster.php?id=' + data.id;

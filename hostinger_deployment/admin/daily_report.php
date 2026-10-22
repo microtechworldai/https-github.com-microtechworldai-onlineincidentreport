@@ -106,6 +106,9 @@ require_once __DIR__ . '/../includes/header.php';
                     Client: <strong><?= htmlspecialchars($siteInfo['client_name'] ?: 'Corporate Client') ?></strong> &bull; 
                     Contact: <?= htmlspecialchars($siteInfo['client_contact'] ?: 'ops@' . strtolower($siteInfo['code']) . '.ae') ?> &bull; 
                     Total Recorded Incidents: <strong style="color: <?= count($incidents) > 0 ? '#38bdf8' : '#34d399' ?>;"><?= count($incidents) ?></strong>
+                    <?php if (!empty($siteInfo['latitude']) || !empty($siteInfo['longitude'])): ?>
+                        &bull; <span style="color: #38bdf8; font-weight: 600;">📍 GPS: <?= htmlspecialchars($siteInfo['latitude'] ?? '') ?>, <?= htmlspecialchars($siteInfo['longitude'] ?? '') ?></span>
+                    <?php endif; ?>
                 </p>
             </div>
 

@@ -365,16 +365,58 @@ function render_status_badge($status) {
 /**
  * Image processing & compression for patrol photos
  */
-function process_and_save_photo($tmpName, $originalName) {
+function process_and_save_photo($tmpName, $originalName, $customPrefix = null, $photoIndex = 0) {
     if (!file_exists($tmpName) || !is_uploaded_file($tmpName)) {
         return false;
     }
 
-    $uploadDir = defined('PHOTOS_PRIVATE_PATH') ? PHOTOS_PRIVATE_PATH : (UPLOADS_PATH . '/photos/');
+    $uploadDir = defined('PHOTOS_PRIVATE_PATH') ? PHOTOS_PRIVATE_PATH : (defined('UPLOADS_PATH') ? (UPLOADS_PATH . '/photos/') : (__DIR__ . '/../uploads/photos/'));
     $fileExt = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
     if (!in_array($fileExt, ['jpg', 'jpeg', 'png', 'webp'])) {
         $fileExt = 'jpg';
     }
+
+    // Determine actual photo capture date & time from mobile camera or gallery EXIF
+    $actualDateTime = null;
+    if (function_exists('exif_read_data')) {
+        try {
+            $exif = @exif_read_data($tmpName);
+            if (!empty($exif['DateTimeOriginal'])) {
+                $dt = DateTime::createFromFormat('Y:m:d H:i:s', trim($exif['DateTimeOriginal']));
+                if ($dt) {
+                    $actualDateTime = $dt->format('Y-m-d_H-i-s');
+                }
+            } elseif (!empty($exif['DateTimeDigitized'])) {
+                $dt = DateTime::createFromFormat('Y:m:d H:i:s', trim($exif['DateTimeDigitized']));
+                if ($dt) {
+                    $actualDateTime = $dt->format('Y-m-d_H-i-s');
+                }
+            } elseif (!empty($exif['DateTime'])) {
+                $dt = DateTime::createFromFormat('Y:m:d H:i:s', trim($exif['DateTime']));
+                if ($dt) {
+                    $actualDateTime = $dt->format('Y-m-d_H-i-s');
+                }
+            }
+        } catch (Throwable $e) {}
+    }
+    if (empty($actualDateTime)) {
+        // Fallback to current UAE date & time
+        $actualDateTime = date('Y-m-d_H-i-s');
+    }
+
+    // Sanitize site name prefix for filesystem safety
+    $prefix = 'Site';
+    if (!empty($customPrefix)) {
+        $prefix = preg_replace('/[^a-zA-Z0-9_-]/', '_', trim($customPrefix));
+        $prefix = preg_replace('/_+/', '_', $prefix);
+        $prefix = trim($prefix, '_');
+        if (empty($prefix)) {
+            $prefix = 'Site';
+        }
+    }
+
+    $idxSuffix = ($photoIndex > 0) ? ('_' . ($photoIndex + 1)) : ('_1');
+    $filename = $prefix . '_' . $actualDateTime . $idxSuffix . '.' . $fileExt;
 
     // Hierarchical Date Sharding for 500,000+ files: /storage/private/photos/YYYY/MM/
     $subDir = date('Y') . DIRECTORY_SEPARATOR . date('m');
@@ -390,7 +432,6 @@ function process_and_save_photo($tmpName, $originalName) {
         }
     }
 
-    $filename = 'inc_' . date('Ymd_His') . '_' . bin2hex(random_bytes(8)) . '.' . $fileExt;
     $targetPath = $fullDir . DIRECTORY_SEPARATOR . $filename;
 
     // Check if GD library is available to compress and strip EXIF

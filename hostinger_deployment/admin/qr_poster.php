@@ -443,6 +443,11 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&d
         <div class="site-card-label">SECURITY PATROL POST</div>
         <div class="site-card-name"><?= htmlspecialchars($site['name']) ?></div>
         <div class="site-card-code">SITE CODE: <?= htmlspecialchars($site['code']) ?></div>
+        <?php if (!empty($site['latitude']) || !empty($site['longitude'])): ?>
+            <div style="font-size: 10.5pt; font-weight: 700; color: #0284c7; margin-top: 6px; letter-spacing: 0.5px;">
+                📍 GPS: <?= htmlspecialchars($site['latitude'] ?? '') ?>, <?= htmlspecialchars($site['longitude'] ?? '') ?>
+            </div>
+        <?php endif; ?>
     </div>
 
     <!-- QR Code Center Card -->

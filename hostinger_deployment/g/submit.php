@@ -18,13 +18,15 @@ $error = '';
 // Support site_id parameter from supervisor visit escalation
 if (!empty($_GET['site_id'])) {
     $paramSiteId = intval($_GET['site_id']);
-    $stmtSite = $db->prepare("SELECT id, name, code FROM sites WHERE id = ?");
+    $stmtSite = $db->prepare("SELECT id, name, code, latitude, longitude FROM sites WHERE id = ?");
     $stmtSite->execute([$paramSiteId]);
     $siteRow = $stmtSite->fetch();
     if ($siteRow) {
         $_SESSION['current_site_id'] = $siteRow['id'];
         $_SESSION['current_site_code'] = $siteRow['code'];
         $_SESSION['current_site_name'] = $siteRow['name'];
+        $_SESSION['current_site_lat'] = $siteRow['latitude'];
+        $_SESSION['current_site_lng'] = $siteRow['longitude'];
     }
 }
 
@@ -43,6 +45,13 @@ $siteName = $_SESSION['current_site_name'];
 $guardName = $_SESSION['guard_name'] ?? 'Officer';
 $guardStaffId = $_SESSION['guard_staff_id'] ?? '';
 $guardDesignation = $_SESSION['guard_designation'] ?? 'Security Officer';
+
+// Always fetch latest site coordinates & metadata as configured by Super Admin
+$stmtCurrentSite = $db->prepare("SELECT id, name, code, latitude, longitude FROM sites WHERE id = ? LIMIT 1");
+$stmtCurrentSite->execute([$siteId]);
+$currentSiteRow = $stmtCurrentSite->fetch();
+$siteLat = !empty($currentSiteRow['latitude']) ? trim($currentSiteRow['latitude']) : (!empty($_SESSION['current_site_lat']) ? trim($_SESSION['current_site_lat']) : '');
+$siteLng = !empty($currentSiteRow['longitude']) ? trim($currentSiteRow['longitude']) : (!empty($_SESSION['current_site_lng']) ? trim($_SESSION['current_site_lng']) : '');
 
 // Pre-fill from supervisor inspection visit
 $prefillSummary = '';
@@ -193,16 +202,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             try {
                                 $processed = process_and_save_photo(
                                     $_FILES['photos']['tmp_name'][$i],
-                                    $_FILES['photos']['name'][$i]
+                                    $_FILES['photos']['name'][$i],
+                                    $siteName,
+                                    $i
                                 );
                                 if ($processed && !empty($processed['relative_path'])) {
                                     $caption = !empty($_POST['photo_captions'][$i]) ? trim($_POST['photo_captions'][$i]) : 'Incident scene evidence';
-                                    $lat = !empty($_POST['photo_latitudes'][$i]) ? trim($_POST['photo_latitudes'][$i]) : '25.1610° N';
-                                    $lng = !empty($_POST['photo_longitudes'][$i]) ? trim($_POST['photo_longitudes'][$i]) : '55.4120° E';
+                                    $lat = !empty($_POST['photo_latitudes'][$i]) ? trim($_POST['photo_latitudes'][$i]) : (!empty($siteLat) ? $siteLat : '25.1610° N');
+                                    $lng = !empty($_POST['photo_longitudes'][$i]) ? trim($_POST['photo_longitudes'][$i]) : (!empty($siteLng) ? $siteLng : '55.4120° E');
                                     $stmtPhoto->execute([
                                         $incidentId,
                                         $processed['relative_path'],
-                                        $_FILES['photos']['name'][$i],
+                                        $processed['filename'],
                                         $processed['size'],
                                         $processed['mime'],
                                         $lat,

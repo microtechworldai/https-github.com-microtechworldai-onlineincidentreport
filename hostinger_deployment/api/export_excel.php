@@ -64,8 +64,10 @@ $whereSql = "WHERE " . implode(" AND ", $where);
 
 $sql = "
     SELECT i.*, 
+           s.latitude as site_latitude, s.longitude as site_longitude,
            (SELECT COUNT(*) FROM incident_photos p WHERE p.incident_id = i.id) as photo_count
     FROM incidents i
+    LEFT JOIN sites s ON s.id = i.site_id
     {$whereSql}
     ORDER BY i.incident_date DESC, i.incident_time DESC
 ";
@@ -89,6 +91,8 @@ fputcsv($output, [
     'Reference Number',
     'Site Name',
     'Site Code',
+    'Site Latitude',
+    'Site Longitude',
     'Reporting Officer',
     'Officer Role',
     'Incident Date (dd/mm/yyyy)',
@@ -121,6 +125,8 @@ while ($inc = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $inc['ref_number'],
         $inc['site_name'],
         $inc['site_code'],
+        $inc['site_latitude'] ?? '',
+        $inc['site_longitude'] ?? '',
         $inc['reported_by_name'],
         $inc['reported_by_designation'],
         format_date($inc['incident_date']),

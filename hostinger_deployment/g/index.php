@@ -55,6 +55,8 @@ if (!empty($_SESSION['uss_guard_logged_in']) && !empty($_SESSION['guard_id'])) {
         $_SESSION['current_site_id'] = $site['id'];
         $_SESSION['current_site_code'] = $site['code'];
         $_SESSION['current_site_name'] = $site['name'];
+        $_SESSION['current_site_lat'] = $site['latitude'] ?? '';
+        $_SESSION['current_site_lng'] = $site['longitude'] ?? '';
         $_SESSION['guard_last_activity'] = time();
         header("Location: " . APP_URL . "/g/submit.php");
         exit;
@@ -139,6 +141,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['current_site_id'] = $currentSite['id'];
                 $_SESSION['current_site_code'] = $currentSite['code'];
                 $_SESSION['current_site_name'] = $currentSite['name'];
+                $_SESSION['current_site_lat'] = $currentSite['latitude'] ?? '';
+                $_SESSION['current_site_lng'] = $currentSite['longitude'] ?? '';
                 $_SESSION['guard_last_activity'] = time();
 
                 // If user is also a supervisor, set supervisor session
