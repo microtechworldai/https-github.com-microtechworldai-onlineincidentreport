@@ -35,13 +35,15 @@ $adminUsername = htmlspecialchars($_SESSION['admin_username'] ?? 'admin');
 
     <!-- Sidebar Navigation -->
     <aside class="app-sidebar" id="appSidebar">
-        <div class="sidebar-brand">
-            <img src="<?= APP_URL ?>/<?= htmlspecialchars($settings['logo_url']) ?>" alt="Logo" onerror="this.style.display='none'">
+        <a href="<?= APP_URL ?>/admin/dashboard.php" class="sidebar-brand" style="text-decoration: none;">
+            <div class="brand-logo-frame">
+                <img src="<?= APP_URL ?>/<?= htmlspecialchars($settings['logo_url']) ?>" alt="Logo" onerror="this.style.display='none'">
+            </div>
             <div class="brand-title">
-                <span><?= htmlspecialchars($settings['company_name']) ?></span>
+                <span class="brand-company" title="<?= htmlspecialchars($settings['company_name']) ?>"><?= htmlspecialchars($settings['company_name']) ?></span>
                 <span class="brand-sub">Incident Control</span>
             </div>
-        </div>
+        </a>
 
         <nav class="sidebar-nav">
             <span class="nav-section-title">Operations</span>

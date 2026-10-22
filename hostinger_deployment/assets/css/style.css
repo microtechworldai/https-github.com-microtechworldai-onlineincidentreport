@@ -314,8 +314,8 @@
 
 /* Common sizing & radius tokens across all themes */
 :root {
-  --sidebar-w: 260px;
-  --header-h: 70px;
+  --sidebar-w: 275px;
+  --header-h: 72px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
@@ -591,33 +591,83 @@ body {
 
 .sidebar-brand {
   height: var(--header-h);
-  padding: 0 24px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid var(--border-subtle);
+  box-sizing: border-box;
+  overflow: hidden;
+  text-decoration: none;
 }
 
+.brand-logo-frame {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 10px;
+  background: rgba(2, 132, 199, 0.08);
+  border: 1.5px solid rgba(2, 132, 199, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 5px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+[data-theme="light"] .brand-logo-frame {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+[data-theme="dark"] .brand-logo-frame {
+  background: rgba(2, 132, 199, 0.12);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.brand-logo-frame img,
 .sidebar-brand img {
-  height: 38px;
+  max-width: 100%;
+  max-height: 100%;
   width: auto;
+  height: auto;
   object-fit: contain;
+  display: block;
 }
 
 .brand-title {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.3px;
-  color: var(--text-main);
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
+
+.brand-title .brand-company,
+.brand-title > span:first-child {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.1px;
+  color: var(--text-main);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
 .brand-sub {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--accent-cyan);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
+  margin-top: 3px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .sidebar-nav {
