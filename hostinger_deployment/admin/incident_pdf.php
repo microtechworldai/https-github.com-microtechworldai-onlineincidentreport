@@ -161,44 +161,166 @@ if (!function_exists('render_signature_img')) {
 
 
 /**
+ * Multi-Path Resilient Storage Resolver
+ * Searches direct paths, date-sharded directories (storage/private/photos/YYYY/MM/),
+ * uploads, and recursive globs to guarantee 100% photo recovery on Hostinger
+ */
+if (!function_exists('resolve_photo_disk_path')) {
+    function resolve_photo_disk_path($filePath, $photoId = 0) {
+        if (empty($filePath) && $photoId <= 0) {
+            return false;
+        }
+
+        $norm = str_replace('\\', '/', trim((string)$filePath));
+        $filename = basename($norm);
+
+        // If filename is missing or empty, attempt lookup by photo ID
+        if ((empty($filename) || $filename === '.' || $filename === '/') && $photoId > 0) {
+            try {
+                $db = get_db();
+                $stmt = $db->prepare("SELECT file_path FROM incident_photos WHERE id = ? LIMIT 1");
+                $stmt->execute([$photoId]);
+                $row = $stmt->fetch();
+                if ($row && !empty($row['file_path'])) {
+                    $norm = str_replace('\\', '/', trim($row['file_path']));
+                    $filename = basename($norm);
+                }
+            } catch (Throwable $e) {}
+        }
+
+        if (empty($filename) || $filename === '.' || $filename === '/') {
+            return false;
+        }
+
+        $cleanNorm = ltrim($norm, '/');
+        $relTail = $cleanNorm;
+        if (preg_match('#(storage/private/.*|uploads/.*|photos/.*)$#i', $norm, $m)) {
+            $relTail = $m[1];
+        }
+
+        $candidates = [
+            // Direct file checks
+            $filePath,
+            $norm,
+            @realpath($filePath),
+            @realpath($norm),
+
+            // Root relative paths
+            ROOT_PATH . '/' . $cleanNorm,
+            ROOT_PATH . '/' . $relTail,
+            ROOT_PATH . '/storage/private/' . ltrim(preg_replace('#^.*?(storage/private/)?#i', '', $norm), '/'),
+            ROOT_PATH . '/uploads/' . ltrim(preg_replace('#^.*?(uploads/)?#i', '', $norm), '/'),
+
+            // Private photos storage with date sharding
+            defined('PHOTOS_PRIVATE_PATH') ? (PHOTOS_PRIVATE_PATH . '/' . ltrim(preg_replace('#^.*?(photos/)?#i', '', $norm), '/')) : false,
+            defined('PHOTOS_PRIVATE_PATH') ? (PHOTOS_PRIVATE_PATH . '/' . date('Y/m/') . $filename) : false,
+            defined('PHOTOS_PRIVATE_PATH') ? (PHOTOS_PRIVATE_PATH . '/' . date('Y/') . $filename) : false,
+            defined('PHOTOS_PRIVATE_PATH') ? (PHOTOS_PRIVATE_PATH . '/' . $filename) : false,
+
+            // Private storage root
+            defined('STORAGE_PRIVATE_PATH') ? (STORAGE_PRIVATE_PATH . '/photos/' . date('Y/m/') . $filename) : false,
+            defined('STORAGE_PRIVATE_PATH') ? (STORAGE_PRIVATE_PATH . '/photos/' . $filename) : false,
+            defined('STORAGE_PRIVATE_PATH') ? (STORAGE_PRIVATE_PATH . '/' . $filename) : false,
+
+            // Uploads directory
+            defined('UPLOADS_PATH') ? (UPLOADS_PATH . '/photos/' . date('Y/m/') . $filename) : false,
+            defined('UPLOADS_PATH') ? (UPLOADS_PATH . '/photos/' . $filename) : false,
+            defined('UPLOADS_PATH') ? (UPLOADS_PATH . '/' . $filename) : false,
+
+            // Direct root paths
+            ROOT_PATH . '/storage/private/photos/' . date('Y/m/') . $filename,
+            ROOT_PATH . '/storage/private/photos/' . $filename,
+            ROOT_PATH . '/uploads/photos/' . date('Y/m/') . $filename,
+            ROOT_PATH . '/uploads/photos/' . $filename,
+            ROOT_PATH . '/uploads/' . $filename,
+        ];
+
+        foreach ($candidates as $cand) {
+            if ($cand && @file_exists($cand) && !is_dir($cand)) {
+                return $cand;
+            }
+        }
+
+        // Search in storage & upload directory structures using glob
+        $searchRoots = array_unique(array_filter([
+            defined('PHOTOS_PRIVATE_PATH') ? PHOTOS_PRIVATE_PATH : null,
+            ROOT_PATH . '/storage/private/photos',
+            defined('STORAGE_PRIVATE_PATH') ? (STORAGE_PRIVATE_PATH . '/photos') : null,
+            defined('STORAGE_PRIVATE_PATH') ? STORAGE_PRIVATE_PATH : null,
+            defined('UPLOADS_PATH') ? (UPLOADS_PATH . '/photos') : null,
+            ROOT_PATH . '/uploads/photos',
+            defined('UPLOADS_PATH') ? UPLOADS_PATH : null,
+            ROOT_PATH . '/uploads',
+        ]));
+
+        foreach ($searchRoots as $sDir) {
+            if (is_dir($sDir)) {
+                // Check 2 levels deep (YYYY/MM/filename)
+                $matches = @glob(rtrim($sDir, '/\\') . '/*/*/' . $filename);
+                if (!empty($matches) && file_exists($matches[0])) {
+                    return $matches[0];
+                }
+                // Check 1 level deep (YYYY/filename or photos/filename)
+                $matches1 = @glob(rtrim($sDir, '/\\') . '/*/' . $filename);
+                if (!empty($matches1) && file_exists($matches1[0])) {
+                    return $matches1[0];
+                }
+            }
+        }
+
+        return false;
+    }
+}
+
+/**
  * Smart High-Definition Image Optimizer for PDF Output
  * Ensures total PDF document stays around ~300KB while preserving pristine print clarity (HD quality)
  */
 if (!function_exists('optimize_photo_for_pdf')) {
     function optimize_photo_for_pdf($rawData, $maxW = 1000, $maxH = 700, $quality = 78) {
-        if (!extension_loaded('gd') || strlen($rawData) < 60000) {
-            return $rawData;
+        if (empty($rawData)) return ['data' => '', 'mime' => 'image/jpeg'];
+
+        if (extension_loaded('gd') && function_exists('imagecreatefromstring')) {
+            $img = @imagecreatefromstring($rawData);
+            if ($img !== false) {
+                $w = imagesx($img);
+                $h = imagesy($img);
+
+                // Scale proportionally down to max bounds if larger
+                $scale = min($maxW / max(1, $w), $maxH / max(1, $h), 1.0);
+                if ($scale < 1.0) {
+                    $newW = (int)round($w * $scale);
+                    $newH = (int)round($h * $scale);
+                    $dst = imagecreatetruecolor($newW, $newH);
+
+                    // Fill with crisp white background
+                    $white = imagecolorallocate($dst, 255, 255, 255);
+                    imagefilledrectangle($dst, 0, 0, $newW, $newH, $white);
+
+                    imagecopyresampled($dst, $img, 0, 0, 0, 0, $newW, $newH, $w, $h);
+                    imagedestroy($img);
+                    $img = $dst;
+                }
+
+                ob_start();
+                imagejpeg($img, null, $quality);
+                $compressed = ob_get_clean();
+                imagedestroy($img);
+
+                if (!empty($compressed)) {
+                    return ['data' => $compressed, 'mime' => 'image/jpeg'];
+                }
+            }
         }
-        $img = @imagecreatefromstring($rawData);
-        if (!$img) {
-            return $rawData;
+
+        $mime = 'image/jpeg';
+        if (strncmp($rawData, "\x89PNG", 4) === 0) {
+            $mime = 'image/png';
+        } elseif (strncmp($rawData, "RIFF", 4) === 0) {
+            $mime = 'image/webp';
         }
 
-        $w = imagesx($img);
-        $h = imagesy($img);
-
-        // Scale proportionally down to max bounds if larger
-        $scale = min($maxW / max(1, $w), $maxH / max(1, $h), 1.0);
-        if ($scale < 1.0) {
-            $newW = (int)round($w * $scale);
-            $newH = (int)round($h * $scale);
-            $dst = imagecreatetruecolor($newW, $newH);
-            
-            // Fill with crisp white background
-            $white = imagecolorallocate($dst, 255, 255, 255);
-            imagefilledrectangle($dst, 0, 0, $newW, $newH, $white);
-            
-            imagecopyresampled($dst, $img, 0, 0, 0, 0, $newW, $newH, $w, $h);
-            imagedestroy($img);
-            $img = $dst;
-        }
-
-        ob_start();
-        imagejpeg($img, null, $quality);
-        $compressed = ob_get_clean();
-        imagedestroy($img);
-
-        return (!empty($compressed) && strlen($compressed) < strlen($rawData)) ? $compressed : $rawData;
+        return ['data' => $rawData, 'mime' => $mime];
     }
 }
 
@@ -208,47 +330,30 @@ if (!function_exists('optimize_photo_for_pdf')) {
  */
 if (!function_exists('get_photo_src')) {
     function get_photo_src($filePath, $photoId = 0) {
-        if (empty($filePath)) return '';
-
-        $norm = str_replace('\\', '/', $filePath);
-
-        $readAndOptimize = function($absPath) {
-            if (!file_exists($absPath)) return false;
-            $data = @file_get_contents($absPath);
-            if ($data === false) return false;
-            $optData = optimize_photo_for_pdf($data, 1000, 700, 78);
-            return 'data:image/jpeg;base64,' . base64_encode($optData);
-        };
-
-        // 1. Direct path on disk (absolute or relative)
-        $res = $readAndOptimize($filePath);
-        if ($res !== false) return $res;
-
-        // 2. Extracted storage/private or uploads sub-path relative to ROOT_PATH
-        if (preg_match('#(storage/private/.*|uploads/.*)$#i', $norm, $m)) {
-            $candRel = ROOT_PATH . '/' . $m[1];
-            $res = $readAndOptimize($candRel);
-            if ($res !== false) return $res;
+        if (!empty($filePath) && strpos($filePath, 'data:image/') === 0) {
+            return $filePath;
         }
 
-        // 3. Relative to ROOT_PATH
-        $cleanRel = ltrim($norm, '/');
-        $cand1 = ROOT_PATH . '/' . $cleanRel;
-        $res = $readAndOptimize($cand1);
-        if ($res !== false) return $res;
-
-        // 4. Relative to UPLOADS_PATH
-        if (defined('UPLOADS_PATH')) {
-            $cand2 = UPLOADS_PATH . '/' . basename($filePath);
-            $res = $readAndOptimize($cand2);
-            if ($res !== false) return $res;
+        $resolved = resolve_photo_disk_path($filePath, $photoId);
+        if ($resolved && file_exists($resolved)) {
+            $data = @file_get_contents($resolved);
+            if ($data !== false && strlen($data) > 0) {
+                $opt = optimize_photo_for_pdf($data, 1000, 700, 78);
+                return 'data:' . $opt['mime'] . ';base64,' . base64_encode($opt['data']);
+            }
         }
 
-        // 5. Fallback to serve_file.php gateway
+        // Remote HTTP fallback
+        if (!empty($filePath) && (strpos($filePath, 'http://') === 0 || strpos($filePath, 'https://') === 0)) {
+            return $filePath;
+        }
+
+        // Authenticated gateway fallback
         if ($photoId > 0) {
             return APP_URL . '/admin/serve_file.php?photo_id=' . (int)$photoId;
         }
 
+        $cleanRel = ltrim(str_replace('\\', '/', (string)$filePath), '/');
         return APP_URL . '/' . $cleanRel;
     }
 }
@@ -674,9 +779,10 @@ $companyDisplayName = !empty($settings['company_name'])
                 margin: 0 !important;
                 padding: 0 !important;
                 background: #fff !important;
-                height: 297mm !important;
-                max-height: 297mm !important;
-                overflow: hidden !important;
+                height: auto !important;
+                min-height: 100% !important;
+                max-height: none !important;
+                overflow: visible !important;
             }
             .page-sheet {
                 box-shadow: none !important;
@@ -686,12 +792,18 @@ $companyDisplayName = !empty($settings['company_name'])
                 height: 285mm !important;
                 max-height: 285mm !important;
                 overflow: hidden !important;
-                page-break-after: avoid !important;
+                page-break-after: always !important;
+                break-after: page !important;
                 page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            .page-sheet:last-of-type {
+                page-break-after: auto !important;
+                break-after: auto !important;
             }
             .page-sheet.page-break {
                 page-break-before: always !important;
-                page-break-after: auto !important;
+                break-before: page !important;
             }
         }
     </style>
@@ -701,6 +813,9 @@ $companyDisplayName = !empty($settings['company_name'])
 <div class="no-print-bar">
     <div>
         <strong>Official Incident Dossier:</strong> <?= htmlspecialchars($formattedRef) ?> &bull; <?= htmlspecialchars($incident['site_name']) ?>
+        <?php if (!empty($photos)): ?>
+            &bull; <span style="background: #22c55e; color: #000; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 11px; margin-left: 6px;">📷 <?= count($photos) ?> Evidence Photo<?= count($photos) > 1 ? 's' : '' ?> Attached (<?= $totalPages ?> Pages Total)</span>
+        <?php endif; ?>
     </div>
     <div style="display: flex; align-items: center; gap: 10px;">
         <button class="btn-print" onclick="window.print();">&#128438; Print / Save as PDF</button>
@@ -954,6 +1069,9 @@ $companyDisplayName = !empty($settings['company_name'])
     <div class="pdf-footer">
         <div style="color: #0284c7; font-weight: bold; font-size: 8.5pt;">
             <?= htmlspecialchars($companyDisplayName) ?> &bull; Report Ref: <?= htmlspecialchars($formattedRef) ?>
+            <?php if (!empty($photos)): ?>
+                &bull; <strong style="color: #002266; font-size: 8.5pt;">Photographic Evidence Attached (<?= count($photos) ?> Photos &bull; See Page 2+)</strong>
+            <?php endif; ?>
         </div>
         <div style="color: #64748b; font-weight: bold; font-size: 8.5pt;">
             Page 1 of <?= $totalPages ?>
@@ -985,10 +1103,10 @@ $companyDisplayName = !empty($settings['company_name'])
                 $latStr = htmlspecialchars(format_coord($pLat, 'lat'));
                 $lngStr = htmlspecialchars(format_coord($pLng, 'lng'));
             ?>
-                <div style="border: 1px solid #cbd5e1; padding: 6px; background: #fff; border-radius: 4px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; height: 76mm;">
+                <div style="border: 2px solid #000; padding: 5px; background: #fff; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; height: 76mm; overflow: hidden;">
                     <!-- Photo Frame with perfect edge-to-edge fit -->
-                    <div style="width: 100%; height: 53mm; overflow: hidden; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 3px; display: flex; align-items: center; justify-content: center;">
-                        <img src="<?= $photoSrc ?>" alt="Evidence <?= $globalIdx + 1 ?>" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                    <div style="width: 100%; height: 53mm; overflow: hidden; background: #0f172a; border: 1.5px solid #000; display: flex; align-items: center; justify-content: center;">
+                        <img src="<?= $photoSrc ?>" alt="Evidence <?= $globalIdx + 1 ?>" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block;" onerror="if(this.src.indexOf('serve_file.php')===-1 && <?= (int)$p['id'] ?> > 0){ this.src='<?= APP_URL ?>/admin/serve_file.php?photo_id=<?= (int)$p['id'] ?>'; }">
                     </div>
                     <!-- Evidence Details -->
                     <div style="margin-top: 4px; font-size: 8.5pt; line-height: 1.4;">

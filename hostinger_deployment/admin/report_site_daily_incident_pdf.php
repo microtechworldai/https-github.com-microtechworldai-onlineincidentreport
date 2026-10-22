@@ -107,31 +107,128 @@ if (!function_exists('format_coord_val')) {
     }
 }
 
-// Base64 image resolver for photos
-if (!function_exists('get_consolidated_photo_src')) {
-    function get_consolidated_photo_src($filePath) {
-        if (empty($filePath)) return '';
-        $norm = str_replace('\\', '/', $filePath);
-        if (file_exists($filePath)) {
-            $mime = mime_content_type($filePath) ?: 'image/jpeg';
-            $data = file_get_contents($filePath);
-            if ($data !== false) return 'data:' . $mime . ';base64,' . base64_encode($data);
+if (!function_exists('resolve_photo_disk_path')) {
+    function resolve_photo_disk_path($filePath, $photoId = 0) {
+        if (empty($filePath) && $photoId <= 0) return false;
+        $norm = str_replace('\\', '/', trim((string)$filePath));
+        $filename = basename($norm);
+
+        if ((empty($filename) || $filename === '.' || $filename === '/') && $photoId > 0) {
+            try {
+                $db = get_db();
+                $stmt = $db->prepare("SELECT file_path FROM incident_photos WHERE id = ? LIMIT 1");
+                $stmt->execute([$photoId]);
+                $row = $stmt->fetch();
+                if ($row && !empty($row['file_path'])) {
+                    $norm = str_replace('\\', '/', trim($row['file_path']));
+                    $filename = basename($norm);
+                }
+            } catch (Throwable $e) {}
         }
-        if (preg_match('#(storage/private/.*|uploads/.*)$#i', $norm, $m)) {
-            $cand = ROOT_PATH . '/' . $m[1];
-            if (file_exists($cand)) {
-                $mime = mime_content_type($cand) ?: 'image/jpeg';
-                $data = file_get_contents($cand);
-                if ($data !== false) return 'data:' . $mime . ';base64,' . base64_encode($data);
+        if (empty($filename) || $filename === '.' || $filename === '/') return false;
+
+        $cleanNorm = ltrim($norm, '/');
+        $relTail = $cleanNorm;
+        if (preg_match('#(storage/private/.*|uploads/.*|photos/.*)$#i', $norm, $m)) {
+            $relTail = $m[1];
+        }
+
+        $candidates = [
+            $filePath, $norm, @realpath($filePath), @realpath($norm),
+            ROOT_PATH . '/' . $cleanNorm,
+            ROOT_PATH . '/' . $relTail,
+            ROOT_PATH . '/storage/private/' . ltrim(preg_replace('#^.*?(storage/private/)?#i', '', $norm), '/'),
+            ROOT_PATH . '/uploads/' . ltrim(preg_replace('#^.*?(uploads/)?#i', '', $norm), '/'),
+            defined('PHOTOS_PRIVATE_PATH') ? (PHOTOS_PRIVATE_PATH . '/' . ltrim(preg_replace('#^.*?(photos/)?#i', '', $norm), '/')) : false,
+            defined('PHOTOS_PRIVATE_PATH') ? (PHOTOS_PRIVATE_PATH . '/' . date('Y/m/') . $filename) : false,
+            defined('PHOTOS_PRIVATE_PATH') ? (PHOTOS_PRIVATE_PATH . '/' . $filename) : false,
+            defined('STORAGE_PRIVATE_PATH') ? (STORAGE_PRIVATE_PATH . '/photos/' . date('Y/m/') . $filename) : false,
+            defined('STORAGE_PRIVATE_PATH') ? (STORAGE_PRIVATE_PATH . '/photos/' . $filename) : false,
+            defined('UPLOADS_PATH') ? (UPLOADS_PATH . '/photos/' . date('Y/m/') . $filename) : false,
+            defined('UPLOADS_PATH') ? (UPLOADS_PATH . '/photos/' . $filename) : false,
+            ROOT_PATH . '/storage/private/photos/' . date('Y/m/') . $filename,
+            ROOT_PATH . '/storage/private/photos/' . $filename,
+            ROOT_PATH . '/uploads/photos/' . date('Y/m/') . $filename,
+            ROOT_PATH . '/uploads/photos/' . $filename,
+        ];
+
+        foreach ($candidates as $cand) {
+            if ($cand && @file_exists($cand) && !is_dir($cand)) return $cand;
+        }
+
+        $searchRoots = array_unique(array_filter([
+            defined('PHOTOS_PRIVATE_PATH') ? PHOTOS_PRIVATE_PATH : null,
+            ROOT_PATH . '/storage/private/photos',
+            defined('STORAGE_PRIVATE_PATH') ? (STORAGE_PRIVATE_PATH . '/photos') : null,
+            defined('UPLOADS_PATH') ? (UPLOADS_PATH . '/photos') : null,
+            ROOT_PATH . '/uploads/photos',
+        ]));
+
+        foreach ($searchRoots as $sDir) {
+            if (is_dir($sDir)) {
+                $matches = @glob(rtrim($sDir, '/\\') . '/*/*/' . $filename);
+                if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                $matches1 = @glob(rtrim($sDir, '/\\') . '/*/' . $filename);
+                if (!empty($matches1) && file_exists($matches1[0])) return $matches1[0];
             }
         }
-        $candRel = ROOT_PATH . '/' . ltrim($norm, '/');
-        if (file_exists($candRel)) {
-            $mime = mime_content_type($candRel) ?: 'image/jpeg';
-            $data = file_get_contents($candRel);
-            if ($data !== false) return 'data:' . $mime . ';base64,' . base64_encode($data);
+        return false;
+    }
+}
+
+if (!function_exists('optimize_photo_for_pdf')) {
+    function optimize_photo_for_pdf($rawData, $maxW = 600, $maxH = 450, $quality = 75) {
+        if (empty($rawData)) return ['data' => '', 'mime' => 'image/jpeg'];
+        if (extension_loaded('gd') && function_exists('imagecreatefromstring')) {
+            $img = @imagecreatefromstring($rawData);
+            if ($img !== false) {
+                $w = imagesx($img);
+                $h = imagesy($img);
+                $scale = min($maxW / max(1, $w), $maxH / max(1, $h), 1.0);
+                if ($scale < 1.0) {
+                    $newW = (int)round($w * $scale);
+                    $newH = (int)round($h * $scale);
+                    $dst = imagecreatetruecolor($newW, $newH);
+                    $white = imagecolorallocate($dst, 255, 255, 255);
+                    imagefilledrectangle($dst, 0, 0, $newW, $newH, $white);
+                    imagecopyresampled($dst, $img, 0, 0, 0, 0, $newW, $newH, $w, $h);
+                    imagedestroy($img);
+                    $img = $dst;
+                }
+                ob_start();
+                imagejpeg($img, null, $quality);
+                $compressed = ob_get_clean();
+                imagedestroy($img);
+                if (!empty($compressed)) return ['data' => $compressed, 'mime' => 'image/jpeg'];
+            }
         }
-        return APP_URL . '/' . ltrim($norm, '/');
+        $mime = 'image/jpeg';
+        if (strncmp($rawData, "\x89PNG", 4) === 0) $mime = 'image/png';
+        elseif (strncmp($rawData, "RIFF", 4) === 0) $mime = 'image/webp';
+        return ['data' => $rawData, 'mime' => $mime];
+    }
+}
+
+// Base64 image resolver for photos
+if (!function_exists('get_consolidated_photo_src')) {
+    function get_consolidated_photo_src($filePath, $photoId = 0) {
+        if (!empty($filePath) && strpos($filePath, 'data:image/') === 0) return $filePath;
+        $resolved = resolve_photo_disk_path($filePath, $photoId);
+        if ($resolved && file_exists($resolved)) {
+            $data = @file_get_contents($resolved);
+            if ($data !== false && strlen($data) > 0) {
+                $opt = optimize_photo_for_pdf($data, 600, 450, 75);
+                return 'data:' . $opt['mime'] . ';base64,' . base64_encode($opt['data']);
+            }
+        }
+        if (!empty($filePath) && (strpos($filePath, 'http://') === 0 || strpos($filePath, 'https://') === 0)) {
+            return $filePath;
+        }
+        if ($photoId > 0) {
+            return APP_URL . '/admin/serve_file.php?photo_id=' . (int)$photoId;
+        }
+        $cleanRel = ltrim(str_replace('\\', '/', (string)$filePath), '/');
+        return APP_URL . '/' . $cleanRel;
     }
 }
 
@@ -807,7 +904,8 @@ $printDateTime = date('d-M-Y H:i:s');
                                 📷 Attached Photos (<?= count($photos) ?>):
                             </span>
                             <?php foreach (array_slice($photos, 0, 5) as $ph): 
-                                $src = get_consolidated_photo_src($ph['photo_path']);
+                                $phFile = !empty($ph['file_path']) ? $ph['file_path'] : (!empty($ph['photo_path']) ? $ph['photo_path'] : '');
+                                $src = get_consolidated_photo_src($phFile, $ph['id'] ?? 0);
                             ?>
                                 <div class="photo-thumb-frame">
                                     <?php if ($src): ?>
