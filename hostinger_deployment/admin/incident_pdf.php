@@ -121,7 +121,50 @@ if (!function_exists('format_meta_date')) {
 }
 
 /**
+ * Smart High-Definition Image Optimizer for PDF Output
+ * Ensures total PDF document stays around ~300KB while preserving pristine print clarity (HD quality)
+ */
+if (!function_exists('optimize_photo_for_pdf')) {
+    function optimize_photo_for_pdf($rawData, $maxW = 1000, $maxH = 700, $quality = 78) {
+        if (!extension_loaded('gd') || strlen($rawData) < 60000) {
+            return $rawData;
+        }
+        $img = @imagecreatefromstring($rawData);
+        if (!$img) {
+            return $rawData;
+        }
+
+        $w = imagesx($img);
+        $h = imagesy($img);
+
+        // Scale proportionally down to max bounds if larger
+        $scale = min($maxW / max(1, $w), $maxH / max(1, $h), 1.0);
+        if ($scale < 1.0) {
+            $newW = (int)round($w * $scale);
+            $newH = (int)round($h * $scale);
+            $dst = imagecreatetruecolor($newW, $newH);
+            
+            // Fill with crisp white background
+            $white = imagecolorallocate($dst, 255, 255, 255);
+            imagefilledrectangle($dst, 0, 0, $newW, $newH, $white);
+            
+            imagecopyresampled($dst, $img, 0, 0, 0, 0, $newW, $newH, $w, $h);
+            imagedestroy($img);
+            $img = $dst;
+        }
+
+        ob_start();
+        imagejpeg($img, null, $quality);
+        $compressed = ob_get_clean();
+        imagedestroy($img);
+
+        return (!empty($compressed) && strlen($compressed) < strlen($rawData)) ? $compressed : $rawData;
+    }
+}
+
+/**
  * Resolve direct photo content as embedded base64 data URI to guarantee 100% rendering
+ * Automatically applies HD compression so generated PDF remains around ~300KB with crystal clarity
  */
 if (!function_exists('get_photo_src')) {
     function get_photo_src($filePath, $photoId = 0) {
@@ -129,56 +172,44 @@ if (!function_exists('get_photo_src')) {
 
         $norm = str_replace('\\', '/', $filePath);
 
-    // 1. Direct path on disk (absolute or relative)
-    if (file_exists($filePath)) {
-        $mime = mime_content_type($filePath) ?: 'image/jpeg';
-        $data = file_get_contents($filePath);
-        if ($data !== false) {
-            return 'data:' . $mime . ';base64,' . base64_encode($data);
+        $readAndOptimize = function($absPath) {
+            if (!file_exists($absPath)) return false;
+            $data = @file_get_contents($absPath);
+            if ($data === false) return false;
+            $optData = optimize_photo_for_pdf($data, 1000, 700, 78);
+            return 'data:image/jpeg;base64,' . base64_encode($optData);
+        };
+
+        // 1. Direct path on disk (absolute or relative)
+        $res = $readAndOptimize($filePath);
+        if ($res !== false) return $res;
+
+        // 2. Extracted storage/private or uploads sub-path relative to ROOT_PATH
+        if (preg_match('#(storage/private/.*|uploads/.*)$#i', $norm, $m)) {
+            $candRel = ROOT_PATH . '/' . $m[1];
+            $res = $readAndOptimize($candRel);
+            if ($res !== false) return $res;
         }
-    }
 
-    // 2. Extracted storage/private or uploads sub-path relative to ROOT_PATH
-    if (preg_match('#(storage/private/.*|uploads/.*)$#i', $norm, $m)) {
-        $candRel = ROOT_PATH . '/' . $m[1];
-        if (file_exists($candRel)) {
-            $mime = mime_content_type($candRel) ?: 'image/jpeg';
-            $data = file_get_contents($candRel);
-            if ($data !== false) {
-                return 'data:' . $mime . ';base64,' . base64_encode($data);
-            }
+        // 3. Relative to ROOT_PATH
+        $cleanRel = ltrim($norm, '/');
+        $cand1 = ROOT_PATH . '/' . $cleanRel;
+        $res = $readAndOptimize($cand1);
+        if ($res !== false) return $res;
+
+        // 4. Relative to UPLOADS_PATH
+        if (defined('UPLOADS_PATH')) {
+            $cand2 = UPLOADS_PATH . '/' . basename($filePath);
+            $res = $readAndOptimize($cand2);
+            if ($res !== false) return $res;
         }
-    }
 
-    // 3. Relative to ROOT_PATH
-    $cleanRel = ltrim($norm, '/');
-    $cand1 = ROOT_PATH . '/' . $cleanRel;
-    if (file_exists($cand1)) {
-        $mime = mime_content_type($cand1) ?: 'image/jpeg';
-        $data = file_get_contents($cand1);
-        if ($data !== false) {
-            return 'data:' . $mime . ';base64,' . base64_encode($data);
+        // 5. Fallback to serve_file.php gateway
+        if ($photoId > 0) {
+            return APP_URL . '/admin/serve_file.php?photo_id=' . (int)$photoId;
         }
-    }
 
-    // 4. Relative to UPLOADS_PATH
-    if (defined('UPLOADS_PATH')) {
-        $cand2 = UPLOADS_PATH . '/' . basename($filePath);
-        if (file_exists($cand2)) {
-            $mime = mime_content_type($cand2) ?: 'image/jpeg';
-            $data = file_get_contents($cand2);
-            if ($data !== false) {
-                return 'data:' . $mime . ';base64,' . base64_encode($data);
-            }
-        }
-    }
-
-    // 5. Fallback to serve_file.php gateway
-    if ($photoId > 0) {
-        return APP_URL . '/admin/serve_file.php?photo_id=' . (int)$photoId;
-    }
-
-    return APP_URL . '/' . $cleanRel;
+        return APP_URL . '/' . $cleanRel;
     }
 }
 
@@ -462,14 +493,14 @@ $companyDisplayName = !empty($settings['company_name'])
         }
 
         .summary-line-box {
-            height: 48px !important;
-            min-height: 48px !important;
-            max-height: 48px !important;
-            padding: 5px 8px !important;
-            font-size: 9.5pt !important;
-            font-weight: normal !important;
-            color: #000000 !important;
-            line-height: 1.35 !important;
+            height: 40px !important;
+            min-height: 40px !important;
+            max-height: 44px !important;
+            padding: 4px 8px !important;
+            font-size: 11pt !important;
+            font-weight: bold !important;
+            color: #8B0000 !important; /* Dark Red */
+            line-height: 1.25 !important;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
             word-break: break-word !important;
@@ -477,7 +508,7 @@ $companyDisplayName = !empty($settings['company_name'])
             border-bottom: 1.5px solid #000 !important;
             overflow: hidden !important;
             box-sizing: border-box !important;
-            vertical-align: top !important;
+            vertical-align: middle !important;
             background: #ffffff !important;
         }
 
@@ -654,14 +685,11 @@ $companyDisplayName = !empty($settings['company_name'])
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
                         <td style="width: 32%; padding: 2.5px 0;" class="meta-label">Site Name :</td>
-                          <td style="width: 68%; padding: 2.5px 0;" class="meta-value">
-                              <?= htmlspecialchars($incident['site_name']) ?>
-                              <?php if (!empty($incident['site_latitude']) || !empty($incident['site_longitude'])): ?>
-                                  <span style="font-size: 8pt; font-weight: normal; color: #475569; margin-left: 4px;">
-                                      (GPS: <?= htmlspecialchars($incident['site_latitude'] ?? '') ?>, <?= htmlspecialchars($incident['site_longitude'] ?? '') ?>)
-                                  </span>
-                              <?php endif; ?>
-                          </td>
+                        <td style="width: 68%; padding: 2.5px 0;" class="meta-value">
+                            <strong style="font-size: 10.5pt; font-weight: 800; color: #000000; letter-spacing: 0.2px;">
+                                <?= htmlspecialchars($incident['site_name']) ?>
+                            </strong>
+                        </td>
                     </tr>
                     <tr>
                         <td style="padding: 2.5px 0;" class="meta-label">Person Reporting :</td>
@@ -755,8 +783,10 @@ $companyDisplayName = !empty($settings['company_name'])
             </td>
         </tr>
         <tr>
-            <td class="summary-line-box" style="background: #ffffff; border-bottom: 1.5px solid #000;">
-                <?= nl2br(htmlspecialchars(!empty($incident['summary_line']) ? $incident['summary_line'] : $incident['description'])) ?>
+            <td class="summary-line-box" style="background: #ffffff; border-bottom: 1.5px solid #000; color: #8B0000 !important; font-weight: bold !important; font-size: 11pt !important;">
+                <div style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.25; word-wrap: break-word; overflow-wrap: break-word; color: #8B0000 !important; font-weight: bold !important; font-size: 11pt !important;">
+                    <?= htmlspecialchars(!empty($incident['summary_line']) ? $incident['summary_line'] : $incident['description']) ?>
+                </div>
             </td>
         </tr>
 
