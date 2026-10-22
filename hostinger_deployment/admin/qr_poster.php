@@ -2,6 +2,7 @@
 /**
  * Official Printable A4 Security Checkpoint QR Poster
  * Designed for Physical Mounting at Patrol Desks & Security Posts
+ * Ultimate Security Services (USS)
  */
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/db.php';
@@ -67,7 +68,7 @@ if (empty($rawToken)) {
 }
 
 $guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
-$qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=" . urlencode($guardUrl);
+$qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data=" . urlencode($guardUrl);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -88,54 +89,59 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&d
         }
 
         body {
-            font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: #e2e8f0;
             color: #0f172a;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
+        /* Top Action Bar (Screen Only) */
         .no-print-bar {
             width: 100%;
             background: #0f172a;
             color: #fff;
-            padding: 14px 24px;
+            padding: 12px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .btn-action {
             color: #fff;
             border: none;
-            padding: 10px 20px;
+            padding: 9px 18px;
             border-radius: 8px;
             font-weight: 700;
-            font-size: 13.5px;
+            font-size: 13px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
             text-decoration: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            transition: transform 0.15s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: transform 0.15s ease, background 0.15s ease;
         }
         .btn-action:hover {
             transform: translateY(-1px);
         }
 
-        /* A4 Page Canvas */
+        /* A4 Poster Canvas */
         .poster-canvas {
             width: 210mm;
-            min-height: 297mm;
-            background: #fff;
+            height: 297mm;
+            max-height: 297mm;
+            background: #ffffff;
             margin: 20px auto;
-            padding: 16mm 18mm;
+            padding: 18mm 20mm;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -143,20 +149,29 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&d
             box-shadow: 0 15px 35px rgba(0,0,0,0.15);
             border: 1px solid #cbd5e1;
             position: relative;
+            overflow: hidden;
         }
 
+        /* Header Section */
         .poster-header {
             width: 100%;
             text-align: center;
-            border-bottom: 3px solid #0284c7;
-            padding-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .poster-logo-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
         }
 
         .poster-logo {
             height: 64px;
-            max-width: 260px;
+            max-width: 280px;
             object-fit: contain;
-            margin-bottom: 8px;
         }
 
         .poster-header h1 {
@@ -165,144 +180,204 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&d
             color: #0b192c;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            margin: 0 0 4px 0;
+            line-height: 1.15;
         }
 
         .poster-header h2 {
-            font-size: 13pt;
-            font-weight: 700;
-            color: #0284c7;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-top: 4px;
-        }
-
-        .site-box {
-            width: 100%;
-            background: #f1f5f9;
-            border: 2px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            margin: 16px 0;
-        }
-
-        .site-name {
-            font-size: 24pt;
-            font-weight: 900;
-            color: #0f172a;
-            line-height: 1.2;
-        }
-
-        .site-code-badge {
-            display: inline-block;
-            background: #0284c7;
-            color: #fff;
-            font-family: monospace;
-            font-size: 14pt;
-            font-weight: bold;
-            padding: 4px 16px;
-            border-radius: 6px;
-            margin-top: 8px;
-            letter-spacing: 1px;
-        }
-
-        .qr-frame {
-            background: #fff;
-            padding: 20px;
-            border: 4px solid #0f172a;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 10px 0;
-        }
-
-        #qrImage, #qrcodeCanvas {
-            width: 260px !important;
-            height: 260px !important;
-            display: block;
-            border-radius: 8px;
-        }
-
-        .qr-caption {
-            margin-top: 12px;
             font-size: 11pt;
             font-weight: 800;
             color: #0284c7;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            margin: 0;
+            line-height: 1.2;
         }
 
-        .instruction-box {
+        .header-divider {
             width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 14px;
-            margin: 14px 0;
-        }
-
-        .step-card {
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            padding: 12px;
-            background: #f8fafc;
-            text-align: center;
-        }
-
-        .step-num {
-            width: 28px;
-            height: 28px;
+            height: 4px;
             background: #0284c7;
-            color: #fff;
-            border-radius: 50%;
-            display: inline-flex;
+            border-radius: 2px;
+            margin-top: 14px;
+        }
+
+        /* Security Patrol Post Card */
+        .site-card {
+            width: 100%;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .site-card-label {
+            font-size: 10pt;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .site-card-name {
+            font-size: 26pt;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1.2;
+            margin-bottom: 5px;
+        }
+
+        .site-card-code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 12pt;
+            font-weight: 700;
+            color: #94a3b8;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* QR Frame Box */
+        .qr-card {
+            width: 380px;
+            max-width: 100%;
+            background: #ffffff;
+            border: 2.5px solid #0f172a;
+            border-radius: 18px;
+            padding: 22px 24px 18px;
+            margin: 16px auto;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+        }
+
+        #qrImage, #qrcodeCanvas {
+            width: 250px !important;
+            height: 250px !important;
+            display: block;
+        }
+
+        .qr-caption {
+            margin-top: 14px;
+            font-size: 11pt;
+            font-weight: 900;
+            color: #0284c7;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* 3 Steps Grid */
+        .steps-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .step-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 12px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .step-badge {
             font-size: 12pt;
-            margin-bottom: 6px;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 5px;
         }
 
         .step-title {
-            font-size: 10.5pt;
-            font-weight: bold;
+            font-size: 11pt;
+            font-weight: 800;
             color: #0f172a;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
         }
 
         .step-desc {
             font-size: 8.5pt;
-            color: #64748b;
-            line-height: 1.3;
+            color: #475569;
+            line-height: 1.35;
         }
 
-        .poster-footer {
+        /* Direct Shortlink */
+        .direct-link-box {
             width: 100%;
-            border-top: 2px solid #e2e8f0;
-            padding-top: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 9pt;
-            color: #64748b;
+            text-align: center;
+            margin-top: 10px;
         }
 
-        .url-text {
-            font-family: monospace;
+        .direct-link-label {
             font-size: 8.5pt;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 2px;
+        }
+
+        .direct-link-url {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 8.5pt;
+            font-weight: 600;
             color: #0284c7;
+            text-decoration: none;
             word-break: break-all;
         }
 
+        /* Footer */
+        .poster-footer {
+            width: 100%;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            font-size: 8.5pt;
+            color: #334155;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        .footer-left strong {
+            color: #0f172a;
+        }
+
+        .footer-right {
+            text-align: right;
+        }
+
+        .print-timestamp {
+            font-size: 8pt;
+            color: #64748b;
+        }
+
+        /* Print Media Styles */
         @media print {
             .no-print-bar { display: none !important; }
-            body { background: #fff !important; }
+            body { 
+                background: #fff !important; 
+                margin: 0 !important;
+                padding: 0 !important;
+            }
             .poster-canvas {
                 border: none !important;
                 box-shadow: none !important;
                 margin: 0 !important;
-                padding: 14mm 16mm !important;
+                padding: 16mm 18mm !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
             }
         }
     </style>
@@ -340,67 +415,77 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&d
         <button class="btn-action" onclick="downloadQrCode();" style="background: #10b981;">💾 Download QR</button>
         <button class="btn-action" onclick="copyPatrolLink();" style="background: #6366f1;">📋 Copy Link</button>
         <button class="btn-action" onclick="window.print();" style="background: #0284c7;">🖨️ Print Poster (A4)</button>
-        <button style="background: transparent; color: #fff; border: 1px solid #475569; padding: 10px 18px; border-radius: 8px; cursor: pointer;" onclick="window.close();">Close</button>
+        <button style="background: transparent; color: #fff; border: 1px solid #475569; padding: 9px 16px; border-radius: 8px; cursor: pointer;" onclick="window.close();">Close</button>
     </div>
 </div>
 
 <div class="poster-canvas">
 
-    <!-- Header -->
+    <!-- Top Header -->
     <div class="poster-header">
-        <img class="poster-logo" src="<?= APP_URL ?>/<?= htmlspecialchars($settings['logo_url']) ?>" alt="Logo" onerror="this.style.display='none'">
+        <div class="poster-logo-wrap">
+            <?php if (!empty($settings['logo_url'])): ?>
+                <img class="poster-logo" src="<?= APP_URL ?>/<?= htmlspecialchars($settings['logo_url']) ?>" alt="USS Logo" onerror="this.style.display='none'; document.getElementById('svgFallbackLogo').style.display='block';">
+            <?php endif; ?>
+            <svg id="svgFallbackLogo" width="56" height="56" viewBox="0 0 64 64" fill="none" style="<?= empty($settings['logo_url']) ? '' : 'display:none;' ?>">
+                <path d="M32 4L10 14V30C10 44 19 56 32 60C45 56 54 44 54 30V14L32 4Z" fill="#0284C7"/>
+                <path d="M32 10L14 18V30C14 41 21 51 32 54C43 51 50 41 50 30V18L32 10Z" fill="#0EA5E9"/>
+                <path d="M26 28L31 33L42 22" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
         <h1><?= htmlspecialchars($settings['company_name']) ?></h1>
-        <h2>Official Incident Reporting Checkpoint</h2>
+        <h2>OFFICIAL INCIDENT REPORTING CHECKPOINT</h2>
+        <div class="header-divider"></div>
     </div>
 
-    <!-- Facility Highlight -->
-    <div class="site-box">
-        <div style="font-size: 11pt; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Security Patrol Post</div>
-        <div class="site-name"><?= htmlspecialchars($site['name']) ?></div>
-        <div class="site-code-badge">SITE CODE: <?= htmlspecialchars($site['code']) ?></div>
+    <!-- Security Patrol Post Card -->
+    <div class="site-card">
+        <div class="site-card-label">SECURITY PATROL POST</div>
+        <div class="site-card-name"><?= htmlspecialchars($site['name']) ?></div>
+        <div class="site-card-code">SITE CODE: <?= htmlspecialchars($site['code']) ?></div>
     </div>
 
-    <!-- QR Code Centerpiece: Dual-mode Guaranteed Rendering -->
-    <div class="qr-frame">
-        <img id="qrImage" src="<?= htmlspecialchars($qrApiUrl) ?>" alt="Security Checkpoint QR Code" crossOrigin="anonymous">
-        <canvas id="qrcodeCanvas" style="display: none;"></canvas>
-        <div class="qr-caption">Scan With Phone Camera To Report Incident</div>
+    <!-- QR Code Center Card -->
+    <div class="qr-card">
+        <canvas id="qrcodeCanvas" width="250" height="250" style="display: none;"></canvas>
+        <img id="qrImage" src="<?= $qrApiUrl ?>" alt="QR Code" width="250" height="250" style="display: block;">
+        <div class="qr-caption">SCAN WITH PHONE CAMERA TO REPORT INCIDENT</div>
     </div>
 
-    <!-- Step by Step Instructions -->
-    <div class="instruction-box">
-        <div class="step-card">
-            <div class="step-num">1</div>
+    <!-- 3 Steps Instructions Grid -->
+    <div class="steps-grid">
+        <div class="step-item">
+            <div class="step-badge">1</div>
             <div class="step-title">Scan QR Code</div>
             <div class="step-desc">Open your mobile phone camera and point at this code. Tap the link banner.</div>
         </div>
-        <div class="step-card">
-            <div class="step-num">2</div>
+        <div class="step-item">
+            <div class="step-badge">2</div>
             <div class="step-title">Guard Sign In</div>
             <div class="step-desc">Enter your Officer Staff ID / Username and Password to access the patrol form.</div>
         </div>
-        <div class="step-card">
-            <div class="step-num">3</div>
+        <div class="step-item">
+            <div class="step-badge">3</div>
             <div class="step-title">Submit &amp; Photos</div>
             <div class="step-desc">Fill report narrative, attach live camera photos, and submit for instant review.</div>
         </div>
     </div>
 
-    <!-- Direct Fallback Shortlink -->
-    <div style="text-align: center; margin: 4px 0;">
-        <span style="font-size: 9pt; color: #64748b;">Direct Patrol Link:</span>
-        <div class="url-text"><?= htmlspecialchars($guardUrl) ?></div>
+    <!-- Direct Fallback Link -->
+    <div class="direct-link-box">
+        <div class="direct-link-label">Direct Patrol Link:</div>
+        <a href="<?= htmlspecialchars($guardUrl) ?>" class="direct-link-url" target="_blank"><?= htmlspecialchars($guardUrl) ?></a>
     </div>
 
     <!-- Footer -->
     <div class="poster-footer">
-        <div>
-            <strong>Operations Hotline:</strong> <?= htmlspecialchars($settings['phone']) ?><br>
-            <strong>Support:</strong> <?= htmlspecialchars($settings['email']) ?>
+        <div class="footer-left">
+            <div><strong>Operations Hotline:</strong> <?= htmlspecialchars($settings['phone'] ?: '+971 4 251 0050') ?></div>
+            <div><strong>Support:</strong> <?= htmlspecialchars($settings['email'] ?: 'ops@ultimatesecurity.ae') ?></div>
         </div>
-        <div style="text-align: right;">
+        <div class="footer-right">
             <div>Dubai, United Arab Emirates</div>
-            <div style="font-size: 8pt; color: #94a3b8;">Printed: <?= date('Y-m-d H:i') ?> GST</div>
+            <div class="print-timestamp">Printed: <?= date('Y-m-d H:i') ?> GST</div>
         </div>
     </div>
 
@@ -415,8 +500,8 @@ window.addEventListener('DOMContentLoaded', function() {
     
     if (typeof QRCode !== 'undefined' && typeof QRCode.toCanvas === 'function') {
         QRCode.toCanvas(canvas, qrData, {
-            width: 260,
-            margin: 2,
+            width: 250,
+            margin: 1,
             color: {
                 dark: '#000000',
                 light: '#ffffff'
@@ -424,7 +509,6 @@ window.addEventListener('DOMContentLoaded', function() {
             errorCorrectionLevel: 'H'
         }, function (error) {
             if (!error) {
-                // Smoothly replace external image with local canvas render
                 canvas.style.display = 'block';
                 img.style.display = 'none';
             }

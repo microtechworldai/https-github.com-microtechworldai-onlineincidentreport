@@ -60,6 +60,7 @@ if (strpos($qrBaseUrl, 'trycloudflare.com') !== false && strpos($qrBaseUrl, 'htt
 }
 
 $supervisorUrl = $qrBaseUrl . '/sup/index.php?camp=' . urlencode($camp['qr_token']);
+$qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data=" . urlencode($supervisorUrl);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -72,286 +73,414 @@ $supervisorUrl = $qrBaseUrl . '/sup/index.php?camp=' . urlencode($camp['qr_token
             size: A4 portrait;
             margin: 0;
         }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: #e2e8f0;
             color: #0f172a;
-            padding: 20px 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
-        .no-print-toolbar {
-            width: 210mm;
-            background: #1e293b;
+
+        /* Top Action Bar (Screen Only) */
+        .no-print-bar {
+            width: 100%;
+            background: #0f172a;
             color: #fff;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 12px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        .btn-print {
-            background: #0284c7;
+
+        .btn-action {
             color: #fff;
             border: none;
-            padding: 8px 16px;
-            font-weight: bold;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-weight: 700;
             font-size: 13px;
-            border-radius: 6px;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: transform 0.15s ease;
         }
-        .poster-page {
+        .btn-action:hover {
+            transform: translateY(-1px);
+        }
+
+        /* A4 Poster Canvas */
+        .poster-canvas {
             width: 210mm;
             height: 297mm;
+            max-height: 297mm;
             background: #ffffff;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            padding: 16mm 16mm;
+            margin: 20px auto;
+            padding: 18mm 20mm;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border: 1px solid #cbd5e1;
             position: relative;
+            overflow: hidden;
         }
-        .poster-border {
-            position: absolute;
-            top: 8mm;
-            left: 8mm;
-            right: 8mm;
-            bottom: 8mm;
-            border: 3px double #0284c7;
-            pointer-events: none;
-        }
+
+        /* Header Section */
         .poster-header {
             width: 100%;
             text-align: center;
-            border-bottom: 3px solid #0284c7;
-            padding-bottom: 12px;
-        }
-        .poster-logo {
-            height: 60px;
-            max-width: 260px;
-            object-fit: contain;
-            margin-bottom: 8px;
-        }
-        .poster-header h1 {
-            font-size: 19pt;
-            font-weight: 900;
-            color: #0b192c;
-            text-transform: uppercase;
-        }
-        .poster-header h2 {
-            font-size: 12.5pt;
-            font-weight: 700;
-            color: #0284c7;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 4px;
-        }
-        .camp-box {
-            width: 100%;
-            background: #f8fafc;
-            border: 2px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 14px;
-            text-align: center;
-            margin: 10px 0;
-        }
-        .camp-name {
-            font-size: 22pt;
-            font-weight: 900;
-            color: #0f172a;
-            line-height: 1.2;
-        }
-        .camp-code-badge {
-            display: inline-block;
-            background: #0284c7;
-            color: #fff;
-            font-family: monospace;
-            font-size: 13pt;
-            font-weight: bold;
-            padding: 4px 16px;
-            border-radius: 6px;
-            margin-top: 6px;
-        }
-        .qr-frame {
-            background: #fff;
-            padding: 18px;
-            border: 4px solid #0f172a;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 6px 0;
         }
-        #qrcodeCanvas {
-            width: 250px !important;
-            height: 250px !important;
-            display: block;
+
+        .poster-logo-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
         }
-        .qr-caption {
-            margin-top: 10px;
+
+        .poster-logo {
+            height: 64px;
+            max-width: 280px;
+            object-fit: contain;
+        }
+
+        .poster-header h1 {
+            font-size: 20pt;
+            font-weight: 900;
+            color: #0b192c;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 4px 0;
+            line-height: 1.15;
+        }
+
+        .poster-header h2 {
             font-size: 11pt;
             font-weight: 800;
             color: #0284c7;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            margin: 0;
+            line-height: 1.2;
         }
-        .instruction-box {
+
+        .header-divider {
             width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-            margin: 8px 0;
-        }
-        .step-card {
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            padding: 10px;
-            background: #f8fafc;
-            text-align: center;
-        }
-        .step-num {
-            width: 26px;
-            height: 26px;
+            height: 4px;
             background: #0284c7;
-            color: #fff;
-            border-radius: 50%;
-            display: inline-flex;
+            border-radius: 2px;
+            margin-top: 14px;
+        }
+
+        /* Camp Card */
+        .site-card {
+            width: 100%;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .site-card-label {
+            font-size: 10pt;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .site-card-name {
+            font-size: 26pt;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1.2;
+            margin-bottom: 5px;
+        }
+
+        .site-card-code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 12pt;
+            font-weight: 700;
+            color: #94a3b8;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* QR Frame Box */
+        .qr-card {
+            width: 380px;
+            max-width: 100%;
+            background: #ffffff;
+            border: 2.5px solid #0f172a;
+            border-radius: 18px;
+            padding: 22px 24px 18px;
+            margin: 16px auto;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+        }
+
+        #qrImage, #qrcodeCanvas {
+            width: 250px !important;
+            height: 250px !important;
+            display: block;
+        }
+
+        .qr-caption {
+            margin-top: 14px;
             font-size: 11pt;
-            margin-bottom: 4px;
-        }
-        .step-title {
-            font-size: 10pt;
-            font-weight: bold;
-            color: #0f172a;
-            margin-bottom: 3px;
-        }
-        .step-desc {
-            font-size: 8pt;
-            color: #64748b;
+            font-weight: 900;
+            color: #0284c7;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            text-align: center;
             line-height: 1.3;
         }
+
+        /* 3 Steps Grid */
+        .steps-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .step-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 12px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .step-badge {
+            font-size: 12pt;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+
+        .step-title {
+            font-size: 11pt;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+
+        .step-desc {
+            font-size: 8.5pt;
+            color: #475569;
+            line-height: 1.35;
+        }
+
+        /* Direct Shortlink */
+        .direct-link-box {
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .direct-link-label {
+            font-size: 8.5pt;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 2px;
+        }
+
+        .direct-link-url {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 8.5pt;
+            font-weight: 600;
+            color: #0284c7;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        /* Footer */
         .poster-footer {
             width: 100%;
-            border-top: 2px solid #e2e8f0;
-            padding-top: 10px;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 12px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: flex-end;
             font-size: 8.5pt;
+            color: #334155;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        .footer-left strong {
+            color: #0f172a;
+        }
+
+        .footer-right {
+            text-align: right;
+        }
+
+        .print-timestamp {
+            font-size: 8pt;
             color: #64748b;
         }
-        .url-text {
-            font-family: monospace;
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid #e2e8f0;
-            word-break: break-all;
-            max-width: 320px;
-            font-size: 7.5pt;
-        }
+
+        /* Print Media Styles */
         @media print {
-            body { background: none; padding: 0; }
-            .no-print-toolbar { display: none; }
-            .poster-page { box-shadow: none; margin: 0; width: 100%; height: 100%; }
+            .no-print-bar { display: none !important; }
+            body { 
+                background: #fff !important; 
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .poster-canvas {
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 16mm 18mm !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="no-print-toolbar">
-    <div style="font-size: 13px;">
-        <strong>Camp Accommodation QR Poster</strong> &bull; <?= htmlspecialchars($camp['camp_name']) ?>
+<div class="no-print-bar">
+    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <div>
+            <strong>Camp Checkpoint Poster:</strong> <?= htmlspecialchars($camp['camp_name']) ?> (<?= htmlspecialchars($camp['camp_code']) ?>)
+        </div>
+        <?php if (!empty($publicTunnelUrl) || !empty($lanIps)): ?>
+            <div style="background: rgba(14, 165, 233, 0.15); border: 1px solid #0284c7; padding: 4px 12px; border-radius: 6px; font-size: 12.5px; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+                <span>📱 <strong>QR Target Host:</strong></span>
+                <select onchange="location.href='?id=<?= $id ?>&host=' + encodeURIComponent(this.value);" style="background: #0f172a; color: #fff; border: 1px solid #0284c7; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                    <option value="<?= htmlspecialchars(APP_URL) ?>" <?= ($qrBaseUrl === APP_URL) ? 'selected' : '' ?>>
+                        🌐 Live Domain (<?= htmlspecialchars(parse_url(APP_URL, PHP_URL_HOST)) ?>)
+                    </option>
+                    <?php if (!empty($publicTunnelUrl)): ?>
+                        <option value="<?= htmlspecialchars($publicTunnelUrl) ?>" <?= ($selectedHost === $publicTunnelUrl) ? 'selected' : '' ?>>
+                            ⚡ Cloudflare Tunnel (HTTPS)
+                        </option>
+                    <?php endif; ?>
+                    <?php foreach ($lanIps as $lip): ?>
+                        <?php $hVal = $lip . $portSuffix; ?>
+                        <option value="<?= htmlspecialchars($hVal) ?>" <?= ($selectedHost === $hVal && $qrBaseUrl !== $publicTunnelUrl) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($hVal) ?> (Local Wi-Fi)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        <?php endif; ?>
     </div>
-    <div style="display: flex; gap: 10px; align-items: center;">
-        <form method="GET" style="margin: 0; display: inline-flex; gap: 6px;">
-            <input type="hidden" name="id" value="<?= $camp['id'] ?>">
-            <select name="host" class="form-control" style="font-size: 12px; padding: 4px 8px; background: #334155; color: #fff; border: 1px solid #475569;" onchange="this.form.submit()">
-                <?php if (!empty($publicTunnelUrl)): ?>
-                    <option value="<?= htmlspecialchars($publicTunnelUrl) ?>" <?= ($selectedHost === $publicTunnelUrl) ? 'selected' : '' ?>>
-                        Public HTTPS Cloudflare Tunnel
-                    </option>
-                <?php endif; ?>
-                <?php foreach ($lanIps as $ip): ?>
-                    <?php $optVal = $ip . $portSuffix; ?>
-                    <option value="<?= htmlspecialchars($optVal) ?>" <?= ($selectedHost === $optVal || $selectedHost === ("http://" . $optVal)) ? 'selected' : '' ?>>
-                        Wi-Fi LAN IP (<?= htmlspecialchars($optVal) ?>)
-                    </option>
-                <?php endforeach; ?>
-                <option value="<?= htmlspecialchars(APP_URL) ?>" <?= ($selectedHost === APP_URL) ? 'selected' : '' ?>>
-                    Default App URL (<?= htmlspecialchars(APP_URL) ?>)
-                </option>
-            </select>
-        </form>
-        <button class="btn-print" onclick="window.print()">
-            🖨️ Print Checkpoint Poster
-        </button>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn-action" onclick="downloadQrCode();" style="background: #10b981;">💾 Download QR</button>
+        <button class="btn-action" onclick="copyPatrolLink();" style="background: #6366f1;">📋 Copy Link</button>
+        <button class="btn-action" onclick="window.print();" style="background: #0284c7;">🖨️ Print Poster (A4)</button>
+        <button style="background: transparent; color: #fff; border: 1px solid #475569; padding: 9px 16px; border-radius: 8px; cursor: pointer;" onclick="window.close();">Close</button>
     </div>
 </div>
 
-<div class="poster-page">
-    <div class="poster-border"></div>
+<div class="poster-canvas">
 
+    <!-- Top Header -->
     <div class="poster-header">
-        <img class="poster-logo" src="<?= APP_URL ?>/<?= htmlspecialchars($settings['logo_url']) ?>" alt="Logo" onerror="this.style.display='none'">
+        <div class="poster-logo-wrap">
+            <?php if (!empty($settings['logo_url'])): ?>
+                <img class="poster-logo" src="<?= APP_URL ?>/<?= htmlspecialchars($settings['logo_url']) ?>" alt="USS Logo" onerror="this.style.display='none'; document.getElementById('svgFallbackLogo').style.display='block';">
+            <?php endif; ?>
+            <svg id="svgFallbackLogo" width="56" height="56" viewBox="0 0 64 64" fill="none" style="<?= empty($settings['logo_url']) ? '' : 'display:none;' ?>">
+                <path d="M32 4L10 14V30C10 44 19 56 32 60C45 56 54 44 54 30V14L32 4Z" fill="#0284C7"/>
+                <path d="M32 10L14 18V30C14 41 21 51 32 54C43 51 50 41 50 30V18L32 10Z" fill="#0EA5E9"/>
+                <path d="M26 28L31 33L42 22" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
         <h1><?= htmlspecialchars($settings['company_name']) ?></h1>
-        <h2>Supervisor Camp Patrol Checkpoint</h2>
+        <h2>OFFICIAL SUPERVISOR SHIFT CHECKPOINT</h2>
+        <div class="header-divider"></div>
     </div>
 
-    <div class="camp-box">
-        <div style="font-size: 11pt; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Base Accommodation</div>
-        <div class="camp-name"><?= htmlspecialchars($camp['camp_name']) ?></div>
-        <div class="camp-code-badge"><?= htmlspecialchars($camp['camp_code']) ?></div>
-        <?php if (!empty($camp['location'])): ?>
-            <div style="font-size: 9.5pt; color: #64748b; margin-top: 6px;"><?= htmlspecialchars($camp['location']) ?></div>
-        <?php endif; ?>
+    <!-- Accommodation Camp Card -->
+    <div class="site-card">
+        <div class="site-card-label">SUPERVISOR ACCOMMODATION BASE</div>
+        <div class="site-card-name"><?= htmlspecialchars($camp['camp_name']) ?></div>
+        <div class="site-card-code">CAMP CODE: <?= htmlspecialchars($camp['camp_code']) ?></div>
     </div>
 
-    <div class="qr-frame">
-        <img id="qrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=<?= urlencode($supervisorUrl) ?>" alt="Camp Checkpoint QR Code" width="250" height="250" style="display:block; margin:0 auto; background:#fff; border-radius:8px;" crossOrigin="anonymous">
-        <canvas id="qrcodeCanvas" style="display: none; width: 250px; height: 250px;"></canvas>
-        <div class="qr-caption">Scan to Start Patrol (Camp Out) or End Duty (Camp In)</div>
+    <!-- QR Code Center Card -->
+    <div class="qr-card">
+        <canvas id="qrcodeCanvas" width="250" height="250" style="display: none;"></canvas>
+        <img id="qrImage" src="<?= $qrApiUrl ?>" alt="QR Code" width="250" height="250" style="display: block;">
+        <div class="qr-caption">SCAN WITH PHONE CAMERA FOR CAMP OUT / CAMP IN</div>
     </div>
 
-    <div class="instruction-box">
-        <div class="step-card">
-            <div class="step-num">1</div>
-            <div class="step-title">Departing Camp</div>
-            <div class="step-desc">Scan this QR when leaving camp to begin patrol shift (Camp Out). Starts official duty timer.</div>
+    <!-- 3 Steps Instructions Grid -->
+    <div class="steps-grid">
+        <div class="step-item">
+            <div class="step-badge">1</div>
+            <div class="step-title">Scan QR Code</div>
+            <div class="step-desc">Open phone camera and point at this code to begin or conclude supervisor patrol duty.</div>
         </div>
-        <div class="step-card">
-            <div class="step-num">2</div>
-            <div class="step-title">Site Inspections</div>
-            <div class="step-desc">Travel to assigned sites. Scan Site QR for Time In, conduct audit, and scan for Time Out with mandatory remarks.</div>
+        <div class="step-item">
+            <div class="step-badge">2</div>
+            <div class="step-title">Camp Out (Start)</div>
+            <div class="step-desc">Register departure from accommodation camp to activate mobile site visit rounds.</div>
         </div>
-        <div class="step-card">
-            <div class="step-num">3</div>
-            <div class="step-title">Return to Camp</div>
-            <div class="step-desc">Scan this QR upon returning to camp to complete duty (Camp In). Finalizes daily patrol dossier.</div>
+        <div class="step-item">
+            <div class="step-badge">3</div>
+            <div class="step-title">Camp In (Finish)</div>
+            <div class="step-desc">Return to camp, scan code to submit daily duty dossier and conclude shift.</div>
         </div>
     </div>
 
+    <!-- Direct Fallback Link -->
+    <div class="direct-link-box">
+        <div class="direct-link-label">Direct Supervisor Link:</div>
+        <a href="<?= htmlspecialchars($supervisorUrl) ?>" class="direct-link-url" target="_blank"><?= htmlspecialchars($supervisorUrl) ?></a>
+    </div>
+
+    <!-- Footer -->
     <div class="poster-footer">
-        <div>
-            <strong>Authorized Personnel Only</strong> &bull; Dubai Server Timestamp Authority (Asia/Dubai)
+        <div class="footer-left">
+            <div><strong>Operations Hotline:</strong> <?= htmlspecialchars($settings['phone'] ?: '+971 4 251 0050') ?></div>
+            <div><strong>Support:</strong> <?= htmlspecialchars($settings['email'] ?: 'ops@ultimatesecurity.ae') ?></div>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-            <span>Target:</span>
-            <span class="url-text"><?= htmlspecialchars($supervisorUrl) ?></span>
+        <div class="footer-right">
+            <div>Dubai, United Arab Emirates</div>
+            <div class="print-timestamp">Printed: <?= date('Y-m-d H:i') ?> GST</div>
         </div>
     </div>
+
 </div>
 
 <script>
@@ -363,8 +492,11 @@ window.addEventListener('DOMContentLoaded', function() {
     if (typeof QRCode !== 'undefined' && typeof QRCode.toCanvas === 'function') {
         QRCode.toCanvas(canvas, qrData, {
             width: 250,
-            margin: 2,
-            color: { dark: '#0f172a', light: '#ffffff' },
+            margin: 1,
+            color: {
+                dark: '#000000',
+                light: '#ffffff'
+            },
             errorCorrectionLevel: 'H'
         }, function (error) {
             if (!error) {
@@ -374,8 +506,34 @@ window.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+function downloadQrCode() {
+    const canvas = document.getElementById('qrcodeCanvas');
+    const img = document.getElementById('qrImage');
+    const a = document.createElement('a');
+    a.download = 'QR_Camp_<?= htmlspecialchars($camp['camp_code']) ?>.png';
+    if (canvas && canvas.style.display !== 'none' && canvas.toDataURL) {
+        a.href = canvas.toDataURL('image/png');
+    } else {
+        a.href = img.src;
+        a.target = '_blank';
+    }
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function copyPatrolLink() {
+    const url = '<?= addslashes($supervisorUrl) ?>';
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(function() {
+            alert('Camp Checkpoint URL copied to clipboard:\n' + url);
+        });
+    } else {
+        prompt('Copy this camp link:', url);
+    }
+}
 </script>
 
 </body>
 </html>
-
