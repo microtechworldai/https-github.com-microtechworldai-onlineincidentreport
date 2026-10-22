@@ -19,7 +19,7 @@ $db = get_db();
 $msg = '';
 $msgType = 'success';
 
-// Handle Management Sign-Off & Status Update
+// Handle Management Sign-Off & Status Update (with Signature Image Uploads)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_management'])) {
     $newStatus = trim($_POST['status'] ?? 'Submitted');
     $supervisorName = trim($_POST['site_supervisor_name'] ?? '');
@@ -34,17 +34,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_management']))
     $clientManagerAction = trim($_POST['client_manager_action_taken'] ?? '');
     $clientManagerDate = !empty($_POST['client_manager_date']) ? $_POST['client_manager_date'] : null;
 
+    $supSig = $incident['site_supervisor_signature'] ?? null;
+    $opsSig = $incident['operations_manager_signature'] ?? null;
+    $clientSig = $incident['client_manager_signature'] ?? null;
+
+    $sigDir = ROOT_PATH . '/uploads/signatures';
+    if (!is_dir($sigDir)) {
+        @mkdir($sigDir, 0777, true);
+    }
+
+    if (!empty($_FILES['site_supervisor_sig_file']['tmp_name']) && is_uploaded_file($_FILES['site_supervisor_sig_file']['tmp_name'])) {
+        $ext = strtolower(pathinfo($_FILES['site_supervisor_sig_file']['name'], PATHINFO_EXTENSION)) ?: 'png';
+        $fname = 'sup_sig_' . $id . '_' . time() . '.' . $ext;
+        if (move_uploaded_file($_FILES['site_supervisor_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
+            $supSig = 'uploads/signatures/' . $fname;
+        }
+    }
+    if (!empty($_FILES['operations_manager_sig_file']['tmp_name']) && is_uploaded_file($_FILES['operations_manager_sig_file']['tmp_name'])) {
+        $ext = strtolower(pathinfo($_FILES['operations_manager_sig_file']['name'], PATHINFO_EXTENSION)) ?: 'png';
+        $fname = 'ops_sig_' . $id . '_' . time() . '.' . $ext;
+        if (move_uploaded_file($_FILES['operations_manager_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
+            $opsSig = 'uploads/signatures/' . $fname;
+        }
+    }
+    if (!empty($_FILES['client_manager_sig_file']['tmp_name']) && is_uploaded_file($_FILES['client_manager_sig_file']['tmp_name'])) {
+        $ext = strtolower(pathinfo($_FILES['client_manager_sig_file']['name'], PATHINFO_EXTENSION)) ?: 'png';
+        $fname = 'client_sig_' . $id . '_' . time() . '.' . $ext;
+        if (move_uploaded_file($_FILES['client_manager_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
+            $clientSig = 'uploads/signatures/' . $fname;
+        }
+    }
+
     $stmtUpdate = $db->prepare("
         UPDATE incidents SET
             status = ?,
             site_supervisor_name = ?,
             site_supervisor_id = ?,
+            site_supervisor_signature = ?,
             site_supervisor_date = ?,
             recommendation_action_taken = ?,
             operations_manager_name = ?,
+            operations_manager_signature = ?,
             operations_manager_date = ?,
             client_manager_name = ?,
             client_manager_action_taken = ?,
+            client_manager_signature = ?,
             client_manager_date = ?,
             updated_at = NOW()
         WHERE id = ?
@@ -53,12 +87,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_management']))
         $newStatus,
         $supervisorName,
         $supervisorId,
+        $supSig,
         $supervisorDate,
         $recommendationAction,
         $opsManagerName,
+        $opsSig,
         $opsManagerDate,
         $clientManagerName,
         $clientManagerAction,
+        $clientSig,
         $clientManagerDate,
         $id
     ]);
@@ -321,12 +358,12 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="card" style="margin-bottom: 24px;">
             <h3 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border-left: 4px solid #fbbf24;">✍️ Official Management Sign-Off</h3>
 
-            <form method="POST" action="">
+            <form method="POST" action="" enctype="multipart/form-data">
                 <input type="hidden" name="update_management" value="1">
 
                 <div class="form-group">
-                    <label class="form-label">Investigation / Lifecycle Status</label>
-                    <select name="status" class="form-control">
+                    <label class="form-label" style="font-weight: 800; color: #000;">Investigation / Lifecycle Status</label>
+                    <select name="status" class="form-control" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
                         <option value="Submitted" <?= $incident['status'] === 'Submitted' ? 'selected' : '' ?>>Submitted</option>
                         <option value="Under Review" <?= $incident['status'] === 'Under Review' ? 'selected' : '' ?>>Under Review</option>
                         <option value="Follow-up Required" <?= $incident['status'] === 'Follow-up Required' ? 'selected' : '' ?>>Follow-up Required</option>
@@ -335,71 +372,101 @@ require_once __DIR__ . '/../includes/header.php';
                     </select>
                 </div>
 
-                <!-- Site Supervisor -->
+                <!-- 1. Site Supervisor Sign-Off -->
                 <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-top: 14px;">
-                    <div style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 10px; text-transform: uppercase;">
+                    <div style="font-size: 12px; font-weight: 800; color: var(--accent-cyan); margin-bottom: 10px; text-transform: uppercase;">
                         1. Site Supervisor Sign-Off
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Supervisor Name & ID</label>
+                        <label class="form-label" style="font-weight: 800; color: #000;">Supervisor Name &amp; ID</label>
                         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
-                            <input type="text" name="site_supervisor_name" class="form-control" placeholder="Supervisor Name" value="<?= htmlspecialchars($incident['site_supervisor_name'] ?? '') ?>">
-                            <input type="text" name="site_supervisor_id" class="form-control" placeholder="Staff ID" value="<?= htmlspecialchars($incident['site_supervisor_id'] ?? '') ?>">
+                            <input type="text" name="site_supervisor_name" class="form-control" placeholder="Supervisor Name" value="<?= htmlspecialchars($incident['site_supervisor_name'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
+                            <input type="text" name="site_supervisor_id" class="form-control" placeholder="Staff ID" value="<?= htmlspecialchars($incident['site_supervisor_id'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Sign-Off Date</label>
-                        <input type="date" name="site_supervisor_date" class="form-control" value="<?= htmlspecialchars($incident['site_supervisor_date'] ?? '') ?>">
+                        <label class="form-label" style="font-weight: 800; color: #000;">Sign-Off Date (dd/mm/yyyy)</label>
+                        <input type="date" name="site_supervisor_date" class="form-control" value="<?= htmlspecialchars($incident['site_supervisor_date'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Recommendation / Action Taken</label>
-                        <textarea name="recommendation_action_taken" class="form-control" rows="2" placeholder="Corrective actions initiated at post..."><?= htmlspecialchars($incident['recommendation_action_taken'] ?? '') ?></textarea>
+                        <label class="form-label" style="font-weight: 800; color: #000;">Supervisor Signature Image</label>
+                        <?php if (!empty($incident['site_supervisor_signature'])): ?>
+                            <div style="margin-bottom: 6px; padding: 4px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; display: inline-block;">
+                                <img src="<?= APP_URL ?>/<?= htmlspecialchars($incident['site_supervisor_signature']) ?>" alt="Supervisor Signature" style="max-height: 32px; display: block;">
+                            </div>
+                        <?php endif; ?>
+                        <input type="file" name="site_supervisor_sig_file" accept="image/*" class="form-control" style="font-size: 11.5px; padding: 5px 8px; font-weight: 600; width: 100%; box-sizing: border-box;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 800; color: #000;">Recommendation / Action Taken</label>
+                        <textarea name="recommendation_action_taken" class="form-control" rows="2" placeholder="Corrective actions initiated at post..." style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;"><?= htmlspecialchars($incident['recommendation_action_taken'] ?? '') ?></textarea>
                     </div>
                 </div>
 
-                <!-- Operations Manager -->
+                <!-- 2. Operations Manager Sign-Off -->
                 <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-top: 14px;">
-                    <div style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 10px; text-transform: uppercase;">
+                    <div style="font-size: 12px; font-weight: 800; color: var(--accent-cyan); margin-bottom: 10px; text-transform: uppercase;">
                         2. Operations Manager Sign-Off
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Operations Manager Name</label>
-                        <input type="text" name="operations_manager_name" class="form-control" placeholder="e.g. Tariq Mansoor" value="<?= htmlspecialchars($incident['operations_manager_name'] ?? '') ?>">
+                        <label class="form-label" style="font-weight: 800; color: #000;">Operations Manager Name</label>
+                        <input type="text" name="operations_manager_name" class="form-control" placeholder="e.g. Tariq Mansoor" value="<?= htmlspecialchars($incident['operations_manager_name'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Ops Sign-off Date</label>
-                        <input type="date" name="operations_manager_date" class="form-control" value="<?= htmlspecialchars($incident['operations_manager_date'] ?? '') ?>">
+                        <label class="form-label" style="font-weight: 800; color: #000;">Ops Sign-off Date (dd/mm/yyyy)</label>
+                        <input type="date" name="operations_manager_date" class="form-control" value="<?= htmlspecialchars($incident['operations_manager_date'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 800; color: #000;">Operations Manager Signature Image</label>
+                        <?php if (!empty($incident['operations_manager_signature'])): ?>
+                            <div style="margin-bottom: 6px; padding: 4px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; display: inline-block;">
+                                <img src="<?= APP_URL ?>/<?= htmlspecialchars($incident['operations_manager_signature']) ?>" alt="Ops Signature" style="max-height: 32px; display: block;">
+                            </div>
+                        <?php endif; ?>
+                        <input type="file" name="operations_manager_sig_file" accept="image/*" class="form-control" style="font-size: 11.5px; padding: 5px 8px; font-weight: 600; width: 100%; box-sizing: border-box;">
                     </div>
                 </div>
 
-                <!-- Client Representative -->
+                <!-- 3. Client Representative Sign-Off -->
                 <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-top: 14px;">
-                    <div style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 10px; text-transform: uppercase;">
+                    <div style="font-size: 12px; font-weight: 800; color: var(--accent-cyan); margin-bottom: 10px; text-transform: uppercase;">
                         3. Client Representative Sign-Off
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Client Representative Name</label>
-                        <input type="text" name="client_manager_name" class="form-control" placeholder="Client Manager Name" value="<?= htmlspecialchars($incident['client_manager_name'] ?? '') ?>">
+                        <label class="form-label" style="font-weight: 800; color: #000;">Client Representative Name</label>
+                        <input type="text" name="client_manager_name" class="form-control" placeholder="Client Manager Name" value="<?= htmlspecialchars($incident['client_manager_name'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Client Action Taken</label>
-                        <textarea name="client_manager_action_taken" class="form-control" rows="2" placeholder="Client acknowledgement or notes..."><?= htmlspecialchars($incident['client_manager_action_taken'] ?? '') ?></textarea>
+                        <label class="form-label" style="font-weight: 800; color: #000;">Client Action Taken</label>
+                        <textarea name="client_manager_action_taken" class="form-control" rows="2" placeholder="Client acknowledgement or notes..." style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;"><?= htmlspecialchars($incident['client_manager_action_taken'] ?? '') ?></textarea>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Client Date</label>
-                        <input type="date" name="client_manager_date" class="form-control" value="<?= htmlspecialchars($incident['client_manager_date'] ?? '') ?>">
+                        <label class="form-label" style="font-weight: 800; color: #000;">Client Date (dd/mm/yyyy)</label>
+                        <input type="date" name="client_manager_date" class="form-control" value="<?= htmlspecialchars($incident['client_manager_date'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 800; color: #000;">Client Signature Image</label>
+                        <?php if (!empty($incident['client_manager_signature'])): ?>
+                            <div style="margin-bottom: 6px; padding: 4px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; display: inline-block;">
+                                <img src="<?= APP_URL ?>/<?= htmlspecialchars($incident['client_manager_signature']) ?>" alt="Client Signature" style="max-height: 32px; display: block;">
+                            </div>
+                        <?php endif; ?>
+                        <input type="file" name="client_manager_sig_file" accept="image/*" class="form-control" style="font-size: 11.5px; padding: 5px 8px; font-weight: 600; width: 100%; box-sizing: border-box;">
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 14px;">
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 14px; font-weight: 800;">
                     Save Management Sign-Off
                 </button>
             </form>

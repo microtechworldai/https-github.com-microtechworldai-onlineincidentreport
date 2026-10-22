@@ -121,6 +121,46 @@ if (!function_exists('format_meta_date')) {
 }
 
 /**
+ * Format date in dd/mm/yyyy format in bold for Official Management Sign-Off
+ */
+if (!function_exists('format_dmy_bold')) {
+    function format_dmy_bold($dateVal) {
+        if (empty($dateVal) || $dateVal === '0000-00-00') {
+            return '<span style="display:inline-block; width: 75px; border-bottom: 1.5px solid #000; vertical-align: bottom; height: 14px;"></span>';
+        }
+        $ts = is_numeric($dateVal) ? (int)$dateVal : strtotime((string)$dateVal);
+        if (!$ts) return '<strong style="font-weight: 800; font-size: 9.5pt; color: #000;">' . htmlspecialchars($dateVal) . '</strong>';
+        return '<strong style="font-weight: 800; font-size: 9.5pt; color: #000;">' . date('d/m/Y', $ts) . '</strong>';
+    }
+}
+
+/**
+ * Render signature image cleanly if available, otherwise an official signature line
+ */
+if (!function_exists('render_signature_img')) {
+    function render_signature_img($sigVal, $alt = 'Signature') {
+        if (empty($sigVal)) {
+            return '<span style="display:inline-block; width: 75px; border-bottom: 1.5px solid #000; vertical-align: bottom; height: 16px;"></span>';
+        }
+        $src = '';
+        if (strpos($sigVal, 'data:image') === 0) {
+            $src = $sigVal;
+        } elseif (file_exists($sigVal)) {
+            $mime = mime_content_type($sigVal) ?: 'image/png';
+            $src = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($sigVal));
+        } elseif (defined('ROOT_PATH') && file_exists(ROOT_PATH . '/' . ltrim($sigVal, '/'))) {
+            $p = ROOT_PATH . '/' . ltrim($sigVal, '/');
+            $mime = mime_content_type($p) ?: 'image/png';
+            $src = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($p));
+        } else {
+            $src = APP_URL . '/' . ltrim($sigVal, '/');
+        }
+        return '<img src="' . htmlspecialchars($src) . '" alt="' . htmlspecialchars($alt) . '" style="max-height: 22px; max-width: 90px; vertical-align: middle; display: inline-block; object-fit: contain;">';
+    }
+}
+
+
+/**
  * Smart High-Definition Image Optimizer for PDF Output
  * Ensures total PDF document stays around ~300KB while preserving pristine print clarity (HD quality)
  */
@@ -354,11 +394,11 @@ $companyDisplayName = !empty($settings['company_name'])
         .main-form-table {
             width: 100%;
             border-collapse: collapse;
-            border: 2px solid #000;
+            border: 2.5px solid #000000 !important;
         }
 
         .main-form-table td, .main-form-table th {
-            border: 1px solid #000;
+            border: 1.5px solid #000000 !important;
             padding: 3.5px 7px;
             vertical-align: middle;
         }
@@ -577,21 +617,30 @@ $companyDisplayName = !empty($settings['company_name'])
         }
 
         .action-box {
-            height: 17mm;
-            min-height: 17mm;
+            height: 18mm !important;
+            min-height: 18mm !important;
             padding: 4px 8px !important;
             font-size: 9.5pt;
             font-weight: bold;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            border-bottom: 1.5px solid #000 !important;
+            border-bottom: 1.8px solid #000 !important;
+            box-sizing: border-box !important;
         }
 
         .action-text {
-            font-weight: normal;
-            margin-bottom: 4px;
-            font-size: 9pt;
+            font-weight: 800 !important;
+            font-size: 10pt !important;
+            color: #8B0000 !important; /* Dark Red */
+            margin-bottom: 3px !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
+            white-space: pre-wrap !important;
+            line-height: 1.30 !important;
+            max-height: 9.5mm !important;
+            overflow: hidden !important;
         }
 
         .signoff-bottom {
@@ -826,55 +875,75 @@ $companyDisplayName = !empty($settings['company_name'])
             </td>
         </tr>
 
-        <!-- Row 7: Site Supervisor Sign-off Line -->
+        <!-- Row 7: Site Supervisor Sign-off Line (Bold, dd/mm/yyyy date, signature load) -->
         <tr>
-            <td colspan="2" style="padding: 0;">
+            <td colspan="2" style="padding: 0; border-bottom: 1.8px solid #000;">
                 <div class="signoff-row">
-                    <span>Site Supervisor: <u><?= htmlspecialchars($incident['site_supervisor_name'] ?: '') ?></u></span>
-                    <span>ID No.: <u><?= htmlspecialchars($incident['site_supervisor_id'] ?: '') ?></u></span>
-                    <span>Signature: <u></u></span>
-                    <span>Date: <u><?= !empty($incident['site_supervisor_date']) ? format_date($incident['site_supervisor_date']) : '' ?></u></span>
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">
+                        Site Supervisor: <strong style="font-weight: 800; font-size: 9.5pt; color: #000; text-decoration: underline;"><?= htmlspecialchars($incident['site_supervisor_name'] ?: '                         ') ?></strong>
+                    </span>
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">
+                        ID No.: <strong style="font-weight: 800; font-size: 9.5pt; color: #000; text-decoration: underline;"><?= htmlspecialchars($incident['site_supervisor_id'] ?: '          ') ?></strong>
+                    </span>
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">
+                        Signature: <?= render_signature_img($incident['site_supervisor_signature'] ?? '', 'Supervisor Signature') ?>
+                    </span>
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">
+                        Date: <?= format_dmy_bold($incident['site_supervisor_date'] ?? '') ?>
+                    </span>
                 </div>
             </td>
         </tr>
 
-        <!-- Row 8: Recommendation / Action Taken -->
+        <!-- Row 8: Recommendation / Action Taken (Operations Manager Sign-off) -->
         <tr>
             <td colspan="2" class="navy-bar-italic">
                 Recommendation / Action Taken
             </td>
         </tr>
         <tr>
-            <td colspan="2" style="padding: 0;">
+            <td colspan="2" style="padding: 0; border-bottom: 1.8px solid #000;">
                 <div class="action-box">
                     <div class="action-text">
-                        <?= htmlspecialchars($incident['recommendation_action_taken'] ?: '') ?>
+                        <?= nl2br(htmlspecialchars($incident['recommendation_action_taken'] ?: '')) ?>
                     </div>
                     <div class="signoff-bottom">
-                        <span>Operations Manager: <u><?= htmlspecialchars($incident['operations_manager_name'] ?: '') ?></u></span>
-                        <span>Signature: <u></u></span>
-                        <span>Date: <u><?= !empty($incident['operations_manager_date']) ? format_date($incident['operations_manager_date']) : '' ?></u></span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                            Operations Manager: <strong style="font-weight: 800; font-size: 9.5pt; color: #000; text-decoration: underline;"><?= htmlspecialchars($incident['operations_manager_name'] ?: '                         ') ?></strong>
+                        </span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                            Signature: <?= render_signature_img($incident['operations_manager_signature'] ?? '', 'Operations Manager Signature') ?>
+                        </span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                            Date: <?= format_dmy_bold($incident['operations_manager_date'] ?? '') ?>
+                        </span>
                     </div>
                 </div>
             </td>
         </tr>
 
-        <!-- Row 9: Action Taken By Client Manager -->
+        <!-- Row 9: Action Taken By Client Manager (Client Representative Sign-off) -->
         <tr>
             <td colspan="2" class="navy-bar-italic">
                 Action Taken By Client Manager
             </td>
         </tr>
         <tr>
-            <td colspan="2" style="padding: 0;">
+            <td colspan="2" style="padding: 0; border-bottom: 1.8px solid #000;">
                 <div class="action-box">
                     <div class="action-text">
-                        <?= htmlspecialchars($incident['client_manager_action_taken'] ?: '') ?>
+                        <?= nl2br(htmlspecialchars($incident['client_manager_action_taken'] ?: '')) ?>
                     </div>
                     <div class="signoff-bottom">
-                        <span>Client Manager: <u><?= htmlspecialchars($incident['client_manager_name'] ?: '') ?></u></span>
-                        <span>Signature: <u></u></span>
-                        <span>Date: <u><?= !empty($incident['client_manager_date']) ? format_date($incident['client_manager_date']) : '' ?></u></span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                            Client Representative: <strong style="font-weight: 800; font-size: 9.5pt; color: #000; text-decoration: underline;"><?= htmlspecialchars($incident['client_manager_name'] ?: '                         ') ?></strong>
+                        </span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                            Signature: <?= render_signature_img($incident['client_manager_signature'] ?? '', 'Client Representative Signature') ?>
+                        </span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                            Date: <?= format_dmy_bold($incident['client_manager_date'] ?? '') ?>
+                        </span>
                     </div>
                 </div>
             </td>
