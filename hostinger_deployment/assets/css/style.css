@@ -418,7 +418,7 @@ table.data-table th,
 [data-theme] .table-container table thead tr,
 [data-theme] .table-container table thead th {
   background: #081426 !important;
-  color: #FFD166 !important;
+  color: #fbbf24 !important;
   font-weight: 800 !important;
   font-size: 12px !important;
   letter-spacing: 0.6px !important;
@@ -496,7 +496,7 @@ table.data-table thead th:last-child,
 .sites-table thead tr, .sites-table thead th,
 [data-theme] .sites-table thead tr, [data-theme] .sites-table thead th {
   background: #081426 !important;
-  color: #FFD166 !important;
+  color: #fbbf24 !important;
   font-weight: 800 !important;
   font-size: 12px !important;
   letter-spacing: 0.6px !important;
@@ -1021,7 +1021,7 @@ table.data-table th {
   background: #081426 !important;
   padding: 15px 18px;
   font-weight: 800 !important;
-  color: #FFD166 !important;
+  color: #fbbf24 !important;
   text-transform: uppercase;
   font-size: 12px !important;
   letter-spacing: 0.6px;
@@ -1361,4 +1361,70 @@ table.data-table tr:hover td {
   color: var(--text-dim);
   pointer-events: none;
   display: block;
+}
+
+
+/* Admin Table Header Image 1 Palette - Deep Navy #081426 & Amber #fbbf24 */
+table.data-table thead tr th,
+table.data-table thead th,
+.table-container table thead th,
+.sites-table thead th,
+.dashboard-table thead th,
+[data-theme] table.data-table thead th,
+[data-theme] .sites-table thead th,
+[data-theme] .dashboard-table thead th {
+  background: #081426 !important;
+  color: #fbbf24 !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.6px !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid rgba(251, 191, 36, 0.25) !important;
+}
+
+/* Edit Incident Features - Bold and Dark Black (Image 5) */
+.incident-edit-card .form-label {
+  color: #000000 !important;
+  font-weight: 800 !important;
+  font-size: 13.5px !important;
+  margin-bottom: 6px !important;
+  display: block !important;
+}
+
+.incident-edit-card .form-control,
+.incident-edit-card select.form-control,
+.incident-edit-card input[type="date"],
+.incident-edit-card input[type="time"],
+.incident-edit-card input[type="text"],
+.incident-edit-card textarea.form-control {
+  color: #000000 !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #0f172a !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+}
+
+.incident-edit-card .form-control::placeholder {
+  color: #475569 !important;
+  font-weight: 600 !important;
+}
+
+.incident-edit-card .feature-option-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 13.5px !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
+.incident-edit-card .feature-option-label input[type="checkbox"] {
+  width: 17px !important;
+  height: 17px !important;
+  accent-color: #081426 !important;
+  cursor: pointer !important;
 }

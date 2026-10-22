@@ -128,15 +128,15 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="live-patrol-banner" style="background: #081426 !important; border: 1px solid rgba(255, 209, 102, 0.35) !important; padding: 16px 20px; border-radius: 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 20px;">
         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
             <div>
-                <h3 style="font-size: 18px; font-weight: 900; margin: 0; color: #FFD166 !important;">Live Patrol Submissions</h3>
+                <h3 style="font-size: 18px; font-weight: 900; margin: 0; color: #fbbf24 !important;">Live Patrol Submissions</h3>
                 <p style="font-size: 13px; font-weight: 700; margin: 3px 0 0 0; color: #ffe894 !important; opacity: 0.95;">Latest incidents filed by on-duty guards across all checkpoints</p>
             </div>
-            <div id="liveStreamBadge" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 209, 102, 0.18); border: 1px solid rgba(255, 209, 102, 0.45); color: #FFD166; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px;">
-                <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #FFD166; box-shadow: 0 0 8px #FFD166; animation: livePulseDot 1.5s infinite;"></span>
+            <div id="liveStreamBadge" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 209, 102, 0.18); border: 1px solid rgba(255, 209, 102, 0.45); color: #fbbf24; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px;">
+                <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation: livePulseDot 1.5s infinite;"></span>
                 LIVE CONNECTED
             </div>
         </div>
-        <a href="<?= APP_URL ?>/admin/incidents.php" class="btn btn-sm" style="background: #FFD166; color: #081426; font-weight: 800; border: none; padding: 7px 14px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+        <a href="<?= APP_URL ?>/admin/incidents.php" class="btn btn-sm" style="background: #fbbf24; color: #081426; font-weight: 800; border: none; padding: 7px 14px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
             View All Reports &rarr;
         </a>
     </div>
@@ -145,14 +145,14 @@ require_once __DIR__ . '/../includes/header.php';
         <table class="data-table dashboard-table">
             <thead>
                 <tr style="background: #081426 !important;">
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Ref Number</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Site / Facility</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Reported By</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Date & Time</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Priority</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Status</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Photos</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-align: right;">Action</th>
+                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Ref Number</th>
+                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Site / Facility</th>
+                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Reported By</th>
+                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Date & Time</th>
+                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Priority</th>
+                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Status</th>
+                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Photos</th>
+                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-align: right;">Action</th>
                 </tr>
             </thead>
             <tbody id="liveTableBody">

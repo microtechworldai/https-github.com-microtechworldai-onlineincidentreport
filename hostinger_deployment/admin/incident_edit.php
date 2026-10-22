@@ -113,9 +113,17 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div style="max-width: 900px; margin: 0 auto;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <a href="<?= APP_URL ?>/admin/incident_view.php?id=<?= $id ?>" class="btn btn-secondary btn-sm">&larr; Back to Dossier</a>
-        <span style="font-family: monospace; color: var(--accent-cyan);"><?= htmlspecialchars($incident['ref_number']) ?></span>
+    <!-- Header Banner Styled matching Image 1: #081426 background & #fbbf24 gold text -->
+    <div style="background: #081426 !important; color: #fbbf24 !important; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid rgba(251, 191, 36, 0.35); box-shadow: 0 4px 12px rgba(0,0,0,0.18);">
+        <div>
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 800; color: #fbbf24 !important;">Edit Incident Report</div>
+            <h2 style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 800; color: #ffffff !important; margin: 3px 0 0 0; letter-spacing: 0.5px;">
+                <?= htmlspecialchars($incident['ref_number']) ?>
+            </h2>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="<?= APP_URL ?>/admin/incident_view.php?id=<?= $id ?>" class="btn btn-secondary btn-sm" style="color: #ffffff !important; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25);">&larr; Back to Dossier</a>
+        </div>
     </div>
 
     <?php if ($error): ?>
@@ -139,8 +147,89 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     <?php endif; ?>
 
-    <div class="card">
+    
+<style>
+/* Edit Incident Dashboard - Bold and Dark Black Features (Image 5) */
+.incident-edit-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
+}
+
+.incident-edit-card .form-label {
+    color: #000000 !important;
+    font-weight: 800 !important;
+    font-size: 13.5px !important;
+    letter-spacing: 0.1px !important;
+    margin-bottom: 6px !important;
+    display: block !important;
+}
+
+.incident-edit-card .form-control,
+.incident-edit-card select.form-control,
+.incident-edit-card input[type="date"],
+.incident-edit-card input[type="time"],
+.incident-edit-card input[type="text"],
+.incident-edit-card textarea.form-control {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    background: #ffffff !important;
+    border: 1.5px solid #0f172a !important;
+    border-radius: 6px !important;
+    padding: 9px 12px !important;
+}
+
+.incident-edit-card .form-control:focus,
+.incident-edit-card select.form-control:focus {
+    border-color: #081426 !important;
+    box-shadow: 0 0 0 3px rgba(8, 20, 38, 0.15) !important;
+}
+
+.incident-edit-card .form-control::placeholder {
+    color: #475569 !important;
+    font-weight: 600 !important;
+}
+
+.incident-edit-card .feature-option-label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 13.5px !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+.incident-edit-card .feature-option-label input[type="checkbox"] {
+    width: 17px !important;
+    height: 17px !important;
+    accent-color: #081426 !important;
+    cursor: pointer !important;
+}
+
+.incident-edit-card .rich-editor-box {
+    color: #000000 !important;
+    background: #ffffff !important;
+    border: 1.5px solid #0f172a !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    min-height: 180px !important;
+}
+
+.incident-edit-card .rich-toolbar {
+    background: #f1f5f9 !important;
+    border: 1.5px solid #0f172a !important;
+    border-bottom: none !important;
+}
+</style>
+
+    <div class="card incident-edit-card">
         <form method="POST" action="">
+                        <!-- Section Heading 1: Incident Timeline & Priority -->
+            <h4 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 9px 14px; border-radius: 6px; margin-bottom: 16px; display: block; border-left: 4px solid #fbbf24;">Incident Timeline &amp; Priority</h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
                 <div class="form-group">
                     <label class="form-label">Incident Date (dd/mm/yyyy)</label>
@@ -183,12 +272,14 @@ require_once __DIR__ . '/../includes/header.php';
                 </select>
             </div>
 
+                        <!-- Section Heading 2: Classification & Triggers -->
+            <h4 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 9px 14px; border-radius: 6px; margin-top: 22px; margin-bottom: 16px; display: block; border-left: 4px solid #fbbf24;">Classification &amp; Triggers</h4>
             <!-- Main Causes -->
             <div class="form-group">
                 <label class="form-label">Main Causes</label>
                 <div style="display: flex; gap: 14px; flex-wrap: wrap;">
                     <?php foreach ($settings['cause_options'] as $opt): ?>
-                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #fff; cursor: pointer;">
+                        <label class="feature-option-label">
                             <input type="checkbox" name="cause_main[]" value="<?= htmlspecialchars($opt) ?>" <?= in_array($opt, $causes) ? 'checked' : '' ?>>
                             <?= htmlspecialchars($opt) ?>
                         </label>
@@ -201,7 +292,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <label class="form-label">Incident Categories</label>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
                     <?php foreach ($settings['incident_options'] as $opt): ?>
-                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); cursor: pointer;">
+                        <label class="feature-option-label">
                             <input type="checkbox" name="incident_types[]" value="<?= htmlspecialchars($opt) ?>" <?= in_array($opt, $incTypes) ? 'checked' : '' ?>>
                             <?= htmlspecialchars($opt) ?>
                         </label>
@@ -215,7 +306,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <label class="form-label">Disciplinary Reasons</label>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;">
                     <?php foreach ($settings['disciplinary_options'] as $opt): ?>
-                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); cursor: pointer;">
+                        <label class="feature-option-label">
                             <input type="checkbox" name="disciplinary_reasons[]" value="<?= htmlspecialchars($opt) ?>" <?= in_array($opt, $discReasons) ? 'checked' : '' ?>>
                             <?= htmlspecialchars($opt) ?>
                         </label>
@@ -228,7 +319,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <label class="form-label">Authorities & Personnel Notified</label>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;">
                     <?php foreach ($settings['notified_options'] as $opt): ?>
-                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); cursor: pointer;">
+                        <label class="feature-option-label">
                             <input type="checkbox" name="who_notified[]" value="<?= htmlspecialchars($opt) ?>" <?= in_array($opt, $notified) ? 'checked' : '' ?>>
                             <?= htmlspecialchars($opt) ?>
                         </label>
@@ -237,6 +328,8 @@ require_once __DIR__ . '/../includes/header.php';
                 <input type="text" name="notified_other_text" class="form-control" style="margin-top: 8px;" placeholder="Other authorities notified details..." value="<?= htmlspecialchars($incident['notified_other_text'] ?? '') ?>">
             </div>
 
+                        <!-- Section Heading 3: Executive Summary & Narrative -->
+            <h4 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 9px 14px; border-radius: 6px; margin-top: 22px; margin-bottom: 16px; display: block; border-left: 4px solid #fbbf24;">Executive Summary &amp; Narrative Description</h4>
             <!-- Summary -->
             <div class="form-group">
                 <label class="form-label">Executive Summary Line</label>
