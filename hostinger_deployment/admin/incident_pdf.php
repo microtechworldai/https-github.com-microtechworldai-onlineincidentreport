@@ -389,35 +389,43 @@ $companyDisplayName = !empty($settings['company_name'])
             display: inline-flex;
             align-items: center;
             width: 20%;
-            font-size: 9.5pt;
+            font-size: 9pt;
             font-weight: bold;
-            color: #000;
+            color: #000000;
+            line-height: 1.2;
+            box-sizing: border-box;
         }
 
         .chk-item-4 {
             display: inline-flex;
-            align-items: center;
+            align-items: flex-start;
             width: 25%;
-            font-size: 9.5pt;
+            font-size: 9pt;
             font-weight: bold;
-            color: #000;
+            color: #000000;
+            line-height: 1.15;
+            box-sizing: border-box;
         }
 
         .chk-box {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 14px;
-            height: 14px;
-            border: 1.8px solid #000;
-            margin-right: 6px;
-            vertical-align: middle;
-            background: #fff;
-            color: #000;
+            width: 13px;
+            height: 13px;
+            min-width: 13px;
+            min-height: 13px;
+            border: 1.5px solid #000000;
+            margin-right: 5px;
+            margin-top: 1px;
+            vertical-align: top;
+            background: #ffffff;
+            color: #000000;
             font-size: 11px;
             font-weight: 900;
             line-height: 1;
             flex-shrink: 0;
+            box-sizing: border-box;
         }
 
         .navy-bar-italic {
@@ -454,14 +462,14 @@ $companyDisplayName = !empty($settings['company_name'])
         }
 
         .summary-line-box {
-            height: 45px !important;
-            min-height: 45px !important;
-            max-height: 45px !important;
-            padding: 3px 8px !important;
-            font-size: 15px !important;
-            font-weight: bold !important;
-            color: #8b0000 !important;
-            line-height: 1.30 !important;
+            height: 48px !important;
+            min-height: 48px !important;
+            max-height: 48px !important;
+            padding: 5px 8px !important;
+            font-size: 9.5pt !important;
+            font-weight: normal !important;
+            color: #000000 !important;
+            line-height: 1.35 !important;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
             word-break: break-word !important;
@@ -469,7 +477,8 @@ $companyDisplayName = !empty($settings['company_name'])
             border-bottom: 1.5px solid #000 !important;
             overflow: hidden !important;
             box-sizing: border-box !important;
-            vertical-align: middle !important;
+            vertical-align: top !important;
+            background: #ffffff !important;
         }
 
         .description-box {
@@ -689,14 +698,14 @@ $companyDisplayName = !empty($settings['company_name'])
             </td>
         </tr>
 
-        <!-- Row 2: Disciplinary (left) + Disciplinary Checkboxes (right) -->
+        <!-- Row 2: Disciplinary (left) + Disciplinary Checkboxes (right) - Organized as per Image 1 -->
         <tr>
-            <td class="col-side-label">
+            <td class="col-side-label" style="border-bottom: 1.5px solid #000;">
                 Disciplinary
             </td>
-            <td class="col-content-box">
-                <!-- Sub-row 1 -->
-                <div class="row-flex" style="margin-bottom: 7.5px;">
+            <td class="col-content-box" style="border-bottom: 1.5px solid #000; padding: 6px 8px;">
+                <!-- Sub-row 1: 5 items -->
+                <div class="row-flex" style="margin-bottom: 7px; display: flex; width: 100%;">
                     <?php foreach ($disciplinaryList[0] as $dItem): ?>
                         <span class="chk-item">
                             <?= render_pdf_box(in_array($dItem, $discReasons)) ?>
@@ -704,8 +713,8 @@ $companyDisplayName = !empty($settings['company_name'])
                         </span>
                     <?php endforeach; ?>
                 </div>
-                <!-- Sub-row 2 -->
-                <div class="row-flex">
+                <!-- Sub-row 2: 4 items -->
+                <div class="row-flex" style="display: flex; width: 100%;">
                     <?php foreach ($disciplinaryList[1] as $dItem): ?>
                         <span class="chk-item">
                             <?= render_pdf_box(in_array($dItem, $discReasons)) ?>
@@ -717,18 +726,18 @@ $companyDisplayName = !empty($settings['company_name'])
             </td>
         </tr>
 
-        <!-- Row 3: Incident (left) + Incident Checkboxes (right) -->
+        <!-- Row 3: Incident (left) + Incident Checkboxes (right) - Organized as per Image 1 -->
         <tr>
-            <td class="col-side-label">
+            <td class="col-side-label" style="border-bottom: 1.5px solid #000;">
                 Incident
             </td>
-            <td class="col-content-box">
+            <td class="col-content-box" style="border-bottom: 1.5px solid #000; padding: 6px 8px;">
                 <?php foreach ($incidentList as $rIdx => $rowItems): ?>
-                    <div class="row-flex" <?= $rIdx < 2 ? 'style="margin-bottom: 7.5px;"' : '' ?>>
+                    <div class="row-flex" style="display: flex; width: 100%; <?= $rIdx < 2 ? 'margin-bottom: 7px;' : '' ?>">
                         <?php foreach ($rowItems as $iItem): ?>
                             <span class="chk-item-4">
                                 <?= render_pdf_box(in_array($iItem, $incTypes)) ?>
-                                <span><?= htmlspecialchars($iItem) ?></span>
+                                <span><?= ($iItem === 'Visitors & Contractors') ? 'Visitors &amp;<br>Contractors' : htmlspecialchars($iItem) ?></span>
                             </span>
                         <?php endforeach; ?>
                     </div>
@@ -736,17 +745,18 @@ $companyDisplayName = !empty($settings['company_name'])
             </td>
         </tr>
 
-        <!-- Row 4: (Explain What, Where, When, Who, Why and How action taken) -->
-        <tr class="navy-bar-italic">
-            <td style="width: 16%; background: #002266 !important; border-right: 1px solid #000;"></td>
-            <td style="background: #002266 !important;">
+        <!-- Row 4: Incident Description (Image 2 - No blue background, labeled Incident Description) -->
+        <tr>
+            <td class="col-side-label" rowspan="2" style="width: 16%; font-weight: bold; font-size: 10.5pt; text-align: center; vertical-align: middle; border-right: 1.5px solid #000; border-bottom: 1.5px solid #000; background: #ffffff; color: #000000; padding: 4px;">
+                Incident<br>Description
+            </td>
+            <td style="background: #ffffff; color: #000000; font-weight: bold; font-style: italic; font-size: 8.5pt; padding: 3.5px 8px; border-bottom: 1px solid #000;">
                 (Explain What, Where, When, Who, Why and How action taken)
             </td>
         </tr>
         <tr>
-            <td style="width: 16%; border-right: 1px solid #000;"></td>
-            <td class="summary-line-box">
-                <?= nl2br(htmlspecialchars($incident['summary_line'] ?: '')) ?>
+            <td class="summary-line-box" style="background: #ffffff; border-bottom: 1.5px solid #000;">
+                <?= nl2br(htmlspecialchars(!empty($incident['summary_line']) ? $incident['summary_line'] : $incident['description'])) ?>
             </td>
         </tr>
 
