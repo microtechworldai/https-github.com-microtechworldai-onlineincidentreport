@@ -1370,3 +1370,62 @@ body.guard-body {
   white-space: pre-wrap;
 }
 
+
+
+/* ====================================================================
+   RESPONSIVE LAYER (viewport-based) - phones -> 32" monitors
+   Adapts to actual browser viewport, zoom level and Windows scaling.
+   ==================================================================== */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html, body.guard-body { max-width: 100%; overflow-x: hidden; }
+*, *::before, *::after { box-sizing: border-box; }
+.guard-body img, .guard-body video, .guard-body canvas { max-width: 100%; height: auto; }
+.guard-body input, .guard-body select, .guard-body textarea, .guard-body button { max-width: 100%; min-width: 0; font-size: max(16px, 1em); }
+.guard-body .guard-input { width: 100%; }
+.guard-body label, .guard-body span, .guard-body div { overflow-wrap: anywhere; }
+.guard-body [class*="grid"] > * { min-width: 0; }
+
+.guard-container {
+  width: 100%;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(10px, 2.5vw, 28px);
+  padding-right: clamp(10px, 2.5vw, 28px);
+}
+.guard-header, .patrol-ribbon { padding-left: clamp(10px, 2.5vw, 32px); padding-right: clamp(10px, 2.5vw, 32px); }
+.section-card, .navy-section-frame { margin-bottom: clamp(12px, 1.6vh, 22px); }
+
+/* Tablets portrait */
+@media (min-width: 600px) {
+  .guard-container { max-width: 720px; }
+}
+/* Tablets landscape / small laptops (13"-14" at 125-150% scaling ~ 1024-1280 CSS px) */
+@media (min-width: 900px) {
+  .guard-container { max-width: 860px; }
+  .guard-body { font-size: 15px; }
+}
+/* 14"-19" laptops/monitors (~1280-1600 CSS px) */
+@media (min-width: 1200px) {
+  .guard-container { max-width: 960px; }
+  .guard-body { font-size: 15.5px; }
+}
+/* 22"-24" monitors (~1600-1920 CSS px) */
+@media (min-width: 1600px) {
+  .guard-container { max-width: 1080px; }
+  .guard-body { font-size: 16px; }
+}
+/* 27"-32" monitors (~2200+ CSS px) - cap width so text stays readable */
+@media (min-width: 2200px) {
+  .guard-container { max-width: 1240px; }
+  .guard-body { font-size: 17px; }
+}
+/* Short laptop screens: tighten vertical rhythm to reduce scrolling */
+@media (min-width: 900px) and (max-height: 820px) {
+  .section-card, .navy-section-frame { margin-bottom: 12px; }
+  .guard-header { min-height: 0; }
+}
+/* Very small phones */
+@media (max-width: 380px) {
+  .guard-container { padding-left: 8px; padding-right: 8px; }
+}

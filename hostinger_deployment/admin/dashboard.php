@@ -166,8 +166,8 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php foreach ($recentIncidents as $inc): ?>
                         <tr id="row_inc_<?= $inc['id'] ?>">
                             <td>
-                                <a href="<?= APP_URL ?>/admin/incident_view.php?id=<?= $inc['id'] ?>" style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; font-weight: 600; text-decoration: none;">
-                                    <?= htmlspecialchars($inc['ref_number']) ?>
+                                <a href="<?= APP_URL ?>/admin/incident_view.php?id=<?= $inc['id'] ?>" style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; font-weight: 600; text-decoration: none; display: block; line-height: 1.3;">
+                                    <?= format_ref_2lines($inc['ref_number']) ?>
                                 </a>
                             </td>
                             <td>
@@ -384,8 +384,8 @@ async function checkLiveIncidents() {
                     tr.className = 'new-incident-row';
                     tr.innerHTML = `
                         <td>
-                            <a href="${inc.view_url}" style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; font-weight: 600; text-decoration: none;">
-                                ${escapeHtml(inc.ref_number)}
+                            <a href="${inc.view_url}" style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; font-weight: 600; text-decoration: none; display: block; line-height: 1.3;">
+                                ${formatRef2LinesJs(inc.ref_number)}
                             </a>
                         </td>
                         <td>
@@ -434,6 +434,21 @@ async function checkLiveIncidents() {
 
 // Poll every 3.5 seconds for instant real-time synchronization from all sites
 setInterval(checkLiveIncidents, 3500);
+
+    function formatRef2LinesJs(ref) {
+        if (!ref) return '';
+        ref = String(ref).trim();
+        const m = ref.match(/^([A-Za-z0-9]+-[A-Za-z0-9_]+)-(\d{8}-\d+)$/);
+        if (m) {
+            return escapeHtml(m[1]) + '<br><span style="color: var(--text-dim); font-size: 11px; font-weight: 500; display: block; line-height: 1.25; margin-top: 2px;">' + escapeHtml(m[2]) + '</span>';
+        }
+        const lastIdx = ref.lastIndexOf('-');
+        if (lastIdx > 0) {
+            return escapeHtml(ref.substring(0, lastIdx)) + '<br><span style="color: var(--text-dim); font-size: 11px; font-weight: 500; display: block; line-height: 1.25; margin-top: 2px;">' + escapeHtml(ref.substring(lastIdx + 1)) + '</span>';
+        }
+        return escapeHtml(ref);
+    }
+
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

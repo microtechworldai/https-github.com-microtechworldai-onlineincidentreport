@@ -1480,3 +1480,153 @@ table.data-table thead th,
   accent-color: #081426 !important;
   cursor: pointer !important;
 }
+
+
+/* ====================================================================
+   RESPONSIVE LAYER (viewport-based) - phones -> 32" monitors
+   ==================================================================== */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video, canvas, svg { max-width: 100%; }
+.app-main, .app-content, .card { min-width: 0; }
+.app-content { width: 100%; max-width: 2000px; margin-left: auto; margin-right: auto;
+  padding: clamp(12px, 2vw, 36px) !important; }
+.app-header { padding: 0 clamp(12px, 2vw, 32px); gap: 12px; }
+.header-actions { flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.card { padding: clamp(14px, 1.6vw, 28px); }
+.kpi-grid { grid-template-columns: repeat(auto-fit, minmax(clamp(160px, 14vw, 240px), 1fr)); gap: clamp(10px, 1.2vw, 22px); }
+.table-container { max-width: 100%; -webkit-overflow-scrolling: touch; }
+.table-container table { width: 100%; }
+.form-control, .btn { max-width: 100%; }
+.form-control { min-width: 0; }
+
+/* Small laptops 13"-14" (scaled ~1024-1366 CSS px) */
+@media (max-width: 1366px) {
+  :root { --sidebar-w: 236px; }
+  body { font-size: 14px; }
+  .table-container th, .table-container td { padding: 9px 10px; font-size: 13px; }
+}
+/* Large 22"-24" */
+@media (min-width: 1600px) {
+  body { font-size: 15px; }
+}
+/* 27"-32" */
+@media (min-width: 2200px) {
+  :root { --sidebar-w: 300px; }
+  body { font-size: 16.5px; }
+}
+/* Tablets */
+@media (max-width: 960px) {
+  .app-header { padding: 0 12px; }
+  .uae-time-box { display: none; }
+}
+/* Phones */
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .app-header { height: auto; min-height: var(--header-h); flex-wrap: wrap; padding: 8px 12px; }
+  .btn { white-space: normal; }
+  .table-container th, .table-container td { padding: 8px; font-size: 12.5px; white-space: nowrap; }
+}
+@media (max-width: 380px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* ==== DASHBOARD TEXT FIT LAYER ==== */
+/* Never split words letter-by-letter inside dashboard tables/cards */
+.app-content, .app-content * { word-break: normal !important; overflow-wrap: normal !important; hyphens: none !important; }
+.app-content p, .app-content .card-body, .app-content .alert { overflow-wrap: break-word !important; }
+
+/* Fluid dashboard typography: scales with the real viewport width */
+.app-content { font-size: clamp(12.5px, 0.42vw + 7.5px, 16px); }
+.app-content h1 { font-size: clamp(20px, 1.1vw + 10px, 30px); }
+.app-content h2 { font-size: clamp(17px, 0.8vw + 9px, 25px); }
+.app-content h3 { font-size: clamp(15px, 0.5vw + 9px, 20px); }
+.kpi-val { font-size: clamp(20px, 1.2vw + 8px, 34px) !important; }
+.kpi-label { font-size: clamp(11px, 0.3vw + 7px, 14px) !important; }
+
+/* Tables: headers on one line, compact fluid cells, scroll inside box only */
+.table-container table { width: 100%; border-collapse: collapse; table-layout: auto; }
+.table-container th {
+  white-space: nowrap !important;
+  font-size: clamp(10.5px, 0.3vw + 6.5px, 13px) !important;
+  padding: clamp(8px, 0.6vw, 14px) clamp(8px, 0.7vw, 16px) !important;
+  letter-spacing: 0.3px;
+}
+.table-container td {
+  font-size: clamp(12px, 0.35vw + 7px, 15px) !important;
+  padding: clamp(8px, 0.6vw, 14px) clamp(8px, 0.7vw, 16px) !important;
+  vertical-align: middle;
+  line-height: 1.35;
+}
+/* Short values (refs, dates, names, badges, buttons) stay on one line */
+.table-container td:not(:has(> div, > br)) { white-space: nowrap; }
+.table-container td .badge, .table-container td .btn, .table-container td code { white-space: nowrap !important; }
+/* Long free-text (summary) wraps on word boundaries and is width-limited */
+.table-container td.summary, .table-container td[class*="summary"],
+.table-container td:has(> .summary), .table-container td[title] {
+  white-space: normal !important; min-width: 180px; max-width: 32vw;
+}
+/* Action buttons: tidy compact stack */
+.table-container td .btn-sm, .table-container td .btn { font-size: clamp(11px, 0.25vw + 7px, 13px); padding: 5px 10px; }
+
+/* Small laptops (13"-14"): slightly tighter cells */
+@media (max-width: 1366px) {
+  .table-container th, .table-container td { padding: 8px 9px !important; }
+}
+/* Phones: keep table readable, horizontal scroll inside container */
+@media (max-width: 600px) {
+  .table-container td, .table-container th { white-space: nowrap !important; }
+}
+
+/* ==== GENERIC .table FULL-WIDTH LAYER ==== */
+/* Cards holding a table scroll horizontally inside themselves if needed */
+.app-content .card:has(table.table) { overflow-x: auto !important; }
+.app-content table.table {
+  display: table !important;
+  width: 100% !important;
+  min-width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+.app-content table.table thead th {
+  text-align: left;
+  white-space: nowrap !important;
+  font-size: clamp(10.5px, 0.3vw + 6.5px, 13px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #fbbf24;
+  background: rgba(2, 6, 23, 0.85);
+  padding: clamp(10px, 0.7vw, 15px) clamp(10px, 0.9vw, 18px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.app-content table.table tbody td {
+  font-size: clamp(12px, 0.35vw + 7px, 15px);
+  padding: clamp(9px, 0.65vw, 14px) clamp(10px, 0.9vw, 18px);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+  line-height: 1.4;
+}
+.app-content table.table tbody tr:hover td { background: rgba(56, 189, 248, 0.05); }
+.app-content table.table tbody tr:last-child td { border-bottom: none; }
+/* Empty-state row spans the full table nicely */
+.app-content table.table td[colspan] { white-space: normal !important; text-align: center; }
+/* Even column distribution for the 8-column correction list */
+.app-content table.table thead th:last-child,
+.app-content table.table tbody td:last-child { text-align: right; }
+@media (max-width: 1366px) {
+  .app-content table.table thead th, .app-content table.table tbody td { padding: 9px 10px; }
+}
+
+/* Reference number column: dedicated width & clean 2-line presentation */
+.table-container td:first-child a {
+  display: block;
+  line-height: 1.35;
+  white-space: normal !important;
+  min-width: 135px;
+  max-width: 175px;
+}
+.table-container td:first-child {
+  white-space: normal !important;
+  vertical-align: middle;
+}

@@ -254,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incident Report | <?= htmlspecialchars($siteName) ?></title>
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/guard.css?v=<?= file_exists(__DIR__ . '/../assets/css/guard.css') ? filemtime(__DIR__ . '/../assets/css/guard.css') : time() ?>">
     <script>

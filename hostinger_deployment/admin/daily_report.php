@@ -246,7 +246,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td>
                                     <a href="<?= APP_URL ?>/admin/incident_view.php?id=<?= $inc['id'] ?>" style="color: var(--accent-cyan); font-family: monospace; font-weight: 700; text-decoration: none;">
-                                        <?= htmlspecialchars($inc['ref_number']) ?>
+                                        <?= format_ref_2lines($inc['ref_number']) ?>
                                     </a>
                                 </td>
                                 <td>

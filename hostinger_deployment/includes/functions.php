@@ -296,6 +296,29 @@ function get_system_settings($forceRefresh = false) {
 /**
  * Standard Project Date Formatter (dd/mm/yyyy)
  */
+/**
+ * Format reference code into two clean lines for optimal dashboard table display
+ * Example: INC-DREAMTOWER-20261020-0001 ->
+ * Line 1: INC-DREAMTOWER
+ * Line 2: 20261020-0001
+ */
+function format_ref_2lines($ref) {
+    if (empty($ref)) return '';
+    $ref = trim($ref);
+    // Standard format: INC-<SITECODE>-<DATE>-<SEQ> or <PREFIX>-<CODE>-<DATE>-<SEQ>
+    if (preg_match('/^([A-Za-z0-9]+-[A-Za-z0-9_]+)-(\d{8}-\d+)$/', $ref, $m)) {
+        return htmlspecialchars($m[1]) . '<br><span style="color: var(--text-dim); font-size: 11px; font-weight: 500; display: block; line-height: 1.25; margin-top: 2px;">' . htmlspecialchars($m[2]) . '</span>';
+    }
+    // Generic fallback: split at the last hyphen
+    $lastHyphen = strrpos($ref, '-');
+    if ($lastHyphen !== false && $lastHyphen > 0) {
+        $p1 = substr($ref, 0, $lastHyphen);
+        $p2 = substr($ref, $lastHyphen + 1);
+        return htmlspecialchars($p1) . '<br><span style="color: var(--text-dim); font-size: 11px; font-weight: 500; display: block; line-height: 1.25; margin-top: 2px;">' . htmlspecialchars($p2) . '</span>';
+    }
+    return htmlspecialchars($ref);
+}
+
 function format_date($dateStr) {
     if (empty($dateStr) || $dateStr === '0000-00-00') {
         return '-';
