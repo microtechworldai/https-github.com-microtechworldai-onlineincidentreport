@@ -1,7 +1,7 @@
 <?php
 /**
- * Dedicated Database Connection for uss_attendance
- * Strictly independent from incident database
+ * Database Connection for uss_attendance
+ * Seamlessly integrates with the active Hostinger database or dedicated attendance DB
  */
 require_once __DIR__ . '/config.php';
 
@@ -11,12 +11,31 @@ function att_get_db() {
         return $pdo;
     }
 
+    // 1. First priority: Reuse the active main system PDO connection if available
+    $parentDbFile = dirname(dirname(__DIR__)) . '/includes/db.php';
+    if (!class_exists('Database') && file_exists($parentDbFile)) {
+        @require_once $parentDbFile;
+    }
+
+    if (class_exists('Database')) {
+        try {
+            $mainPdo = Database::getInstance();
+            if ($mainPdo instanceof PDO) {
+                $pdo = $mainPdo;
+                return $pdo;
+            }
+        } catch (Throwable $e) {
+            // Fall back to dedicated connection below
+        }
+    }
+
+    // 2. Second priority: Connect using ATT_DB_* constants
     $dsn = sprintf(
         'mysql:host=%s;port=%d;dbname=%s;charset=%s',
-        ATT_DB_HOST,
-        ATT_DB_PORT,
-        ATT_DB_NAME,
-        ATT_DB_CHARSET
+        defined('ATT_DB_HOST') ? ATT_DB_HOST : 'localhost',
+        defined('ATT_DB_PORT') ? ATT_DB_PORT : 3306,
+        defined('ATT_DB_NAME') ? ATT_DB_NAME : 'uss_attendance',
+        defined('ATT_DB_CHARSET') ? ATT_DB_CHARSET : 'utf8mb4'
     );
 
     $options = [
@@ -30,9 +49,9 @@ function att_get_db() {
         $pdo = new PDO($dsn, ATT_DB_USER, ATT_DB_PASS, $options);
         return $pdo;
     } catch (PDOException $e) {
-        // Log to module's private log and never output credentials
-        @error_log("[" . date('Y-m-d H:i:s') . "] Attendance DB Error: " . $e->getMessage() . "\n", 3, ATT_LOGS_PATH . '/db_errors.log');
+        @error_log("[" . date('Y-m-d H:i:s') . "] Attendance DB Error: " . $e->getMessage() . "
+", 3, ATT_LOGS_PATH . '/db_errors.log');
         http_response_code(503);
-        die("<h3>Attendance Subsystem Unavailable</h3><p>Could not connect to the attendance database. Please verify the attendance database connection settings.</p>");
+        die("<h3>Attendance Subsystem Unavailable</h3><p>Could not connect to the database. Error: " . htmlspecialchars($e->getMessage()) . "</p>");
     }
 }
