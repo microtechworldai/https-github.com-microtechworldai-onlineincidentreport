@@ -1,0 +1,5 @@
+Require all denied
+<Files "*">
+    Order Deny,Allow
+    Deny from all
+</Files>
