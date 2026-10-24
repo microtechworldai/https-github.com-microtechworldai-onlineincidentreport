@@ -107,6 +107,10 @@ require_once __DIR__ . '/../includes/header.php';
             <p style="font-size: 13px;">Generate official client dossiers or manage field checkpoints</p>
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <a href="<?= APP_URL ?>/attendance/" class="btn btn-sm" style="background: linear-gradient(135deg, #005f73 0%, #0a9396 100%); color: #ffffff; font-weight: 700; border: none; box-shadow: 0 4px 10px rgba(0,95,115,0.25); text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                Attendance &amp; Payroll
+            </a>
             <a href="<?= APP_URL ?>/admin/daily_report.php" class="btn btn-primary btn-sm">
                 📑 Daily Consolidated Report
             </a>
@@ -118,6 +122,36 @@ require_once __DIR__ . '/../includes/header.php';
             </a>
             <a href="<?= APP_URL ?>/admin/backups.php" class="btn btn-secondary btn-sm">
                 💾 Backup Database
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance & Payroll Operations Card -->
+<div class="card" style="margin-bottom: 28px; background: linear-gradient(135deg, #051b2c 0%, #082d3b 100%); border: 1px solid rgba(10, 147, 150, 0.4); border-radius: 12px; padding: 20px 24px;">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #005f73, #0a9396); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 14px rgba(10,147,150,0.4);">
+                <svg style="width:26px;height:26px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <h3 style="font-size: 17px; font-weight: 800; margin: 0; color: #e0f2fe;">Attendance &amp; Payroll Management</h3>
+                    <span style="background: rgba(10,147,150,0.25); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; letter-spacing: 0.5px;">STANDALONE SYSTEM</span>
+                </div>
+                <p style="font-size: 13px; color: #94a3b8; margin: 4px 0 0 0;">
+                    Manage monthly security guard rosters, record daily shifts (Day, Night, Off, Leave), and calculate payroll salaries &amp; overtime.
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <a href="<?= APP_URL ?>/attendance/" class="btn btn-sm" style="background: #0a9396; color: #ffffff; font-weight: 700; border: none; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <svg style="width:15px;height:15px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                Monthly Attendance Roster &rarr;
+            </a>
+            <a href="<?= APP_URL ?>/attendance/?action=payroll" class="btn btn-sm" style="background: rgba(255,255,255,0.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.2); font-weight: 700; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <svg style="width:15px;height:15px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Payroll &amp; Salary Sheet &rarr;
             </a>
         </div>
     </div>
