@@ -22,6 +22,12 @@ $isLocal = (php_sapi_name() === 'cli'
     || strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false
     || is_dir('C:\\xampp'));
 
+// Optional: Auto-load parent project config if present
+$parentConfig = dirname(dirname(__DIR__)) . '/config.php';
+if (!defined('DB_NAME') && file_exists($parentConfig)) {
+    @require_once $parentConfig;
+}
+
 if ($isLocal) {
     define('ATT_DB_HOST', 'localhost');
     define('ATT_DB_PORT', 3306);
@@ -30,13 +36,14 @@ if ($isLocal) {
     define('ATT_DB_PASS', '');
     define('ATT_DB_CHARSET', 'utf8mb4');
 } else {
-    // Hostinger production credentials (configured separately in production)
-    define('ATT_DB_HOST', 'localhost');
-    define('ATT_DB_PORT', 3306);
-    define('ATT_DB_NAME', 'u123456789_uss_attendance');
-    define('ATT_DB_USER', 'u123456789_att_admin');
-    define('ATT_DB_PASS', 'YourStrongAttDbPass123!');
-    define('ATT_DB_CHARSET', 'utf8mb4');
+    // In production on Hostinger:
+    // If a dedicated attendance database is not set, automatically inherit the active Hostinger database credentials!
+    define('ATT_DB_HOST', defined('DB_HOST') ? DB_HOST : 'localhost');
+    define('ATT_DB_PORT', defined('DB_PORT') ? DB_PORT : 3306);
+    define('ATT_DB_NAME', (defined('ATT_CUSTOM_DB_NAME') ? ATT_CUSTOM_DB_NAME : (defined('DB_NAME') ? DB_NAME : 'u211560622_superadmin')));
+    define('ATT_DB_USER', (defined('ATT_CUSTOM_DB_USER') ? ATT_CUSTOM_DB_USER : (defined('DB_USER') ? DB_USER : 'u211560622_superadmin')));
+    define('ATT_DB_PASS', (defined('ATT_CUSTOM_DB_PASS') ? ATT_CUSTOM_DB_PASS : (defined('DB_PASS') ? DB_PASS : '')));
+    define('ATT_DB_CHARSET', defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4');
 }
 
 // Module Paths
