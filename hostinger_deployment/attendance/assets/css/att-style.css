@@ -1,0 +1,669 @@
+/* Universal Security Services - Attendance & Payroll Module Stylesheet */
+/* File: hostinger_deployment/attendance/assets/css/att-style.css */
+/* Strict prefix: all classes start with att- */
+
+:root {
+  --att-primary: #005f73;
+  --att-primary-hover: #0a9396;
+  --att-accent: #ee9b00;
+  --att-accent-dark: #ca6702;
+  --att-danger: #ae2012;
+  --att-danger-bg: #fdf0ed;
+  --att-warning-bg: #fff8e6;
+  --att-success: #2a9d8f;
+  --att-bg: #f8fafc;
+  --att-card-bg: #ffffff;
+  --att-text: #1e293b;
+  --att-text-muted: #64748b;
+  --att-border: #000000;
+  --att-border-light: #cbd5e1;
+  --att-font-condensed: "Franklin Gothic Demi Cond", "Franklin Gothic Demi", "Franklin Gothic Medium Cond", "Arial Narrow", Arial, sans-serif;
+  --att-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --att-border: #94a3b8; /* Light grey border in dark mode */
+    --att-bg: #0f172a;
+    --att-card-bg: #1e293b;
+    --att-text: #f1f5f9;
+    --att-text-muted: #94a3b8;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body.att-body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--att-bg);
+  color: var(--att-text);
+  font-family: var(--att-font-body);
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header & Top Navigation */
+.att-topbar {
+  background: linear-gradient(135deg, #005f73 0%, #0a9396 100%);
+  color: #ffffff;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.att-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.att-logo-badge {
+  background: rgba(255,255,255,0.15);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+}
+
+.att-nav-links {
+  display: flex;
+  gap: 8px;
+}
+
+.att-nav-btn {
+  color: #ffffff;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background 0.2s;
+  background: rgba(255,255,255,0.08);
+}
+
+.att-nav-btn:hover, .att-nav-btn.att-active {
+  background: rgba(255,255,255,0.25);
+  color: #ffffff;
+}
+
+.att-nav-btn.att-back {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.4);
+}
+
+.att-nav-btn.att-back:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.att-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+/* Control Bar */
+.att-controlbar {
+  background: var(--att-card-bg);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--att-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.att-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.att-select, .att-input {
+  padding: 5px 10px;
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  background-color: #ffffff;
+  color: #111;
+}
+
+.att-select:focus, .att-input:focus {
+  outline: none;
+  border-color: var(--att-primary);
+  box-shadow: 0 0 0 2px rgba(0, 95, 115, 0.2);
+}
+
+.att-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.att-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: all 0.15s ease-in-out;
+}
+
+.att-btn-primary {
+  background: var(--att-primary);
+  color: #ffffff;
+}
+
+.att-btn-primary:hover {
+  background: var(--att-primary-hover);
+}
+
+.att-btn-secondary {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.att-btn-secondary:hover {
+  background: #cbd5e1;
+}
+
+.att-btn-success {
+  background: #2a9d8f;
+  color: #ffffff;
+}
+
+.att-btn-success:hover {
+  background: #238276;
+}
+
+.att-btn-warning {
+  background: #ee9b00;
+  color: #000000;
+}
+
+.att-btn-warning:hover {
+  background: #d48b00;
+}
+
+.att-btn-danger {
+  background: var(--att-danger);
+  color: #ffffff;
+}
+
+.att-btn-danger:hover {
+  background: #8e1a0e;
+}
+
+/* Save Status Indicator */
+.att-status-indicator {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.att-status-saving {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.att-status-saved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.att-status-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Main Content & Table Container */
+.att-container {
+  padding: 12px 16px;
+}
+
+.att-grid-wrapper {
+  background: #ffffff;
+  border: 2px solid var(--att-border); /* Thicker outer border around whole sheet */
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 160px);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  position: relative;
+}
+
+/* Table Specs: Franklin Gothic Demi Cond, font-size: 12px for body, row height: 20px */
+.att-table, .att-roster-outer-table {
+  border-collapse: collapse;
+  font-family: var(--att-font-condensed) !important;
+  font-size: 12px !important;
+  width: 100%;
+  color: #000000;
+  table-layout: auto;
+  border: 2px solid var(--att-border) !important;
+}
+
+.att-table th, .att-table td, 
+.att-roster-outer-table th, .att-roster-outer-table td {
+  border: 1px solid var(--att-border) !important; /* Single black borders, locked during scroll */
+  padding: 1px 2px;
+  height: 20px;
+  text-align: center !important;
+  vertical-align: middle;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  font-family: var(--att-font-condensed) !important;
+  font-size: 12px !important;
+}
+
+.att-table tr, .att-roster-outer-table tr {
+  height: 20px;
+}
+
+/* Dark Teal Title Banner: 55px height and 25px font size */
+.att-th-banner-darkteal {
+  background-color: #005f73 !important;
+  color: #ffffff !important;
+  font-weight: bold !important;
+  font-size: 25px !important;
+  height: 55px !important;
+  line-height: 55px !important;
+  letter-spacing: 0.5px;
+  text-align: center !important;
+  vertical-align: middle !important;
+  border: 1px solid var(--att-border) !important;
+  padding: 0 8px !important;
+}
+
+/* 1st Header Row (Emp No, Name, Site Name, Day Numbers 1 to 31): height 28px, font-size 18px, bold, column fit */
+.att-th-top-row {
+  height: 28px !important;
+  background-color: #0a9396 !important;
+  color: #ffffff !important;
+  font-weight: bold !important;
+  font-size: 18px !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border: 1px solid var(--att-border) !important;
+  padding: 1px 3px !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+}
+
+.att-th-teal-sub {
+  height: 28px !important;
+  background-color: #0a9396 !important;
+  color: #ffffff !important;
+  font-weight: bold !important;
+  font-size: 14px !important;
+  border: 1px solid var(--att-border) !important;
+  padding: 2px 4px !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+}
+
+.att-th-teal-weekend {
+  background-color: #007788 !important;
+  color: #ffffff !important;
+  border: 1px solid var(--att-border) !important;
+}
+
+.att-td-weekend {
+  background-color: #f0fdfa;
+}
+
+.att-col-no {
+  width: 90px;
+  min-width: 90px;
+}
+
+.att-col-emp {
+  width: auto !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  font-weight: bold !important;
+  padding: 2px 8px !important;
+}
+
+.att-col-name {
+  width: auto !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  font-weight: bold !important;
+  padding: 2px 10px !important;
+  font-size: 12px !important;
+}
+
+.att-col-site {
+  width: auto !important;
+  white-space: nowrap !important;
+  font-size: 12px !important;
+  color: #005f73;
+  font-weight: bold !important;
+  text-align: center !important;
+  padding: 2px 10px !important;
+}
+
+.att-col-action {
+  width: auto !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  font-weight: bold !important;
+  padding: 2px 6px !important;
+}
+
+/* Day Columns: Exactly 38px width */
+.att-col-day {
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  padding: 0 !important;
+  height: 20px !important;
+}
+
+.att-col-stat {
+  width: 40px;
+  min-width: 40px;
+  font-weight: bold;
+  background-color: #f1f5f9;
+  font-size: 12px !important;
+  text-align: center !important;
+}
+
+.att-col-total {
+  width: 52px;
+  min-width: 52px;
+  font-weight: bold;
+  background-color: #e2e8f0;
+  font-size: 12px !important;
+  text-align: center !important;
+}
+
+/* Interactive Cell Input */
+.att-cell-input {
+  width: 100%;
+  height: 19px;
+  border: none;
+  background: transparent;
+  text-align: center !important;
+  font-family: var(--att-font-condensed) !important;
+  font-size: 12px !important;
+  font-weight: bold;
+  color: #000000;
+  text-transform: uppercase;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.att-cell-input:focus {
+  outline: 2px solid var(--att-primary);
+  background-color: #e0f2fe;
+}
+
+/* Code Color Coding */
+.att-code-D {
+  color: #005f73 !important;
+  font-weight: 800 !important;
+}
+
+.att-code-N {
+  color: #1e3a8a !important;
+  font-weight: 800 !important;
+}
+
+.att-code-OFF {
+  color: #c00000 !important;
+  font-weight: 900 !important;
+  font-size: 11px !important;
+}
+
+.att-code-S {
+  color: #d97706 !important;
+  font-weight: 800 !important;
+}
+
+.att-code-B {
+  color: #4b5563 !important;
+  font-weight: 800 !important;
+}
+
+/* In-Row Action Buttons: Edit, Replace, Remove */
+.att-row-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 3px;
+  border-radius: 2px;
+  text-decoration: underline;
+}
+
+.att-row-btn-edit {
+  color: #0284c7;
+}
+
+.att-row-btn-replace {
+  color: #d97706;
+}
+
+.att-row-btn-remove {
+  color: #dc2626;
+}
+
+.att-row-btn:hover {
+  background: #f1f5f9;
+}
+
+/* Bottom Summary Rows */
+.att-tr-day-total, .att-tr-night-total, .att-tr-grand-total {
+  height: 20px;
+  font-size: 12px !important;
+  border: 1px solid var(--att-border) !important;
+}
+
+.att-tr-day-total, .att-tr-night-total, .att-tr-grand-total {
+  background-color: #f8fafc;
+  font-weight: bold;
+}
+
+.att-summary-label {
+  background-color: #ee9b00 !important;
+  color: #000000 !important;
+  text-align: center !important;
+  padding: 0 6px !important;
+  font-weight: bold;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+}
+
+.att-tr-grand-total .att-summary-label {
+  background-color: #ca6702 !important;
+  color: #ffffff !important;
+}
+
+/* Deployment Status Colors for Attendance Daily Count Cells */
+.att-col-total-d, .att-col-total-n, .att-col-total-grand {
+  text-align: center !important;
+  vertical-align: middle !important;
+  font-weight: bold !important;
+  font-size: 12px !important;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.att-deploy-ok {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.att-deploy-less {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.att-deploy-over {
+  background-color: #facc15 !important;
+  color: #000000 !important;
+}
+
+.att-deploy-neutral {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+}
+
+/* Action Icon Buttons: Smaller size per user request */
+.att-row-btn-icon {
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  padding: 1px 2px !important;
+  margin: 0 1px !important;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.att-row-btn-icon:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: scale(1.15);
+}
+
+.att-row-btn-icon.att-btn-remove-staff:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.att-row-btn-icon.att-btn-replace-staff:hover {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+/* Modal Styling */
+.att-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.att-modal-overlay.att-open {
+  display: flex;
+}
+
+.att-modal {
+  background: #ffffff;
+  border-radius: 6px;
+  width: 580px;
+  max-width: 95vw;
+  max-height: 85vh;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.att-modal-header {
+  background: var(--att-primary);
+  color: #ffffff;
+  padding: 12px 16px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.att-modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.att-modal-footer {
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-top: 1px solid var(--att-border-light);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.att-form-group {
+  margin-bottom: 12px;
+}
+
+.att-form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.att-form-group input, .att-form-group select, .att-form-group textarea {
+  width: 100%;
+}
+
+/* Staff Directory Search List */
+.att-staff-list-container {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.att-staff-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.att-staff-item:last-child {
+  border-bottom: none;
+}
+
+.att-staff-item:hover {
+  background: #f8fafc;
+}

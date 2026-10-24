@@ -1,0 +1,5 @@
+*.sql
+!index.html
+!.htaccess
+!web.config
+!.gitignore

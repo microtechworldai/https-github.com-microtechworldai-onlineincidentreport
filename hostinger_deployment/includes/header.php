@@ -110,6 +110,13 @@ $adminUsername = htmlspecialchars($_SESSION['admin_username'] ?? 'admin');
                 Sites & QR Posters
             </a>
 
+            <!-- Attendance & Payroll Module (Independent Module) -->
+            <?php if (file_exists(dirname(__DIR__) . '/attendance/config/config.php')): ?>
+            <a href="<?= APP_URL ?>/attendance/" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/attendance/') !== false ? 'active' : '' ?>" style="border-left: 3px solid #005f73;">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span>Attendance &amp; Payroll</span>
+            </a>
+            <?php endif; ?>
             <a href="<?= APP_URL ?>/admin/guards.php" class="nav-item <?= $currentPage === 'guards.php' ? 'active' : '' ?>">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 Security Staff (Guards)
