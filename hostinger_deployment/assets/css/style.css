@@ -1714,21 +1714,19 @@ td, .table td {
 
 
 /* ====================================================================
-   PROFESSIONAL LIGHT WHITE DASHBOARD SIDEBAR THEME
+   HIGH-CONTRAST WHITE TEXT FOR SIDEBAR & DASHBOARD PANELS
    ==================================================================== */
 .app-sidebar,
 aside.app-sidebar {
-  background: #FFFFFF !important;
-  color: #1E293B !important;
-  border-right: 1px solid #E2E8F0 !important;
-  box-shadow: 1px 0 8px rgba(0, 0, 0, 0.03) !important;
+  background: var(--header-band) !important;
+  color: #FFFFFF !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 .sidebar-brand,
 .sidebar-brand a {
-  background: #FFFFFF !important;
-  color: #0F172A !important;
-  border-bottom: 1px solid #E2E8F0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #FFFFFF !important;
   text-decoration: none !important;
 }
 
@@ -1736,73 +1734,58 @@ aside.app-sidebar {
 .brand-title .brand-company,
 .brand-title > span:first-child,
 .sidebar-brand .brand-company {
-  color: #0F172A !important;
+  color: #FFFFFF !important;
   font-weight: 800 !important;
-  font-size: 13.5px !important;
+  font-size: 13px !important;
   letter-spacing: 0.3px !important;
 }
 
 .brand-sub {
-  color: #0284C7 !important;
+  color: #8AB4E8 !important;
+  font-size: 10px !important;
   font-weight: 700 !important;
-  font-size: 10.5px !important;
-  letter-spacing: 0.5px !important;
-  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
 }
 
 .nav-section-title {
-  color: #64748B !important;
+  color: rgba(255, 255, 255, 0.75) !important;
   font-size: 11px !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   letter-spacing: 1px !important;
   text-transform: uppercase !important;
-  padding: 18px 14px 6px !important;
-  display: block !important;
+  padding: 14px 12px 6px !important;
 }
 
 .nav-item,
 .sidebar-nav .nav-item {
-  color: #334155 !important;
+  color: #E6EEF0 !important;
   font-size: 13.5px !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   text-decoration: none !important;
   display: flex !important;
   align-items: center !important;
   gap: 12px !important;
-  padding: 9px 12px !important;
-  margin: 2px 8px !important;
-  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  border-radius: var(--radius-sm) !important;
   transition: all 0.2s ease !important;
 }
 
 .nav-item svg,
 .sidebar-nav .nav-item svg {
-  color: #64748B !important;
-  stroke: #64748B !important;
-  transition: all 0.2s ease !important;
-}
-
-.nav-item span,
-.sidebar-nav .nav-item span {
-  color: #334155 !important;
+  color: #B4C3C9 !important;
+  stroke: currentColor !important;
 }
 
 .nav-item:hover,
 .sidebar-nav .nav-item:hover {
-  background: #F1F5F9 !important;
-  color: #0F172A !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #FFFFFF !important;
   transform: translateX(2px) !important;
 }
 
 .nav-item:hover svg,
 .sidebar-nav .nav-item:hover svg {
-  color: #0F172A !important;
-  stroke: #0F172A !important;
-}
-
-.nav-item:hover span,
-.sidebar-nav .nav-item:hover span {
-  color: #0F172A !important;
+  color: #FFFFFF !important;
 }
 
 .nav-item.active,
@@ -1810,50 +1793,33 @@ aside.app-sidebar {
 [data-theme] .sidebar-nav .nav-item.active,
 [data-theme="light"] .sidebar-nav .nav-item.active,
 [data-theme="dark"] .sidebar-nav .nav-item.active {
-  background: #EFF6FF !important;
-  color: #0284C7 !important;
-  border-left: 4px solid #0284C7 !important;
+  background: var(--primary) !important;
+  color: #FFFFFF !important;
+  border-left: 4px solid var(--accent) !important;
   font-weight: 700 !important;
-  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.08) !important;
-  border-radius: 6px !important;
 }
 
 .nav-item.active svg,
 .sidebar-nav .nav-item.active svg {
-  color: #0284C7 !important;
-  stroke: #0284C7 !important;
-}
-
-.nav-item.active span,
-.sidebar-nav .nav-item.active span {
-  color: #0284C7 !important;
-  font-weight: 700 !important;
+  color: #FFFFFF !important;
 }
 
 .sidebar-footer {
-  background: #F8FAFC !important;
-  border-top: 1px solid #E2E8F0 !important;
-  color: #0F172A !important;
-  padding: 14px 16px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(0, 0, 0, 0.20) !important;
+  color: #FFFFFF !important;
 }
 
 .admin-meta .name {
-  color: #0F172A !important;
+  color: #FFFFFF !important;
   font-weight: 700 !important;
-  font-size: 13.5px !important;
+  font-size: 13px !important;
 }
 
 .admin-meta .role {
-  color: #64748B !important;
+  color: #8AB4E8 !important;
   font-weight: 600 !important;
   font-size: 11px !important;
-}
-
-.admin-avatar {
-  background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%) !important;
-  color: #FFFFFF !important;
-  font-weight: 700 !important;
-  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25) !important;
 }
 
 /* Dashboard Top Header Bar */
