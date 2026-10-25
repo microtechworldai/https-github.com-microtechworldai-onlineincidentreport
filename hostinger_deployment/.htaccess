@@ -6,6 +6,7 @@ Options -Indexes
 # URL Rewriting for QR tokens
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteRule ^admin/?$ admin/dashboard.php [R=302,L]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^g/([a-zA-Z0-9_\-]+)/?$ g/index.php?token=$1 [QSA,L]
