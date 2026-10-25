@@ -1711,3 +1711,133 @@ td, .table td {
 .sidebar-nav-item, .nav-item {
   font-size: var(--fs-admin-sidebar) !important;
 }
+
+
+/* ====================================================================
+   HIGH-CONTRAST WHITE TEXT FOR SIDEBAR & DASHBOARD PANELS
+   ==================================================================== */
+.app-sidebar,
+aside.app-sidebar {
+  background: var(--header-band) !important;
+  color: #FFFFFF !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.sidebar-brand,
+.sidebar-brand a {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #FFFFFF !important;
+  text-decoration: none !important;
+}
+
+.brand-company,
+.brand-title .brand-company,
+.brand-title > span:first-child,
+.sidebar-brand .brand-company {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.3px !important;
+}
+
+.brand-sub {
+  color: #8AB4E8 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.8px !important;
+}
+
+.nav-section-title {
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  padding: 14px 12px 6px !important;
+}
+
+.nav-item,
+.sidebar-nav .nav-item {
+  color: #E6EEF0 !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 14px !important;
+  border-radius: var(--radius-sm) !important;
+  transition: all 0.2s ease !important;
+}
+
+.nav-item svg,
+.sidebar-nav .nav-item svg {
+  color: #B4C3C9 !important;
+  stroke: currentColor !important;
+}
+
+.nav-item:hover,
+.sidebar-nav .nav-item:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #FFFFFF !important;
+  transform: translateX(2px) !important;
+}
+
+.nav-item:hover svg,
+.sidebar-nav .nav-item:hover svg {
+  color: #FFFFFF !important;
+}
+
+.nav-item.active,
+.sidebar-nav .nav-item.active,
+[data-theme] .sidebar-nav .nav-item.active,
+[data-theme="light"] .sidebar-nav .nav-item.active,
+[data-theme="dark"] .sidebar-nav .nav-item.active {
+  background: var(--primary) !important;
+  color: #FFFFFF !important;
+  border-left: 4px solid var(--accent) !important;
+  font-weight: 700 !important;
+}
+
+.nav-item.active svg,
+.sidebar-nav .nav-item.active svg {
+  color: #FFFFFF !important;
+}
+
+.sidebar-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(0, 0, 0, 0.20) !important;
+  color: #FFFFFF !important;
+}
+
+.admin-meta .name {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
+
+.admin-meta .role {
+  color: #8AB4E8 !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+}
+
+/* Dashboard Top Header Bar */
+.app-header {
+  background: var(--header-band) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #FFFFFF !important;
+}
+
+.app-header .header-title,
+.app-header h1,
+.app-header h2,
+.app-header h3 {
+  color: #FFFFFF !important;
+}
+
+.app-header .header-action-btn,
+.app-header a,
+.app-header .admin-name {
+  color: #FFFFFF !important;
+}
