@@ -330,7 +330,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </span>
                             </td>
                             <td>
-                                <strong style="font-size: 14px;"><?= htmlspecialchars($g['full_name']) ?></strong>
+                                <a href="<?= APP_URL ?>/admin/guard_profile.php?id=<?= $g['id'] ?>" style="color: #0F172A; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;" title="View Compliance Profile"><span style="width: 28px; height: 28px; border-radius: 50%; background: #059669; color: #FFFFFF; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;"><?= strtoupper(substr($g['full_name'], 0, 1)) ?></span><span><?= htmlspecialchars($g['full_name']) ?></span></a>
                             </td>
                             <td>
                                 <span style="font-size: 13px;"><?= htmlspecialchars($g['designation']) ?></span>
@@ -365,6 +365,7 @@ require_once __DIR__ . '/../includes/header.php';
                             </td>
                             <td style="text-align: right;">
                                 <div style="display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap;">
+                                    <a href="<?= APP_URL ?>/admin/guard_profile.php?id=<?= $g['id'] ?>" class="btn btn-secondary btn-sm" style="background: #F8FAFC; color: #0A5C36; border: 1px solid #CBD5E1; font-weight: 700;" title="View UAE Compliance Dossier">👤 Profile</a>
                                     <button type="button" class="btn btn-primary btn-sm" onclick='openEditGuardModal(<?= htmlspecialchars(json_encode($g), ENT_QUOTES, "UTF-8") ?>)'>
                                         Assign Post / Edit
                                     </button>
