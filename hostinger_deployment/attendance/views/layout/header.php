@@ -22,7 +22,13 @@ $activeTab = $activeTab ?? 'sheet';
     <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-arabic-variable.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="<?= APP_URL ?>/attendance/assets/css/design-tokens.css?v=<?= time() ?>">
-    <?php require_once __DIR__ . '/../../includes/theme_bootstrapper.php'; ?>
+    <?php 
+if (file_exists(__DIR__ . '/../../../includes/theme_bootstrapper.php')) {
+    require_once __DIR__ . '/../../../includes/theme_bootstrapper.php';
+} elseif (file_exists(__DIR__ . '/../../includes/theme_bootstrapper.php')) {
+    require_once __DIR__ . '/../../includes/theme_bootstrapper.php';
+} 
+?>
     
 </head>
 <body class="att-body">
