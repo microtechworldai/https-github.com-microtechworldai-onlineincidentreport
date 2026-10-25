@@ -806,6 +806,7 @@ export const IncidentForm: React.FC = () => {
           </div>
         </div>
       </div>
+      </div>
 
       {/* Error Alert */}
       {error && (

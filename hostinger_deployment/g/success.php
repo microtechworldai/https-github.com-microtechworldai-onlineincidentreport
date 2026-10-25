@@ -4,6 +4,7 @@
  * Guard session has already been destroyed on submit
  */
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
 
 $settings = get_system_settings();
@@ -15,7 +16,17 @@ $ref = htmlspecialchars($_GET['ref'] ?? 'INC-SUBMITTED');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report Submitted | <?= htmlspecialchars($settings['company_name']) ?></title>
-    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/guard.css">
+    
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/design-tokens.css?v=<?= time() ?>">
+    <?php require_once __DIR__ . '/../includes/theme_bootstrapper.php'; ?>
+        
+<link rel="stylesheet" href="../assets/css/guard.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/guard.css?v=<?= time() ?>">
+    <style>
+        img { max-width: 100%; height: auto; box-sizing: border-box; }
+        .guard-container { max-width: 480px; width: 100%; margin: 0 auto; padding: 16px; box-sizing: border-box; }
+    </style>
     <style>
         .success-box {
             max-width: 460px;
@@ -74,21 +85,23 @@ $ref = htmlspecialchars($_GET['ref'] ?? 'INC-SUBMITTED');
             ⚡ <strong>Shift Active:</strong> You remain logged in. Scan any checkpoint QR poster or tap below to file another report immediately without delay.
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
             <?php if (!empty($_SESSION['uss_supervisor_logged_in'])): ?>
-                <a href="<?= APP_URL ?>/sup/duty.php" class="btn-guard-submit" style="text-decoration: none; padding: 12px 20px; font-size: 15px; background: #0284c7;">
-                    🛡️ Return to Supervisor Duty Portal &rarr;
+                <a href="<?= APP_URL ?>/sup/duty.php" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; text-decoration: none; padding: 14px 20px; font-size: 15px; font-weight: 800; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);">
+                    <span>🛡️</span> Continue to Next Site (Supervisor Cockpit) &rarr;
+                </a>
+                <a href="<?= APP_URL ?>/sup/index.php" style="background: rgba(255,255,255,0.08); color: #bae6fd; border: 1px solid rgba(56, 189, 248, 0.3); text-decoration: none; padding: 11px 18px; font-size: 13.5px; font-weight: 700; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    📍 Back to Current Site Inspection
+                </a>
+            <?php else: ?>
+                <a href="<?= APP_URL ?>/g/submit.php" class="btn-guard-submit" style="text-decoration: none; padding: 14px 20px; font-size: 15px;">
+                    + File Another Report for this Site &rarr;
+                </a>
+                <a href="<?= APP_URL ?>/g/logout.php" style="color: var(--g-text-muted); font-size: 12.5px; text-decoration: none; padding: 6px;">
+                    Sign Out Officer (End Shift)
                 </a>
             <?php endif; ?>
-            <a href="<?= APP_URL ?>/g/submit.php" class="btn-guard-submit" style="text-decoration: none; padding: 12px 20px; font-size: 15px;">
-                + File Another Report for this Site &rarr;
-            </a>
-            <a href="<?= APP_URL ?>/g/logout.php" style="color: var(--g-text-muted); font-size: 12.5px; text-decoration: none; padding: 6px;">
-                Sign Out Officer (End Shift)
-            </a>
-        </div>
-    </div>
-</div>
+        </div></div></div>
 
 </body>
 </html>

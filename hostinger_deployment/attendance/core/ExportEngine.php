@@ -36,15 +36,15 @@ class ExportEngine {
         echo '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
         echo '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Attendance Roster</x:Name><x:WorksheetOptions><x:FitToPage/><x:Print><x:FitWidth>1</x:FitWidth><x:FitHeight>1</x:FitHeight><x:ValidPrinterInfo/><x:Orientation>Landscape</x:Orientation></x:Print></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
         echo '<style>
-            table { border-collapse: collapse; font-family: "Franklin Gothic Demi Cond", "Franklin Gothic Demi", Arial, sans-serif; font-size: 12pt; border: 2px solid #000000; }
+            table { border-collapse: collapse; font-family: "Noto Sans Condensed", "Franklin Gothic Demi Cond", "Arial Narrow", Arial, sans-serif; font-size: 12pt; border: 2px solid #000000; }
             th, td { border: 1px solid #000000; text-align: center; vertical-align: middle; height: 20pt; padding: 1px 2px; word-wrap: break-word; white-space: normal; }
-            .header-banner { background-color: #005f73; color: #ffffff; font-weight: bold; font-size: 14pt; height: 35pt; }
-            .sub-banner { background-color: #0a9396; color: #ffffff; font-weight: bold; font-size: 11pt; height: 20pt; }
+            .header-banner { background-color: #12263F; color: #ffffff; font-weight: bold; font-size: 14pt; height: 45pt; }
+            .sub-banner { background-color: #235F63; color: #ffffff; font-weight: bold; font-size: 10pt; height: 20pt; }
             .col-weekend { background-color: #007788; color: #ffffff; }
             .staff-name { text-align: center; font-weight: bold; }
             .site-name { text-align: center; color: #005f73; font-weight: 600; }
-            .total-row { background-color: #ee9b00; color: #000000; font-weight: bold; height: 20pt; }
-            .grand-total { background-color: #ca6702; color: #ffffff; font-weight: bold; height: 20pt; }
+            .total-row { background-color: #EEF2F6; color: #1E242E; font-weight: bold; height: 20pt; }
+            .grand-total { background-color: #235F63; color: #ffffff; font-weight: bold; height: 20pt; }
             .month-total { background-color: #e2e8f0; font-weight: bold; font-size: 11pt; text-align: center; padding: 4px; height: 20pt; }
             .legend-row { font-size: 10pt; font-weight: bold; text-align: center; padding: 4px; }
             .sig-row { font-weight: bold; font-size: 10pt; height: 35pt; }
@@ -182,7 +182,7 @@ class ExportEngine {
         echo "<title>Ultimate Security Services Actual Attendance for the month of {$monthName} - {$year}</title>";
         echo '<style>
             @page { size: A4 landscape; margin: 5mm 5mm; }
-            body { font-family: "Franklin Gothic Demi Cond", "Franklin Gothic Demi", Arial, sans-serif; font-size: 8pt; color: #000; margin: 0; padding: 0; }
+            body { font-family: "Noto Sans Condensed", "Franklin Gothic Demi Cond", "Arial Narrow", Arial, sans-serif; font-size: 8pt; color: #000; margin: 0; padding: 0; }
             table { width: 100%; border-collapse: collapse; border: 2px solid #000; table-layout: fixed; }
             th, td { border: 1px solid #000; text-align: center; vertical-align: middle; height: 16px; padding: 1px; font-size: 7.5pt; overflow: hidden; white-space: normal; word-wrap: break-word; }
             .header-banner { background-color: #005f73 !important; color: #fff !important; font-size: 11pt !important; font-weight: bold; height: 24px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -322,7 +322,7 @@ class ExportEngine {
         echo '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
         echo '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Payroll Attendance</x:Name><x:WorksheetOptions><x:FitToPage/><x:Print><x:FitWidth>1</x:FitWidth><x:FitHeight>1</x:FitHeight><x:ValidPrinterInfo/><x:Orientation>Landscape</x:Orientation></x:Print></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
         echo '<style>
-            table { border-collapse: collapse; font-family: "Franklin Gothic Demi Cond", "Franklin Gothic Demi", Arial, sans-serif; font-size: 12pt; }
+            table { border-collapse: collapse; font-family: "Noto Sans Condensed", "Franklin Gothic Demi Cond", "Arial Narrow", Arial, sans-serif; font-size: 12pt; }
             th, td { border: 1px solid #000000; text-align: center; vertical-align: middle; height: 20pt; padding: 1px 2px; word-wrap: break-word; white-space: normal; }
             .header-banner { background-color: #005f73; color: #ffffff; font-weight: bold; font-size: 14pt; height: 35pt; }
             .teal-header { background-color: #0a9396; color: #ffffff; font-weight: bold; font-size: 11pt; }

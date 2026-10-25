@@ -13,6 +13,7 @@ if (empty($_SESSION['uss_supervisor_logged_in']) || empty($_SESSION['supervisor_
     header("Location: " . APP_URL . "/sup/login.php");
     exit;
 }
+require_supervisor_auth();
 
 $db = get_db();
 $settings = get_system_settings();
@@ -65,7 +66,12 @@ if ($selectedDutyId > 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Patrol History | <?= htmlspecialchars($settings['company_name']) ?></title>
-    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
+    
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/design-tokens.css?v=<?= time() ?>">
+    <?php require_once __DIR__ . '/../includes/theme_bootstrapper.php'; ?>
+        
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
     <style>
         body { background: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 16px; }
         .history-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px; margin-bottom: 12px; }

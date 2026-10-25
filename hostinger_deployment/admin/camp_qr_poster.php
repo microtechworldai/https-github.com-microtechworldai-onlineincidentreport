@@ -24,6 +24,11 @@ $camp = $stmt->fetch();
 if (!$camp) {
     die("Camp accommodation not found.");
 }
+$campToken = get_stored_qr_token($camp, 'qr_token_encrypted', 'qr_token');
+if ($campToken === '') {
+    http_response_code(410);
+    die("This camp QR has been revoked. Generate a new QR from Camp Management.");
+}
 
 $publicTunnelUrl = get_active_tunnel_url();
 $lanIps = get_lan_ips();
@@ -59,8 +64,7 @@ if (strpos($qrBaseUrl, 'trycloudflare.com') !== false && strpos($qrBaseUrl, 'htt
     $qrBaseUrl = 'https://' . substr($qrBaseUrl, 7);
 }
 
-$supervisorUrl = $qrBaseUrl . '/sup/index.php?camp=' . urlencode($camp['qr_token']);
-$qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data=" . urlencode($supervisorUrl);
+$supervisorUrl = $qrBaseUrl . '/sup/index.php?camp=' . urlencode($campToken);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -440,7 +444,7 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&d
     <!-- QR Code Center Card -->
     <div class="qr-card">
         <canvas id="qrcodeCanvas" width="250" height="250" style="display: none;"></canvas>
-        <img id="qrImage" src="<?= $qrApiUrl ?>" alt="QR Code" width="250" height="250" style="display: block;">
+        <div id="qrUnavailable" style="display:none; width:250px; height:250px; align-items:center; justify-content:center; color:#b91c1c; font-weight:700;">QR could not be rendered. Use the direct link below.</div>
         <div class="qr-caption">SCAN WITH PHONE CAMERA FOR CAMP OUT / CAMP IN</div>
     </div>
 
@@ -486,8 +490,8 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&d
 <script>
 window.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('qrcodeCanvas');
-    const img = document.getElementById('qrImage');
-    const qrData = '<?= addslashes($supervisorUrl) ?>';
+    const unavailable = document.getElementById('qrUnavailable');
+    const qrData = <?= json_encode($supervisorUrl, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
     
     if (typeof QRCode !== 'undefined' && typeof QRCode.toCanvas === 'function') {
         QRCode.toCanvas(canvas, qrData, {
@@ -501,22 +505,24 @@ window.addEventListener('DOMContentLoaded', function() {
         }, function (error) {
             if (!error) {
                 canvas.style.display = 'block';
-                img.style.display = 'none';
+            } else {
+                unavailable.style.display = 'flex';
             }
         });
+    } else {
+        unavailable.style.display = 'flex';
     }
 });
 
 function downloadQrCode() {
     const canvas = document.getElementById('qrcodeCanvas');
-    const img = document.getElementById('qrImage');
     const a = document.createElement('a');
-    a.download = 'QR_Camp_<?= htmlspecialchars($camp['camp_code']) ?>.png';
+    a.download = <?= json_encode('QR_Camp_' . $camp['camp_code'] . '.png', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
     if (canvas && canvas.style.display !== 'none' && canvas.toDataURL) {
         a.href = canvas.toDataURL('image/png');
     } else {
-        a.href = img.src;
-        a.target = '_blank';
+        alert('QR could not be rendered. Use the direct link below.');
+        return;
     }
     document.body.appendChild(a);
     a.click();
@@ -524,7 +530,7 @@ function downloadQrCode() {
 }
 
 function copyPatrolLink() {
-    const url = '<?= addslashes($supervisorUrl) ?>';
+    const url = <?= json_encode($supervisorUrl, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
     if (navigator.clipboard) {
         navigator.clipboard.writeText(url).then(function() {
             alert('Camp Checkpoint URL copied to clipboard:\n' + url);

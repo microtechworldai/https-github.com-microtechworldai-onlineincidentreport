@@ -1,0 +1,238 @@
+/**
+ * ====================================================================
+ * ULTIMATE SECURITY SERVICES (USS) - ENTERPRISE DESIGN SYSTEM
+ * Central Token Definition (Light/Dark Themes, Noto Sans Typography,
+ * Sizing Scale, Semantic Sets, and Responsive Layout Rules)
+ * ====================================================================
+ */
+
+/* 1. SELF-HOSTED FONT DECLARATIONS (ZERO THIRD-PARTY REQUESTS) */
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url('../fonts/noto-sans-variable.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Noto Sans Condensed';
+  font-style: normal;
+  font-weight: 400 700;
+  font-stretch: 62.5% 85%;
+  font-display: swap;
+  src: url('../fonts/noto-sans-variable.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Noto Sans Arabic';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../fonts/noto-sans-arabic-variable.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+08A0-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E;
+}
+
+/* 2. UNIVERSAL DESIGN TOKENS */
+:root {
+  /* Typography Families */
+  --font-sans: 'Noto Sans', 'Noto Sans Arabic', Arial, 'Helvetica Neue', system-ui, sans-serif;
+  --font-table: 'Noto Sans Condensed', 'Arial Narrow', Arial, sans-serif;
+  --font-arabic: 'Noto Sans Arabic', 'Noto Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Geometry & Grid */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  --space-unit: 8px;
+
+  /* Typography Sizes: Web Admin (Desktop & Tablet) */
+  --fs-admin-body: 14px;
+  --lh-admin-body: 1.5;
+  --fs-admin-table-hdr: 12px;
+  --fs-admin-btn: 14px;
+  --fs-admin-h1: 24px;
+  --fs-admin-h2: 18px;
+  --fs-admin-caption: 12px;
+  --fs-admin-sidebar: 14px;
+
+  /* Typography Sizes: Mobile Portals (Guards & Supervisors) */
+  --fs-mobile-body: 16px;
+  --lh-mobile-body: 1.5;
+  --fs-mobile-input: 16px; /* Strictly >= 16px to prevent iOS auto-zoom */
+  --fs-mobile-label: 14px;
+  --fs-mobile-help: 13px;
+  --fs-mobile-btn: 16px;
+  --fs-mobile-btn-lg: 18px;
+  --min-touch-target: 48px;
+  --fs-mobile-h1: 22px;
+  --fs-mobile-h2: 20px;
+  --fs-mobile-progress: 14px;
+
+  /* Typography Sizes: Dense Attendance & Payroll Tables */
+  --fs-att-title: 14px;
+  --fs-att-header: 10px;
+  --fs-att-weekday: 7px;
+  --fs-att-cell: 12px;
+  --fs-att-total: 12px;
+  --row-h-att-header: 45px;
+  --row-h-att-row: 20px;
+
+  /* Checkpoint Group Bars (White text, WCAG >= 4.5:1) */
+  --group-fire: #B03A2E;
+  --group-security: #1F4E79;
+  --group-parking: #9A5A08;
+  --group-utilities: #0B6E77;
+  --group-common: #6C3483;
+}
+
+/* 3. LIGHT THEME TOKENS (DEFAULT & EXPORT PALETTE) */
+:root,
+[data-theme="light"] {
+  --bg: #F4F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #EEF2F6;
+  --border: #C9D1DB;
+  --border-strong: #8A97A3; /* 3:1 on white for form/table outlines */
+  --text: #1E242E;          /* 15.6:1 on white */
+  --text-2: #4A5560;        /* 7.6:1 on white */
+  --text-muted: #5F6B76;    /* 5.5:1 on white */
+  --heading: #12263F;       /* 15.3:1 on white */
+  --primary: #235F63;       /* 7.3:1 with white text */
+  --primary-hover: #1B4A4E; /* 9.2:1 with white text */
+  --link: #0B5C66;          /* 7.7:1 on white */
+  --header-band: #12263F;   /* Top bars and report title bands */
+  --accent: #2F7478;
+  --success: #1B6E41;       /* 6.3:1 on surface */
+  --warning: #9A5A08;       /* 5.5:1 on surface */
+  --danger: #B3261E;        /* 6.5:1 on surface */
+  --info: #1F4E79;          /* 8.7:1 on surface */
+  --focus: #0B5C66;         /* High visibility focus ring */
+
+  --card-shadow: 0 4px 12px rgba(18, 38, 63, 0.06);
+  --modal-overlay: rgba(18, 38, 63, 0.6);
+
+  /* Semantic Attendance Codes (Light) */
+  --code-d-color: #1E242E;
+  --code-d-bg: rgba(30, 36, 46, 0.06);
+  --code-n-color: #1F3A93;
+  --code-n-bg: rgba(31, 58, 147, 0.10);
+  --code-off-color: #B3261E;
+  --code-off-bg: rgba(179, 38, 30, 0.12);
+  --code-s-color: #9A5A08;
+  --code-s-bg: rgba(154, 90, 8, 0.10);
+  --code-b-color: #6A2C91;
+  --code-b-bg: rgba(106, 44, 145, 0.10);
+
+  /* Severity Chips (Light) */
+  --chip-critical-bg: rgba(179, 38, 30, 0.12);
+  --chip-critical-text: #B3261E;
+  --chip-high-bg: rgba(184, 90, 14, 0.12);
+  --chip-high-text: #B85A0E;
+  --chip-medium-bg: rgba(154, 90, 8, 0.12);
+  --chip-medium-text: #9A5A08;
+  --chip-low-bg: rgba(27, 110, 65, 0.12);
+  --chip-low-text: #1B6E41;
+}
+
+/* 4. DARK THEME TOKENS */
+[data-theme="dark"] {
+  --bg: #0F1417;            /* Never pure pitch black */
+  --surface: #172024;
+  --surface-2: #1D2A2F;
+  --border: #2F3E44;
+  --border-strong: #6B7F87; /* 4.1:1 on surface */
+  --text: #E6EEF0;          /* 14.1:1 on surface */
+  --text-2: #B4C3C9;        /* 9.1:1 on surface */
+  --text-muted: #93A4AB;    /* 6.4:1 on surface */
+  --heading: #F2F7F8;       /* 15.3:1 on surface */
+  --primary: #2F7478;       /* 5.4:1 with white text */
+  --primary-hover: #3A8C91;
+  --link: #6CC4CC;          /* 8.2:1 on surface */
+  --header-band: #0B1A2B;
+  --accent: #4FB3BA;
+  --success: #5CC78A;       /* 7.9:1 on surface */
+  --warning: #F0B060;       /* 8.7:1 on surface */
+  --danger: #FF8E85;        /* 7.5:1 on surface */
+  --info: #8AB4E8;          /* 7.7:1 on surface */
+  --focus: #6CC4CC;
+
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --modal-overlay: rgba(0, 0, 0, 0.75);
+
+  /* Semantic Attendance Codes (Dark) */
+  --code-d-color: #E6EEF0;
+  --code-d-bg: rgba(230, 238, 240, 0.08);
+  --code-n-color: #9DB4FF;
+  --code-n-bg: rgba(157, 180, 255, 0.15);
+  --code-off-color: #FF9A92;
+  --code-off-bg: rgba(255, 154, 146, 0.18);
+  --code-s-color: #FFBE73;
+  --code-s-bg: rgba(255, 190, 115, 0.15);
+  --code-b-color: #D6A6FF;
+  --code-b-bg: rgba(214, 166, 255, 0.15);
+
+  /* Severity Chips (Dark) */
+  --chip-critical-bg: rgba(255, 142, 133, 0.16);
+  --chip-critical-text: #FF8E85;
+  --chip-high-bg: rgba(245, 162, 93, 0.16);
+  --chip-high-text: #F5A25D;
+  --chip-medium-bg: rgba(240, 176, 96, 0.16);
+  --chip-medium-text: #F0B060;
+  --chip-low-bg: rgba(92, 199, 138, 0.16);
+  --chip-low-text: #5CC78A;
+}
+
+/* 5. ALWAYS-LIGHT PRINT & EXPORT OVERRIDE */
+@media print {
+  :root, body, [data-theme="dark"], [data-theme="light"] {
+    --bg: #FFFFFF !important;
+    --surface: #FFFFFF !important;
+    --surface-2: #F6F8FB !important;
+    --border: #C9D1DB !important;
+    --border-strong: #000000 !important;
+    --text: #000000 !important;
+    --text-2: #333333 !important;
+    --text-muted: #555555 !important;
+    --heading: #000000 !important;
+    --primary: #235F63 !important;
+    --header-band: #12263F !important;
+    color: #000000 !important;
+    background: #FFFFFF !important;
+  }
+}
+
+/* 6. TABULAR NUMERALS UTILITY */
+.tabular-nums,
+table,
+.metric-value,
+.timer-display,
+.kpi-value,
+.code-badge {
+  font-variant-numeric: tabular-nums;
+  -moz-font-feature-settings: "tnum";
+  -webkit-font-feature-settings: "tnum";
+  font-feature-settings: "tnum";
+}
+
+/* 7. FOCUS VISIBLE ACCESSIBILITY OUTLINE */
+:focus-visible {
+  outline: 2px solid var(--focus) !important;
+  outline-offset: 2px !important;
+}
+
+/* 8. PREFERS-REDUCED-MOTION */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -8,6 +8,7 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/pdf_tokens.php';
 
 require_admin_auth();
 
@@ -114,6 +115,47 @@ if ($totalVisits > 22 && $totalVisits <= 30) {
     <meta charset="UTF-8">
     <title>Monthly_Site_Report_<?= htmlspecialchars($site['code']) ?>_<?= htmlspecialchars($monthParam) ?></title>
     <style>
+    @page {
+        size: A4 landscape;
+        margin: 8mm 10mm;
+    }
+    body {
+        font-family: "Noto Sans", Arial, Helvetica, sans-serif !important;
+        font-size: 9pt !important;
+        color: #000000 !important;
+        background: #FFFFFF !important;
+    }
+    .report-title, h1 {
+        font-size: 16pt !important;
+        font-weight: 700 !important;
+        color: #12263F !important;
+    }
+    .section-bar, .section-title {
+        font-size: 10pt !important;
+        font-weight: 700 !important;
+        background-color: #12263F !important;
+        color: #FFFFFF !important;
+    }
+    th {
+        font-size: 9pt !important;
+        font-weight: 600 !important;
+        background-color: #235F63 !important;
+        color: #FFFFFF !important;
+    }
+    td {
+        font-size: 9pt !important;
+    }
+    .kpi-val, .metric-value {
+        font-size: 24pt !important;
+        font-weight: 700 !important;
+    }
+    .kpi-lbl {
+        font-size: 9pt !important;
+    }
+    .footer-pt, .signoff-text {
+        font-size: 8pt !important;
+    }
+    
         @page {
             size: A4 landscape;
             margin: 5mm 7mm;

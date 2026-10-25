@@ -37,13 +37,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_site'])) {
             $msg = "A site with code '{$code}' already exists. Please choose a unique code.";
             $msgType = 'danger';
         } else {
-            $cleanCode = preg_replace('/[^a-z0-9]/', '', strtolower($code));
-            $token = 'uss_qr_' . ($cleanCode ?: 'site') . '_' . bin2hex(random_bytes(10));
+            $tokenSecret = create_qr_token_secret('SITE_');
+            $supervisorTokenSecret = create_qr_token_secret('SUP_');
             $insertStmt = $db->prepare("
-                INSERT INTO sites (name, code, type, address, latitude, longitude, client_name, client_contact, active_qr_token, is_active, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())
+                INSERT INTO sites (
+                    name, code, type, address, latitude, longitude, client_name, client_contact,
+                    active_qr_token, active_qr_token_hash, active_qr_token_encrypted,
+                    supervisor_qr_token, supervisor_qr_token_hash, supervisor_qr_token_encrypted,
+                    is_active, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, ?, ?, 1, NOW())
             ");
-            $insertStmt->execute([$name, $code, $type, $address, $latitude, $longitude, $clientName, $clientContact, $token]);
+            $insertStmt->execute([
+                $name, $code, $type, $address, $latitude, $longitude, $clientName, $clientContact,
+                $tokenSecret['hash'], $tokenSecret['encrypted'],
+                $supervisorTokenSecret['hash'], $supervisorTokenSecret['encrypted']
+            ]);
             log_audit('CREATE_SITE', 'SITE', $code, ['name' => $name, 'code' => $code, 'lat' => $latitude, 'lng' => $longitude]);
             $msg = "Site '{$name}' created successfully with active cryptographic QR token and GPS coordinates.";
         }
@@ -85,13 +94,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_site'])) {
     }
 }
 
-// Handle Regenerate QR Token (Manual Super Admin Action Only)
-if (isset($_GET['action']) && $_GET['action'] === 'regen_qr' && isset($_GET['id'])) {
-    $siteId = (int)$_GET['id'];
-    $newToken = 'uss_qr_' . bin2hex(random_bytes(14));
-    $db->prepare("UPDATE sites SET active_qr_token = ?, updated_at = NOW() WHERE id = ?")->execute([$newToken, $siteId]);
-    log_audit('REGENERATE_SITE_QR', 'SITE', $siteId, 'Cryptographic QR token revoked and replaced by Super Admin');
-    $msg = "QR Code token regenerated. Any previous physical poster has been invalidated and revoked.";
+// Handle QR token rotation as an authenticated, CSRF-protected state change.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['regenerate_qr'])) {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        http_response_code(400);
+        $msg = "The form expired. Refresh the page and try again.";
+        $msgType = 'danger';
+    } else {
+        $siteId = (int)($_POST['site_id'] ?? 0);
+        $qrType = ($_POST['qr_type'] ?? 'guard') === 'supervisor' ? 'supervisor' : 'guard';
+        $tokenSecret = create_qr_token_secret($qrType === 'supervisor' ? 'SUP_' : 'SITE_');
+        if ($qrType === 'supervisor') {
+            $db->prepare("UPDATE sites SET supervisor_qr_token = NULL, supervisor_qr_token_hash = ?, supervisor_qr_token_encrypted = ?, updated_at = NOW() WHERE id = ?")
+                ->execute([$tokenSecret['hash'], $tokenSecret['encrypted'], $siteId]);
+        } else {
+            $db->prepare("UPDATE sites SET active_qr_token = NULL, active_qr_token_hash = ?, active_qr_token_encrypted = ?, updated_at = NOW() WHERE id = ?")
+                ->execute([$tokenSecret['hash'], $tokenSecret['encrypted'], $siteId]);
+        }
+        log_audit('REGENERATE_SITE_QR', 'SITE', $siteId, ['type' => $qrType, 'token' => 'replaced']);
+        $msg = ucfirst($qrType) . " QR token regenerated. Any previous physical poster has been invalidated.";
+    }
 }
 
 // Handle Toggle Active
@@ -296,15 +318,11 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
                                     <a href="<?= APP_URL ?>/admin/daily_report.php?site_id=<?= $s['id'] ?>" class="btn btn-secondary btn-sm" title="Sitewise Daily Security Incident Consolidated Report">
                                         📑 Report
                                     </a>
-                                    <?php 
-                                        $siteToken = !empty($s['active_qr_token']) ? $s['active_qr_token'] : '';
-                                        if (empty($siteToken)) {
-                                            $cleanC = preg_replace('/[^a-z0-9]/', '', strtolower($s['code'] ?: 'site'));
-                                            $siteToken = 'uss_qr_' . ($cleanC ?: 'site') . '_' . bin2hex(random_bytes(10));
-                                            $db->prepare("UPDATE sites SET active_qr_token = ? WHERE id = ?")->execute([$siteToken, $s['id']]);
-                                        }
-                                        $siteGuardUrl = APP_URL . '/g/index.php?token=' . urlencode($siteToken);
+                                    <?php
+                                        $siteToken = get_stored_qr_token($s, 'active_qr_token_encrypted', 'active_qr_token');
+                                        $siteGuardUrl = $siteToken !== '' ? APP_URL . '/g/index.php?token=' . urlencode($siteToken) : '';
                                     ?>
+                                    <?php if ($siteGuardUrl !== ''): ?>
                                     <button type="button" class="btn btn-sm" style="background: #0284c7; color: #fff; font-weight: 700;" onclick='openQuickQrModal(<?= json_encode([
                                         "id" => $s["id"],
                                         "name" => $s["name"],
@@ -315,12 +333,31 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
                                     ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' title="View & Download Site QR Code">
                                         📱 QR Code
                                     </button>
-                                    <a href="<?= APP_URL ?>/admin/qr_poster.php?id=<?= $s['id'] ?>" target="_blank" class="btn btn-primary btn-sm" title="Print A4 Checkpoint QR Poster">
-                                        🖨️ Poster
+                                    <a href="<?= APP_URL ?>/admin/qr_poster.php?id=<?= $s['id'] ?>" target="_blank" class="btn btn-primary btn-sm" title="Print A4 Guard Checkpoint QR Poster">
+                                        🖨️ Guard Poster
                                     </a>
-                                    <a href="<?= APP_URL ?>/admin/sites.php?action=regen_qr&id=<?= $s['id'] ?>" class="btn btn-secondary btn-sm" onclick="return confirm('Regenerate QR token? This will permanently invalidate the old physical poster.');" title="Regenerate QR">
-                                        🔄 Token
+                                    <?php else: ?>
+                                        <span class="btn btn-secondary btn-sm" aria-disabled="true">Guard QR not issued</span>
+                                    <?php endif; ?>
+                                    <?php if (!empty(get_stored_qr_token($s, 'supervisor_qr_token_encrypted', 'supervisor_qr_token'))): ?>
+                                    <a href="<?= APP_URL ?>/admin/qr_poster.php?id=<?= (int)$s['id'] ?>&amp;type=supervisor" target="_blank" class="btn btn-primary btn-sm" title="Print Supervisor Visit QR Poster">
+                                        🖨️ Supervisor Poster
                                     </a>
+                                    <?php else: ?>
+                                    <span class="btn btn-secondary btn-sm" aria-disabled="true">Supervisor QR not issued</span>
+                                    <?php endif; ?>
+                                    <form method="post" style="display:inline" onsubmit="return confirm('Regenerate the guard QR? The current guard poster will stop working.');">
+                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
+                                        <input type="hidden" name="site_id" value="<?= (int)$s['id'] ?>">
+                                        <input type="hidden" name="qr_type" value="guard">
+                                        <button type="submit" name="regenerate_qr" class="btn btn-secondary btn-sm" title="Regenerate Guard QR">🔄 Guard QR</button>
+                                    </form>
+                                    <form method="post" style="display:inline" onsubmit="return confirm('Regenerate the supervisor QR? The current supervisor poster will stop working.');">
+                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
+                                        <input type="hidden" name="site_id" value="<?= (int)$s['id'] ?>">
+                                        <input type="hidden" name="qr_type" value="supervisor">
+                                        <button type="submit" name="regenerate_qr" class="btn btn-secondary btn-sm" title="Issue or regenerate Supervisor QR">🔄 Supervisor QR</button>
+                                    </form>
                                     <a href="<?= APP_URL ?>/admin/sites.php?action=toggle&id=<?= $s['id'] ?>" class="btn btn-secondary btn-sm">
                                         <?= $s['is_active'] ? 'Disable' : 'Enable' ?>
                                     </a>
@@ -543,7 +580,8 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
         </div>
         
         <div style="background: #ffffff; padding: 14px; border-radius: 12px; display: inline-block; box-shadow: 0 8px 24px rgba(0,0,0,0.25); margin-bottom: 14px;">
-            <img id="modalQrImg" src="" alt="Site QR Code" width="230" height="230" style="display: block; border-radius: 6px; margin: 0 auto;" crossOrigin="anonymous">
+            <canvas id="modalQrCanvas" width="300" height="300" style="display: block; width: 230px; height: 230px; border-radius: 6px; margin: 0 auto;"></canvas>
+            <div id="modalQrUnavailable" style="display:none; width:230px; height:230px; align-items:center; justify-content:center; color:#b91c1c; font-weight:700;">QR could not be rendered.</div>
         </div>
         
         <div id="modalQrCodeBadge" style="font-family: monospace; font-weight: 800; font-size: 13.5px; color: #38bdf8; margin-bottom: 8px; background: rgba(56, 189, 248, 0.1); padding: 4px 12px; border-radius: 6px; display: inline-block;"></div>
@@ -571,6 +609,7 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
     </div>
 </div>
 
+<script src="<?= APP_URL ?>/assets/js/qrcode.min.js"></script>
 <script>
 let currentModalQr = null;
 
@@ -586,7 +625,21 @@ function openQuickQrModal(data) {
         gpsEl.style.display = 'none';
     }
     document.getElementById('modalQrUrl').value = data.url;
-    document.getElementById('modalQrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=' + encodeURIComponent(data.url);
+    const canvas = document.getElementById('modalQrCanvas');
+    const unavailable = document.getElementById('modalQrUnavailable');
+    canvas.style.display = 'block';
+    unavailable.style.display = 'none';
+    if (typeof QRCode !== 'undefined' && typeof QRCode.toCanvas === 'function') {
+        QRCode.toCanvas(canvas, data.url, { width: 300, margin: 8 }, function(error) {
+            if (error) {
+                canvas.style.display = 'none';
+                unavailable.style.display = 'flex';
+            }
+        });
+    } else {
+        canvas.style.display = 'none';
+        unavailable.style.display = 'flex';
+    }
     document.getElementById('modalPrintPosterLink').href = '<?= APP_URL ?>/admin/qr_poster.php?id=' + data.id;
     document.getElementById('quickQrModal').style.display = 'flex';
 }
@@ -606,10 +659,14 @@ function copyModalQrLink() {
 
 function downloadModalQrPng() {
     if (!currentModalQr) return;
+    const canvas = document.getElementById('modalQrCanvas');
+    if (canvas.style.display === 'none') {
+        alert('QR could not be rendered. Use the direct link above.');
+        return;
+    }
     const a = document.createElement('a');
-    a.href = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=' + encodeURIComponent(currentModalQr.url);
+    a.href = canvas.toDataURL('image/png');
     a.download = 'QR_Checkpoint_' + currentModalQr.code + '.png';
-    a.target = '_blank';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -630,4 +687,3 @@ function openEditSiteModal(site) {
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
-

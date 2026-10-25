@@ -60,15 +60,21 @@ if (strpos($qrBaseUrl, 'trycloudflare.com') !== false && strpos($qrBaseUrl, 'htt
     $qrBaseUrl = 'https://' . substr($qrBaseUrl, 7);
 }
 
-$rawToken = !empty($site['active_qr_token']) ? $site['active_qr_token'] : '';
-if (empty($rawToken)) {
-    $cleanCode = preg_replace('/[^a-z0-9]/', '', strtolower($site['code'] ?: 'site'));
-    $rawToken = 'uss_qr_' . ($cleanCode ?: 'site') . '_' . bin2hex(random_bytes(10));
-    $db->prepare("UPDATE sites SET active_qr_token = ?, updated_at = NOW() WHERE id = ?")->execute([$rawToken, $site['id']]);
+$qrType = ($_GET['type'] ?? 'guard') === 'supervisor' ? 'supervisor' : 'guard';
+if ($qrType === 'supervisor') {
+    $rawToken = get_stored_qr_token($site, 'supervisor_qr_token_encrypted', 'supervisor_qr_token');
+    $qrPath = '/sup/index.php?token=';
+} else {
+    $rawToken = get_stored_qr_token($site, 'active_qr_token_encrypted', 'active_qr_token');
+    $qrPath = '/g/index.php?token=';
+}
+if ($rawToken === '') {
+    http_response_code(410);
+    die("This QR token has not been issued. Return to Site Management and issue a new token.");
 }
 
-$guardUrl = $qrBaseUrl . '/g/index.php?token=' . urlencode($rawToken);
-$qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data=" . urlencode($guardUrl);
+$posterRole = $qrType === 'supervisor' ? 'SUPERVISOR VISIT CHECKPOINT' : 'SECURITY PATROL POST';
+$guardUrl = $qrBaseUrl . $qrPath . urlencode($rawToken);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -89,7 +95,7 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&d
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: "Noto Sans", Arial, sans-serif;
             background: #e2e8f0;
             color: #0f172a;
             display: flex;
@@ -231,7 +237,7 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&d
         }
 
         .site-card-code {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-family: "Noto Sans", Arial, sans-serif;
             font-size: 12pt;
             font-weight: 700;
             color: #94a3b8;
@@ -325,14 +331,7 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&d
             margin-bottom: 2px;
         }
 
-        .direct-link-url {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            font-size: 8.5pt;
-            font-weight: 600;
-            color: #0284c7;
-            text-decoration: none;
-            word-break: break-all;
-        }
+        .direct-link-url { font-family: "Noto Sans", Arial, sans-serif; font-size: 14pt; font-weight: 600; color: #0B5C66; text-align: center; word-break: break-all; }
 
         /* Footer */
         .poster-footer {
@@ -387,7 +386,7 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&d
 <div class="no-print-bar">
     <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
         <div>
-            <strong>Checkpoint Poster:</strong> <?= htmlspecialchars($site['name']) ?> (<?= htmlspecialchars($site['code']) ?>)
+            <strong><?= htmlspecialchars(ucfirst($qrType)) ?> Checkpoint Poster:</strong> <?= htmlspecialchars($site['name']) ?> (<?= htmlspecialchars($site['code']) ?>)
         </div>
         <?php if (!empty($publicTunnelUrl) || !empty($lanIps)): ?>
             <div style="background: rgba(14, 165, 233, 0.15); border: 1px solid #0284c7; padding: 4px 12px; border-radius: 6px; font-size: 12.5px; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
@@ -440,7 +439,7 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&d
 
     <!-- Security Patrol Post Card -->
     <div class="site-card">
-        <div class="site-card-label">SECURITY PATROL POST</div>
+        <div class="site-card-label"><?= htmlspecialchars($posterRole) ?></div>
         <div class="site-card-name"><?= htmlspecialchars($site['name']) ?></div>
         <div class="site-card-code">SITE CODE: <?= htmlspecialchars($site['code']) ?></div>
         <?php if (!empty($site['latitude']) || !empty($site['longitude'])): ?>
@@ -453,8 +452,8 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&d
     <!-- QR Code Center Card -->
     <div class="qr-card">
         <canvas id="qrcodeCanvas" width="250" height="250" style="display: none;"></canvas>
-        <img id="qrImage" src="<?= $qrApiUrl ?>" alt="QR Code" width="250" height="250" style="display: block;">
-        <div class="qr-caption">SCAN WITH PHONE CAMERA TO REPORT INCIDENT</div>
+        <div id="qrUnavailable" style="display:none; width:250px; height:250px; align-items:center; justify-content:center; color:#b91c1c; font-weight:700;">QR could not be rendered. Use the direct link below.</div>
+        <div class="qr-caption">SCAN WITH PHONE CAMERA TO <?= $qrType === 'supervisor' ? 'RECORD SUPERVISOR VISIT' : 'REPORT INCIDENT' ?></div>
     </div>
 
     <!-- 3 Steps Instructions Grid -->
@@ -466,19 +465,19 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&d
         </div>
         <div class="step-item">
             <div class="step-badge">2</div>
-            <div class="step-title">Guard Sign In</div>
-            <div class="step-desc">Enter your Officer Staff ID / Username and Password to access the patrol form.</div>
+            <div class="step-title"><?= $qrType === 'supervisor' ? 'Supervisor Sign In' : 'Guard Sign In' ?></div>
+            <div class="step-desc"><?= $qrType === 'supervisor' ? 'Enter your supervisor credentials and confirm the proposed site visit action.' : 'Enter your Officer Staff ID / Username and Password to access the patrol form.' ?></div>
         </div>
         <div class="step-item">
             <div class="step-badge">3</div>
-            <div class="step-title">Submit &amp; Photos</div>
-            <div class="step-desc">Fill report narrative, attach live camera photos, and submit for instant review.</div>
+            <div class="step-title"><?= $qrType === 'supervisor' ? 'Confirm Visit' : 'Submit &amp; Photos' ?></div>
+            <div class="step-desc"><?= $qrType === 'supervisor' ? 'Confirm Time In or complete Time Out with required visit remarks.' : 'Fill report narrative, attach live camera photos, and submit for instant review.' ?></div>
         </div>
     </div>
 
     <!-- Direct Fallback Link -->
     <div class="direct-link-box">
-        <div class="direct-link-label">Direct Patrol Link:</div>
+        <div class="direct-link-label">Direct <?= htmlspecialchars(ucfirst($qrType)) ?> Link:</div>
         <a href="<?= htmlspecialchars($guardUrl) ?>" class="direct-link-url" target="_blank"><?= htmlspecialchars($guardUrl) ?></a>
     </div>
 
@@ -500,8 +499,8 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&d
 // Client-side Canvas rendering enhancement
 window.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('qrcodeCanvas');
-    const img = document.getElementById('qrImage');
-    const qrData = '<?= addslashes($guardUrl) ?>';
+    const unavailable = document.getElementById('qrUnavailable');
+    const qrData = <?= json_encode($guardUrl, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
     
     if (typeof QRCode !== 'undefined' && typeof QRCode.toCanvas === 'function') {
         QRCode.toCanvas(canvas, qrData, {
@@ -515,22 +514,24 @@ window.addEventListener('DOMContentLoaded', function() {
         }, function (error) {
             if (!error) {
                 canvas.style.display = 'block';
-                img.style.display = 'none';
+            } else {
+                unavailable.style.display = 'flex';
             }
         });
+    } else {
+        unavailable.style.display = 'flex';
     }
 });
 
 function downloadQrCode() {
     const canvas = document.getElementById('qrcodeCanvas');
-    const img = document.getElementById('qrImage');
     const a = document.createElement('a');
-    a.download = 'QR_Checkpoint_<?= htmlspecialchars($site['code']) ?>.png';
+    a.download = <?= json_encode('QR_Checkpoint_' . $site['code'] . '.png', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
     if (canvas && canvas.style.display !== 'none' && canvas.toDataURL) {
         a.href = canvas.toDataURL('image/png');
     } else {
-        a.href = img.src;
-        a.target = '_blank';
+        alert('QR could not be rendered. Use the direct link below.');
+        return;
     }
     document.body.appendChild(a);
     a.click();
@@ -538,7 +539,7 @@ function downloadQrCode() {
 }
 
 function copyPatrolLink() {
-    const url = '<?= addslashes($guardUrl) ?>';
+    const url = <?= json_encode($guardUrl, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
     if (navigator.clipboard) {
         navigator.clipboard.writeText(url).then(function() {
             alert('Patrol Checkpoint URL copied to clipboard:\n' + url);

@@ -14,6 +14,7 @@ if (empty($_SESSION['uss_supervisor_logged_in']) || empty($_SESSION['supervisor_
     header("Location: " . APP_URL . "/sup/login.php");
     exit;
 }
+require_supervisor_auth();
 
 $db = get_db();
 $settings = get_system_settings();
@@ -44,7 +45,8 @@ $activeDuty = $dutyStmt->fetch();
 $openVisit = null;
 if ($activeDuty) {
     $vStmt = $db->prepare("
-        SELECT v.*, s.name AS site_name, s.code AS site_code, s.active_qr_token
+        SELECT v.*, s.name AS site_name, s.code AS site_code,
+               s.supervisor_qr_token, s.supervisor_qr_token_encrypted
         FROM supervisor_visits v
         JOIN sites s ON s.id = v.site_id
         WHERE v.duty_id = ? AND v.status = 'In Progress'
@@ -97,7 +99,8 @@ $dayOfWeek = (int)date('N'); // 1 (Mon) to 7 (Sun)
 $todayDate = date('Y-m-d');
 
 $schedStmt = $db->prepare("
-    SELECT sc.*, s.name AS site_name, s.code AS site_code, s.active_qr_token
+    SELECT sc.*, s.name AS site_name, s.code AS site_code,
+           s.supervisor_qr_token, s.supervisor_qr_token_encrypted
     FROM supervisor_schedules sc
     JOIN sites s ON s.id = sc.site_id
     WHERE sc.supervisor_id = ? 
@@ -120,7 +123,12 @@ $msg = $_GET['msg'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Patrol Cockpit | <?= htmlspecialchars($settings['company_name']) ?></title>
-    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
+    
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/design-tokens.css?v=<?= time() ?>">
+    <?php require_once __DIR__ . '/../includes/theme_bootstrapper.php'; ?>
+        
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
     <script>
         (function() {
             var theme = localStorage.getItem('uss_theme') || 'dark';
@@ -339,7 +347,7 @@ $msg = $_GET['msg'] ?? '';
             </div>
         <?php elseif ($msg === 'manual_request_submitted'): ?>
             <div class="alert alert-warning" style="margin-bottom: 14px; font-size: 13px;">
-                ⚠️ Manual Time Out request submitted to Super Admin! Record flagged as "Manual correction (pending)". You may now proceed with your next site.
+                ⚠️ Manual Time Out request submitted to the Super Admin. Official visit time remains unchanged until the request is reviewed.
             </div>
         <?php elseif ($msg === 'duty_completed'): ?>
             <div class="alert alert-info" style="margin-bottom: 14px;">
@@ -371,7 +379,7 @@ $msg = $_GET['msg'] ?? '';
             <div class="status-hero active-site">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <span class="badge" style="background: var(--accent-amber); color: #000; font-weight: 800;">
-                        ● CURRENTLY INSPECTING SITE
+                        ● <?= $openVisit['manual_timeout_status'] === 'Pending' ? 'MANUAL TIME OUT PENDING' : 'CURRENTLY INSPECTING SITE' ?>
                     </span>
                     <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">
                         Time In: <?= date('h:i A', $timeInTs) ?>
@@ -392,14 +400,27 @@ $msg = $_GET['msg'] ?? '';
                     <div style="font-size: 13px; color: var(--text-muted);">spent on site so far</div>
                 </div>
 
-                <a href="<?= APP_URL ?>/sup/index.php?token=<?= urlencode($openVisit['active_qr_token']) ?>" class="btn btn-primary" style="width: 100%; text-align: center; padding: 14px; font-size: 15px; font-weight: 800; background: var(--accent-amber); color: #000;">
-                    ⏱️ Clock Out & Write Site Remarks
-                </a>
-                <div style="text-align: center; margin-top: 10px;">
-                    <a href="<?= APP_URL ?>/sup/manual_request.php?visit_id=<?= $openVisit['id'] ?>" style="color: var(--accent-amber); font-size: 12px; text-decoration: underline;">
-                        ⚠️ Left site without scanning out? Submit Manual Time Out Request
-                    </a>
+                <?php if ($openVisit['manual_timeout_status'] === 'Pending'): ?>
+                <div class="alert alert-warning" style="margin-bottom: 12px;">
+                    Wait for Super Admin review. Do not start another site visit until this request is resolved.
                 </div>
+                <?php else: ?>
+                    <?php $openVisitToken = get_stored_qr_token($openVisit, 'supervisor_qr_token_encrypted', 'supervisor_qr_token'); ?>
+                    <?php if ($openVisitToken !== ''): ?>
+                    <a href="<?= APP_URL ?>/sup/index.php?token=<?= urlencode($openVisitToken) ?>" class="btn btn-primary" style="width: 100%; text-align: center; padding: 14px; font-size: 15px; font-weight: 800; background: var(--accent-amber); color: #000;">
+                        ⏱️ Clock Out & Write Site Remarks
+                    </a>
+                    <?php else: ?>
+                    <div style="color: var(--accent-rose); font-size: 13px; text-align: center; font-weight: 700;">
+                        This site has no active Supervisor QR. Contact the Super Admin to issue one.
+                    </div>
+                    <?php endif; ?>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <a href="<?= APP_URL ?>/sup/manual_request.php?visit_id=<?= $openVisit['id'] ?>" style="color: var(--accent-amber); font-size: 12px; text-decoration: underline;">
+                            ⚠️ Left site without scanning out? Submit Manual Time Out Request
+                        </a>
+                    </div>
+                <?php endif; ?>
             </div>
 
         <?php else: ?>

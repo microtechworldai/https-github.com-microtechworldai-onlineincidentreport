@@ -15,6 +15,7 @@ build/
 .env.*.local
 *.pem
 *.key
+hostinger_deployment/config.local.php
 
 # Temp and logs
 logs/

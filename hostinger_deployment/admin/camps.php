@@ -27,13 +27,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->fetch()) {
                 $error = "Camp Code '{$campCode}' already exists.";
             } else {
-                $rawToken = 'CMP_' . strtoupper(bin2hex(random_bytes(6)));
+                $tokenSecret = create_qr_token_secret('CMP_');
 
                 $stmt = $db->prepare("
-                    INSERT INTO camps (camp_code, camp_name, location, qr_token, is_active, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, 1, NOW(), NOW())
+                    INSERT INTO camps (camp_code, camp_name, location, qr_token, qr_token_hash, qr_token_encrypted, is_active, created_at, updated_at)
+                    VALUES (?, ?, ?, NULL, ?, ?, 1, NOW(), NOW())
                 ");
-                $stmt->execute([$campCode, $campName, $location, $rawToken]);
+                $stmt->execute([$campCode, $campName, $location, $tokenSecret['hash'], $tokenSecret['encrypted']]);
                 $campId = $db->lastInsertId();
 
                 log_audit('CAMP_CREATED', "Created camp {$campCode} ({$campName})", $_SESSION['admin_id'] ?? null, 'camps', $campId);
@@ -57,6 +57,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$campName, $location, $status, $campId]);
             log_audit('CAMP_UPDATED', "Updated camp ID {$campId} ({$campName})", $_SESSION['admin_id'] ?? null, 'camps', $campId);
             $message = "Camp details updated successfully.";
+        }
+    } elseif ($action === 'regenerate_camp_qr') {
+        $campId = (int)($_POST['camp_id'] ?? 0);
+        if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+            http_response_code(400);
+            $error = "The form expired. Refresh the page and try again.";
+        } elseif ($campId < 1) {
+            $error = "Select a valid camp.";
+        } else {
+            $tokenSecret = create_qr_token_secret('CMP_');
+            $stmt = $db->prepare("
+                UPDATE camps
+                SET qr_token = NULL, qr_token_hash = ?, qr_token_encrypted = ?, updated_at = NOW()
+                WHERE id = ?
+            ");
+            $stmt->execute([$tokenSecret['hash'], $tokenSecret['encrypted'], $campId]);
+            if ($stmt->rowCount() !== 1) {
+                $error = "Camp QR was not changed. Confirm the camp exists and try again.";
+            } else {
+                log_audit('REGENERATE_CAMP_QR', 'CAMP', $campId, ['token' => 'replaced']);
+                $message = "Camp QR token regenerated. Any previous camp poster has been invalidated.";
+            }
         }
     }
 }
@@ -150,6 +172,12 @@ $camps = $db->query("
                                     <a href="<?= APP_URL ?>/admin/camp_qr_poster.php?id=<?= $camp['id'] ?>" target="_blank" class="btn btn-sm btn-outline" title="Print Official A4 QR Poster">
                                         🖨️ Poster
                                     </a>
+                                    <form method="post" style="display:inline" onsubmit="return confirm('Regenerate the camp QR? The current camp poster will stop working.');">
+                                        <input type="hidden" name="action" value="regenerate_camp_qr">
+                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
+                                        <input type="hidden" name="camp_id" value="<?= (int)$camp['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline" title="Regenerate Camp QR">🔄 QR</button>
+                                    </form>
                                     <button type="button" class="btn btn-sm btn-outline" onclick='openEditModal(<?= json_encode($camp) ?>)' title="Edit Details">
                                         ✏️ Edit
                                     </button>

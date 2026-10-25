@@ -13,6 +13,7 @@ if (empty($_SESSION['uss_supervisor_logged_in']) || empty($_SESSION['supervisor_
     header("Location: " . APP_URL . "/sup/login.php");
     exit;
 }
+require_supervisor_auth();
 
 $db = get_db();
 $settings = get_system_settings();
@@ -48,38 +49,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_manual_request
     $reason = trim($_POST['manual_timeout_reason'] ?? '');
     $remarks = trim($_POST['remarks'] ?? '');
 
-    if (empty($manualTime)) {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        http_response_code(400);
+        $error = "The form expired. Refresh the page and try again.";
+    } elseif ($visit['status'] !== 'In Progress' || $visit['manual_timeout_status'] === 'Pending') {
+        $error = "This visit cannot accept another manual time-out request.";
+    } elseif (empty($manualTime)) {
         $error = "Please specify the approximate time you left the site.";
     } elseif (empty($reason) || strlen($reason) < 8) {
         $error = "Please provide a valid explanation for why you could not scan out at the site.";
     } elseif (empty($remarks) || strlen($remarks) < $minRemarksLen) {
         $error = "Remarks too short! Minimum {$minRemarksLen} characters required (current: " . strlen($remarks) . ").";
     } else {
+        $parsedTime = DateTime::createFromFormat('Y-m-d\TH:i', $manualTime);
+        $dateErrors = DateTime::getLastErrors();
         $timeInTs = strtotime($visit['time_in']);
-        $timeOutTs = strtotime($manualTime);
+        $timeOutTs = $parsedTime ? $parsedTime->getTimestamp() : false;
 
-        if ($timeOutTs <= $timeInTs) {
+        if (
+            !$parsedTime
+            || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))
+            || $timeOutTs === false
+            || $timeOutTs <= $timeInTs
+        ) {
             $error = "Departure time must be after the Time In timestamp (" . date('h:i A', $timeInTs) . ").";
         } else {
-            $minsSpent = max(1, round(($timeOutTs - $timeInTs) / 60));
-
             $up = $db->prepare("
                 UPDATE supervisor_visits 
-                SET time_out = ?, minutes_spent = ?, remarks = ?,
-                    manual_timeout_requested = 1, manual_timeout_time = ?, manual_timeout_reason = ?,
-                    manual_timeout_status = 'Pending', status = 'Manual correction (pending)', updated_at = NOW()
-                WHERE id = ?
+                SET manual_timeout_requested = 1, manual_timeout_time = ?, manual_timeout_reason = ?,
+                    manual_timeout_remarks = ?, manual_timeout_status = 'Pending', updated_at = NOW()
+                WHERE id = ? AND status = 'In Progress' AND manual_timeout_status <> 'Pending'
             ");
             $up->execute([
-                $manualTime, $minsSpent, $remarks,
-                $manualTime, $reason,
+                $parsedTime->format('Y-m-d H:i:s'), $reason, $remarks,
                 $visit['id']
             ]);
+            if ($up->rowCount() !== 1) {
+                $error = "This visit changed while the request was being submitted. Refresh and review its status.";
+            } else {
 
-            log_audit('MANUAL_TIMEOUT_REQUESTED', "Supervisor {$supervisorId} requested manual time-out for visit {$visit['id']}. Reason: {$reason}", null, 'supervisor_visits', $visit['id']);
+            log_audit('MANUAL_TIMEOUT_REQUESTED', 'SUPERVISOR_VISIT', (string)$visit['id'], ['reason' => $reason], 'SUPERVISOR', $supervisorId, $_SESSION['supervisor_name'] ?? null);
 
             header("Location: " . APP_URL . "/sup/duty.php?msg=manual_request_submitted");
             exit;
+            }
         }
     }
 }
@@ -90,7 +103,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_manual_request
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Manual Time Out Request | <?= htmlspecialchars($settings['company_name']) ?></title>
-    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
+    
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/design-tokens.css?v=<?= time() ?>">
+    <?php require_once __DIR__ . '/../includes/theme_bootstrapper.php'; ?>
+        
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
     <script>
         (function() {
             var theme = localStorage.getItem('uss_theme') || 'dark';
@@ -132,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_manual_request
     </div>
 
     <div style="background: var(--bg-card-hover); border-left: 3px solid var(--accent-amber); padding: 12px; border-radius: 4px; font-size: 12.5px; color: var(--text-muted); line-height: 1.4; margin-bottom: 18px;">
-        Use this form only if you could not scan the site QR code before leaving. Your request will be flagged as <strong>"Manual correction (pending)"</strong> and reviewed by the Super Admin.
+        Use this form only if you could not scan the site QR code before leaving. Your request will be reviewed by the Super Admin; official visit time and remarks remain unchanged until approval.
     </div>
 
     <?php if ($error): ?>
@@ -144,6 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_manual_request
     <form method="POST">
         <input type="hidden" name="submit_manual_request" value="1">
         <input type="hidden" name="visit_id" value="<?= $visit['id'] ?>">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
 
         <div class="form-group" style="margin-bottom: 14px;">
             <label class="form-label" style="font-size: 12px;">Official Time In</label>
@@ -162,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_manual_request
 
         <div class="form-group" style="margin-bottom: 20px;">
             <label class="form-label" style="font-size: 12px;">Mandatory Visit Remarks <span style="color: var(--accent-rose);">*</span></label>
-            <textarea name="remarks" id="manualRemarks" class="form-control" rows="3" required placeholder="Observations, guard alertness, post condition..."><?= htmlspecialchars($visit['remarks'] ?? '') ?></textarea>
+            <textarea name="remarks" id="manualRemarks" class="form-control" rows="3" required placeholder="Observations, guard alertness, post condition..."><?= htmlspecialchars($visit['manual_timeout_remarks'] ?? $visit['remarks'] ?? '') ?></textarea>
             <div style="font-size: 11.5px; color: var(--text-dim); margin-top: 4px;">
                 Minimum <?= $minRemarksLen ?> characters required.
             </div>
