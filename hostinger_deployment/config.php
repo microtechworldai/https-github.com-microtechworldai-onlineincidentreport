@@ -49,8 +49,8 @@ if ($isLocal) {
     // Hostinger Production Credentials (Configure for Hostinger)
     define('DB_HOST', 'localhost');
     define('DB_PORT', 3306);
-    define('DB_NAME', 'u123456789_uss_incidents');  // Replace with your Hostinger DB name (e.g. u123456789_incidents)
-    define('DB_USER', 'u123456789_uss_admin');      // Replace with your Hostinger DB user
+    define('DB_NAME', 'u211560622_superadmin');  // Replace with your Hostinger DB name (e.g. u123456789_incidents)
+    define('DB_USER', 'u211560622_superadmin');      // Replace with your Hostinger DB user
     define('DB_PASS', 'YourStrongDbPassword123!');  // Replace with your Hostinger DB password
     define('DB_CHARSET', 'utf8mb4');
 }
