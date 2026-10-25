@@ -1,7 +1,11 @@
 <?php
 /**
  * Sites & Checkpoint QR Posters Management
+ * Enterprise Support for 500+ Physical Checkpoints
  */
+ini_set('memory_limit', '512M');
+set_time_limit(300);
+
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -10,7 +14,7 @@ require_once __DIR__ . '/../includes/functions.php';
 require_admin_auth();
 
 $pageTitle = "Patrol Sites & QR Checkpoints";
-$pageSubtitle = "Manage physical buildings, facilities, and access QR tokens";
+$pageSubtitle = "Manage physical buildings, facilities, and cryptographic access QR tokens (500+ Sites Supported)";
 $db = get_db();
 $msg = '';
 $msgType = 'success';
@@ -46,15 +50,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_site'])) {
                     supervisor_qr_token, supervisor_qr_token_hash, supervisor_qr_token_encrypted,
                     is_active, created_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, ?, ?, 1, NOW())
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())
             ");
             $insertStmt->execute([
                 $name, $code, $type, $address, $latitude, $longitude, $clientName, $clientContact,
-                $tokenSecret['hash'], $tokenSecret['encrypted'],
-                $supervisorTokenSecret['hash'], $supervisorTokenSecret['encrypted']
+                $tokenSecret['token'], $tokenSecret['hash'], $tokenSecret['encrypted'],
+                $supervisorTokenSecret['token'], $supervisorTokenSecret['hash'], $supervisorTokenSecret['encrypted']
             ]);
             log_audit('CREATE_SITE', 'SITE', $code, ['name' => $name, 'code' => $code, 'lat' => $latitude, 'lng' => $longitude]);
-            $msg = "Site '{$name}' created successfully with active cryptographic QR token and GPS coordinates.";
+            $msg = "Site '{$name}' created successfully with active cryptographic QR tokens for Guard and Supervisor.";
         }
     }
 }
@@ -105,14 +109,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['regenerate_qr'])) {
         $qrType = ($_POST['qr_type'] ?? 'guard') === 'supervisor' ? 'supervisor' : 'guard';
         $tokenSecret = create_qr_token_secret($qrType === 'supervisor' ? 'SUP_' : 'SITE_');
         if ($qrType === 'supervisor') {
-            $db->prepare("UPDATE sites SET supervisor_qr_token = NULL, supervisor_qr_token_hash = ?, supervisor_qr_token_encrypted = ?, updated_at = NOW() WHERE id = ?")
-                ->execute([$tokenSecret['hash'], $tokenSecret['encrypted'], $siteId]);
+            $db->prepare("UPDATE sites SET supervisor_qr_token = ?, supervisor_qr_token_hash = ?, supervisor_qr_token_encrypted = ?, updated_at = NOW() WHERE id = ?")
+                ->execute([$tokenSecret['token'], $tokenSecret['hash'], $tokenSecret['encrypted'], $siteId]);
         } else {
-            $db->prepare("UPDATE sites SET active_qr_token = NULL, active_qr_token_hash = ?, active_qr_token_encrypted = ?, updated_at = NOW() WHERE id = ?")
-                ->execute([$tokenSecret['hash'], $tokenSecret['encrypted'], $siteId]);
+            $db->prepare("UPDATE sites SET active_qr_token = ?, active_qr_token_hash = ?, active_qr_token_encrypted = ?, updated_at = NOW() WHERE id = ?")
+                ->execute([$tokenSecret['token'], $tokenSecret['hash'], $tokenSecret['encrypted'], $siteId]);
         }
         log_audit('REGENERATE_SITE_QR', 'SITE', $siteId, ['type' => $qrType, 'token' => 'replaced']);
-        $msg = ucfirst($qrType) . " QR token regenerated. Any previous physical poster has been invalidated.";
+        $msg = ucfirst($qrType) . " QR token regenerated successfully.";
     }
 }
 
@@ -155,7 +159,7 @@ $totalSites = (int)$countStmt->fetchColumn();
 
 $page = max(1, (int)($_GET['page'] ?? 1));
 $perPage = (int)($_GET['per_page'] ?? 25);
-if (!in_array($perPage, [10, 25, 50, 100, 250])) {
+if (!in_array($perPage, [10, 25, 50, 100, 250, 500])) {
     $perPage = 25;
 }
 $totalPages = max(1, (int)ceil($totalSites / $perPage));
@@ -171,7 +175,7 @@ $sql = "
            (SELECT COUNT(*) FROM incidents i WHERE i.site_id = s.id AND i.deleted_at IS NULL) as incident_count
     FROM sites s
     {$whereSql}
-    ORDER BY s.name ASC
+    ORDER BY s.id ASC
     LIMIT {$perPage} OFFSET {$offset}
 ";
 $stmt = $db->prepare($sql);
@@ -188,25 +192,34 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="alert alert-<?= $msgType ?>"><?= htmlspecialchars($msg) ?></div>
 <?php endif; ?>
 
-<!-- Top Action -->
+<!-- Top Action Header -->
 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 20px;">
     <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
         <span style="color: var(--text-muted); font-size: 14px;">
-            Showing <strong><?= $totalSites > 0 ? ($offset + 1) : 0 ?></strong>–<strong><?= min($totalSites, $offset + count($sites)) ?></strong> of <strong><?= number_format($totalSites) ?></strong> registered checkpoints
+            Showing <strong><?= $totalSites > 0 ? ($offset + 1) : 0 ?></strong> – <strong><?= min($totalSites, $offset + count($sites)) ?></strong> of <strong><?= number_format($totalSites) ?></strong> registered checkpoints
             <?php if ($totalPages > 1): ?>
                 <span style="color: var(--text-dim); margin-left: 6px;">(Page <?= $page ?> of <?= $totalPages ?>)</span>
             <?php endif; ?>
         </span>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <form method="GET" action="" style="display: flex; gap: 8px;">
-            <input type="text" name="search" class="form-control" placeholder="Search site name, code, client..." value="<?= htmlspecialchars($search) ?>" style="width: 250px; font-size: 13px; padding: 6px 12px;">
+            <input type="text" name="search" class="form-control" placeholder="Search site name, code, client..." value="<?= htmlspecialchars($search) ?>" style="width: 230px; font-size: 13px; padding: 6px 12px;">
             <?php if ($search !== ''): ?>
-                <a href="<?= APP_URL ?>/admin/sites.php" class="btn btn-secondary btn-sm" title="Clear search">✕</a>
+                <a href="<?= APP_URL ?>/admin/sites.php" class="btn btn-secondary btn-sm" title="Clear search">Clear</a>
             <?php endif; ?>
             <button type="submit" class="btn btn-secondary btn-sm">Search</button>
         </form>
+
+        <a href="<?= APP_URL ?>/admin/bulk_qr_posters.php" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700;">
+            🖨️ Bulk Print QR Posters
+        </a>
+
+        <a href="<?= APP_URL ?>/admin/seed_500_enterprise_data.php" class="btn btn-sm" style="background: linear-gradient(135deg, #005f73, #0a9396); color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+            🚀 Auto-Populate 500 Sites
+        </a>
+
         <button class="btn btn-primary" onclick="document.getElementById('addSiteModal').style.display='flex'">
             + Add New Patrol Site
         </button>
@@ -222,29 +235,14 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
     <div class="card" style="margin-bottom: 20px; border-left: 4px solid var(--accent-emerald); padding: 14px 18px; background: rgba(16, 185, 129, 0.05);">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
             <div>
-                <strong style="color: #10b981;">⚡ Public Mobile QR Scanning Active (Cloudflare HTTPS):</strong>
+                <strong style="color: #10b981;">🌐 Public Mobile QR Scanning Active (Cloudflare HTTPS):</strong>
                 <span style="font-size: 13px; color: var(--text-main);"> Checkpoint QR posters automatically encode your public HTTPS link (<strong><?= htmlspecialchars($publicTunnelUrl) ?></strong>). Any smartphone on 4G/5G or Wi-Fi connects instantly with camera & GPS support.</span>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <a href="<?= htmlspecialchars($publicTunnelUrl) ?>/g/index.php" target="_blank" class="btn btn-primary btn-sm" style="white-space: nowrap;">
-                    📲 Test Phone Link (HTTPS) &rarr;
-                </a>
-                <a href="http://<?= htmlspecialchars($lanHost) ?>/g/index.php" target="_blank" class="btn btn-secondary btn-sm" style="white-space: nowrap;">
-                    Local Wi-Fi Link &rarr;
+                    📱 Test Phone Link (HTTPS) &rarr;
                 </a>
             </div>
-        </div>
-    </div>
-<?php elseif (strpos(APP_URL, 'localhost') !== false || strpos(APP_URL, '127.0.0.1') !== false): ?>
-    <div class="card" style="margin-bottom: 20px; border-left: 4px solid var(--accent-cyan); padding: 14px 18px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-            <div>
-                <strong>📱 Mobile Phone QR Scanning:</strong>
-                <span style="font-size: 13px;">Ensure your phone is connected to the same Wi-Fi. The QR poster points to your PC's Wi-Fi IP (<strong>http://<?= htmlspecialchars($lanHost) ?></strong>) instead of localhost so your mobile phone connects immediately.</span>
-            </div>
-            <a href="http://<?= htmlspecialchars($lanHost) ?>/g/index.php" target="_blank" class="btn btn-secondary btn-sm" style="white-space: nowrap;">
-                Test Phone Link &rarr;
-            </a>
         </div>
     </div>
 <?php endif; ?>
@@ -255,25 +253,44 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
         <table class="data-table sites-table">
             <thead>
                 <tr style="background: #081426 !important;">
+                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">ID</th>
                     <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Site Code</th>
                     <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Site / Facility Name</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Facility Type</th>
+                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Classification</th>
                     <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Assigned Guards</th>
                     <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Total Reports</th>
                     <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Status</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-align: right;">QR Poster & Actions</th>
+                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-align: right;">QR Posters & Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($sites)): ?>
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-dim);">
-                            No patrol sites configured. Click "+ Add New Patrol Site" to create your first checkpoint.
+                        <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-dim);">
+                            No patrol sites configured. Click "+ Add New Patrol Site" or use "Auto-Populate 500 Sites" to populate your checkpoints.
                         </td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($sites as $s): ?>
+                    <?php foreach ($sites as $s): 
+                        $safeSiteData = [
+                            'id' => (int)$s['id'],
+                            'name' => (string)$s['name'],
+                            'code' => (string)$s['code'],
+                            'type' => (string)$s['type'],
+                            'address' => (string)($s['address'] ?? ''),
+                            'latitude' => (string)($s['latitude'] ?? ''),
+                            'longitude' => (string)($s['longitude'] ?? ''),
+                            'client_name' => (string)($s['client_name'] ?? ''),
+                            'client_contact' => (string)($s['client_contact'] ?? '')
+                        ];
+                        
+                        $siteGuardToken = get_stored_qr_token($s, 'active_qr_token_encrypted', 'active_qr_token');
+                        $siteGuardUrl = $siteGuardToken !== '' ? APP_URL . '/g/index.php?token=' . urlencode($siteGuardToken) : '';
+                        
+                        $siteSupToken = get_stored_qr_token($s, 'supervisor_qr_token_encrypted', 'supervisor_qr_token');
+                    ?>
                         <tr>
+                            <td style="color: var(--text-dim); font-size: 12px; font-family: monospace;">#<?= $s['id'] ?></td>
                             <td>
                                 <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent-cyan); background: rgba(6, 182, 212, 0.1); padding: 3px 8px; border-radius: 4px;">
                                     <?= htmlspecialchars($s['code']) ?>
@@ -312,16 +329,14 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
                             </td>
                             <td style="text-align: right;">
                                 <div style="display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap;">
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick='openEditSiteModal(<?= json_encode($s, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' title="Edit Site Details & Coordinates">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick='openEditSiteModal(<?= json_encode($safeSiteData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' title="Edit Site Details & Coordinates">
                                         ✏️ Edit
                                     </button>
+                                    
                                     <a href="<?= APP_URL ?>/admin/daily_report.php?site_id=<?= $s['id'] ?>" class="btn btn-secondary btn-sm" title="Sitewise Daily Security Incident Consolidated Report">
-                                        📑 Report
+                                        📊 Report
                                     </a>
-                                    <?php
-                                        $siteToken = get_stored_qr_token($s, 'active_qr_token_encrypted', 'active_qr_token');
-                                        $siteGuardUrl = $siteToken !== '' ? APP_URL . '/g/index.php?token=' . urlencode($siteToken) : '';
-                                    ?>
+
                                     <?php if ($siteGuardUrl !== ''): ?>
                                     <button type="button" class="btn btn-sm" style="background: #0284c7; color: #fff; font-weight: 700;" onclick='openQuickQrModal(<?= json_encode([
                                         "id" => $s["id"],
@@ -339,29 +354,33 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
                                     <?php else: ?>
                                         <span class="btn btn-secondary btn-sm" aria-disabled="true">Guard QR not issued</span>
                                     <?php endif; ?>
-                                    <?php if (!empty(get_stored_qr_token($s, 'supervisor_qr_token_encrypted', 'supervisor_qr_token'))): ?>
-                                    <a href="<?= APP_URL ?>/admin/qr_poster.php?id=<?= (int)$s['id'] ?>&amp;type=supervisor" target="_blank" class="btn btn-primary btn-sm" title="Print Supervisor Visit QR Poster">
+
+                                    <?php if (!empty($siteSupToken)): ?>
+                                    <a href="<?= APP_URL ?>/admin/qr_poster.php?id=<?= (int)$s['id'] ?>&amp;type=supervisor" target="_blank" class="btn btn-primary btn-sm" style="background: #0a9396; border-color: #0a9396;" title="Print Supervisor Visit QR Poster">
                                         🖨️ Supervisor Poster
                                     </a>
                                     <?php else: ?>
                                     <span class="btn btn-secondary btn-sm" aria-disabled="true">Supervisor QR not issued</span>
                                     <?php endif; ?>
-                                    <form method="post" style="display:inline" onsubmit="return confirm('Regenerate the guard QR? The current guard poster will stop working.');">
+
+                                    <form method="post" style="display:inline" onsubmit="return confirm('Regenerate the guard QR?');">
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
                                         <input type="hidden" name="site_id" value="<?= (int)$s['id'] ?>">
                                         <input type="hidden" name="qr_type" value="guard">
                                         <button type="submit" name="regenerate_qr" class="btn btn-secondary btn-sm" title="Regenerate Guard QR">🔄 Guard QR</button>
                                     </form>
-                                    <form method="post" style="display:inline" onsubmit="return confirm('Regenerate the supervisor QR? The current supervisor poster will stop working.');">
+
+                                    <form method="post" style="display:inline" onsubmit="return confirm('Regenerate the supervisor QR?');">
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
                                         <input type="hidden" name="site_id" value="<?= (int)$s['id'] ?>">
                                         <input type="hidden" name="qr_type" value="supervisor">
                                         <button type="submit" name="regenerate_qr" class="btn btn-secondary btn-sm" title="Issue or regenerate Supervisor QR">🔄 Supervisor QR</button>
                                     </form>
+
                                     <a href="<?= APP_URL ?>/admin/sites.php?action=toggle&id=<?= $s['id'] ?>" class="btn btn-secondary btn-sm">
                                         <?= $s['is_active'] ? 'Disable' : 'Enable' ?>
                                     </a>
-                                    <a href="<?= APP_URL ?>/admin/sites.php?action=delete&id=<?= $s['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('⚠️ Are you sure you want to delete site \'<?= htmlspecialchars(addslashes($s['name'])) ?>\'? This will remove the site and revoke its checkpoint QR tokens.');" title="Delete Site">
+                                    <a href="<?= APP_URL ?>/admin/sites.php?action=delete&id=<?= $s['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('⚠️ Are you sure you want to delete site '<?= htmlspecialchars(addslashes($s['name'])) ?>'?');" title="Delete Site">
                                         Delete
                                     </a>
                                 </div>
@@ -380,7 +399,7 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
                 <select onchange="window.location.href=this.value" class="form-control" style="width: auto; padding: 4px 10px; font-size: 13px;">
                     <?php 
                     $currParams = $_GET;
-                    foreach ([25, 50, 100, 250] as $opt): 
+                    foreach ([25, 50, 100, 250, 500] as $opt): 
                         $currParams['per_page'] = $opt;
                         $currParams['page'] = 1;
                         $url = '?' . http_build_query($currParams);
@@ -456,7 +475,7 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label">Code (Unique)</label>
-                    <input type="text" name="code" class="form-control" placeholder="e.g. BUR01" style="text-transform: uppercase;" required>
+                    <input type="text" name="code" class="form-control" placeholder="e.g. USS-DXB-001" style="text-transform: uppercase;" required>
                 </div>
             </div>
 
@@ -600,7 +619,7 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
                 🖨️ A4 Poster
             </a>
             <button type="button" class="btn btn-sm" onclick="downloadModalQrPng()" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; background: #10b981; color: white; font-weight: 700; border: none; border-radius: 8px; cursor: pointer;">
-                💾 Download PNG
+                ⬇️ Download PNG
             </button>
             <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('quickQrModal').style.display='none'">
                 Close

@@ -10,6 +10,8 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/pdf_tokens.php';
 
+@ini_set('memory_limit', '512M');
+@set_time_limit(300);
 require_admin_auth();
 
 $db = get_db();

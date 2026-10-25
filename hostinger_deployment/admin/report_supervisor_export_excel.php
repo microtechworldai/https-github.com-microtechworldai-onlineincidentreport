@@ -16,6 +16,8 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
 
+@ini_set('memory_limit', '512M');
+@set_time_limit(300);
 require_admin_auth();
 
 $db = get_db();
@@ -54,8 +56,8 @@ $visitsStmt = $db->prepare("
     FROM supervisor_visits v
     JOIN sites s ON s.id = v.site_id
     JOIN guards g ON g.id = v.supervisor_id
-    JOIN supervisor_duties d ON d.id = v.duty_id
-    JOIN camps c ON c.id = d.camp_id
+    LEFT JOIN supervisor_duties d ON d.id = v.duty_id
+    LEFT JOIN camps c ON c.id = d.camp_id
     WHERE v.time_in >= ? AND v.time_in <= ?
     ORDER BY v.time_in ASC
 ");
@@ -91,7 +93,7 @@ $siteSumStmt = $db->prepare("
            ROUND(COALESCE(AVG(v.minutes_spent), 0), 1) AS avg_minutes
     FROM sites s
     LEFT JOIN supervisor_visits v ON v.site_id = s.id AND v.time_in >= ? AND v.time_in <= ? AND v.status = 'Completed'
-    LEFT JOIN supervisor_duties d ON d.id = v.duty_id
+    LEFT LEFT JOIN supervisor_duties d ON d.id = v.duty_id
     GROUP BY s.id, s.code, s.name, s.min_visits_per_week, s.min_night_visits_per_week
     ORDER BY s.name ASC
 ");

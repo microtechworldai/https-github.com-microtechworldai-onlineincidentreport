@@ -178,7 +178,7 @@ $camps = $db->query("
                                         <input type="hidden" name="camp_id" value="<?= (int)$camp['id'] ?>">
                                         <button type="submit" class="btn btn-sm btn-outline" title="Regenerate Camp QR">🔄 QR</button>
                                     </form>
-                                    <button type="button" class="btn btn-sm btn-outline" onclick='openEditModal(<?= json_encode($camp) ?>)' title="Edit Details">
+                                    <button type="button" class="btn btn-sm btn-outline" onclick='openEditModal(<?= htmlspecialchars(json_encode($camp), ENT_QUOTES, "UTF-8") ?>)' title="Edit Details">
                                         ✏️ Edit
                                     </button>
                                 </div>

@@ -37,8 +37,8 @@ $query = "
     FROM supervisor_visits v
     JOIN sites s ON s.id = v.site_id
     JOIN guards g ON g.id = v.supervisor_id
-    JOIN supervisor_duties d ON d.id = v.duty_id
-    JOIN camps c ON c.id = d.camp_id
+    LEFT JOIN supervisor_duties d ON d.id = v.duty_id
+    LEFT JOIN camps c ON c.id = d.camp_id
     {$whereSql}
     ORDER BY v.time_in ASC
 ";

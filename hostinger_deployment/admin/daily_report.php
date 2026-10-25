@@ -9,6 +9,8 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
 
+@ini_set('memory_limit', '512M');
+@set_time_limit(300);
 require_admin_auth();
 
 $pageTitle = "DAILY SECURITY INCIDENT CONSOLIDATED REPORT";
