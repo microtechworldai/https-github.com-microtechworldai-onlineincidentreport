@@ -99,6 +99,90 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+
+<!-- Secondary Status & Compliance Pill Overview (Exact Inspiration from Enterprise Dashboard) -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;">
+    <!-- 1. Attendance Today -->
+    <div class="card" style="padding: 16px 18px; border-radius: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="font-size: 13px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 7px;">
+                <span style="color: #0284c7;">🕒</span> Attendance (<?= date('d M Y') ?>)
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <span style="background: #15803d; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                5 Present
+            </span>
+            <span style="background: #dc2626; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                0 Absent
+            </span>
+            <span style="background: #d97706; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                0 Late
+            </span>
+        </div>
+    </div>
+
+    <!-- 2. Patrol Compliance -->
+    <div class="card" style="padding: 16px 18px; border-radius: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="font-size: 13px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 7px;">
+                <span style="color: #059669;">🛡️</span> Patrol Compliance
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <span style="background: #15803d; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                4 Done
+            </span>
+            <span style="background: #dc2626; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                0 Missed
+            </span>
+            <span style="background: #0284c7; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                0 In Progress
+            </span>
+        </div>
+    </div>
+
+    <!-- 3. Expiring Compliance (30d) -->
+    <div class="card" style="padding: 16px 18px; border-radius: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="font-size: 13px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 7px;">
+                <span style="color: #d97706;">📋</span> Expiring Compliance (30d)
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <span style="background: #f59e0b; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                0 Licences
+            </span>
+            <span style="background: #f59e0b; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                0 Documents
+            </span>
+            <span style="background: #64748b; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                0 Assets Out
+            </span>
+        </div>
+    </div>
+
+    <!-- 4. HR & System Status -->
+    <div class="card" style="padding: 16px 18px; border-radius: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="font-size: 13px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 7px;">
+                <span style="color: #2563eb;">💼</span> HR &amp; System Status
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <span style="background: #2563eb; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                4 Leave Req
+            </span>
+            <span style="background: #0284c7; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                Draft Payroll
+            </span>
+            <span style="background: #15803d; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+                0 Alerts
+            </span>
+        </div>
+    </div>
+</div>
+
 <!-- Quick Actions Banner -->
 <div class="card quick-actions-banner" style="margin-bottom: 28px;">
     <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;">

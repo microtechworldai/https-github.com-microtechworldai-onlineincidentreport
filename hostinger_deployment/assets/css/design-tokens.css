@@ -97,48 +97,53 @@
 [data-theme="light"] {
   --bg: #F4F6F8;
   --surface: #FFFFFF;
-  --surface-2: #EEF2F6;
-  --border: #C9D1DB;
-  --border-strong: #8A97A3; /* 3:1 on white for form/table outlines */
-  --text: #1E242E;          /* 15.6:1 on white */
-  --text-2: #4A5560;        /* 7.6:1 on white */
-  --text-muted: #5F6B76;    /* 5.5:1 on white */
-  --heading: #12263F;       /* 15.3:1 on white */
-  --primary: #235F63;       /* 7.3:1 with white text */
-  --primary-hover: #1B4A4E; /* 9.2:1 with white text */
-  --link: #0B5C66;          /* 7.7:1 on white */
-  --header-band: #12263F;   /* Top bars and report title bands */
-  --accent: #2F7478;
-  --success: #1B6E41;       /* 6.3:1 on surface */
-  --warning: #9A5A08;       /* 5.5:1 on surface */
-  --danger: #B3261E;        /* 6.5:1 on surface */
-  --info: #1F4E79;          /* 8.7:1 on surface */
-  --focus: #0B5C66;         /* High visibility focus ring */
+  --surface-2: #F8FAFC;
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --text: #0F172A;
+  --text-2: #334155;
+  --text-muted: #64748B;
+  --heading: #0F172A;
+  --primary: #0A5C36;       /* Deep UAE Forest Green */
+  --primary-hover: #064E3B; /* Darker Forest */
+  --link: #0A5C36;
+  --header-band: #FFFFFF;
+  --accent: #059669;
+  --success: #15803D;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --info: #0284C7;
+  --focus: #0A5C36;
 
-  --card-shadow: 0 4px 12px rgba(18, 38, 63, 0.06);
-  --modal-overlay: rgba(18, 38, 63, 0.6);
+  --sidebar-bg: #062D1F;
+  --sidebar-text: #CCE3D8;
+  --sidebar-active-bg: rgba(255, 255, 255, 0.14);
+  --sidebar-active-text: #FFFFFF;
+
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --modal-overlay: rgba(15, 23, 42, 0.6);
 
   /* Semantic Attendance Codes (Light) */
-  --code-d-color: #1E242E;
-  --code-d-bg: rgba(30, 36, 46, 0.06);
-  --code-n-color: #1F3A93;
-  --code-n-bg: rgba(31, 58, 147, 0.10);
-  --code-off-color: #B3261E;
-  --code-off-bg: rgba(179, 38, 30, 0.12);
-  --code-s-color: #9A5A08;
-  --code-s-bg: rgba(154, 90, 8, 0.10);
-  --code-b-color: #6A2C91;
-  --code-b-bg: rgba(106, 44, 145, 0.10);
+  --code-d-color: #0F172A;
+  --code-d-bg: rgba(15, 23, 42, 0.06);
+  --code-n-color: #1E40AF;
+  --code-n-bg: rgba(30, 64, 175, 0.10);
+  --code-off-color: #DC2626;
+  --code-off-bg: rgba(220, 38, 38, 0.12);
+  --code-s-color: #D97706;
+  --code-s-bg: rgba(217, 119, 6, 0.10);
+  --code-b-color: #7C3AED;
+  --code-b-bg: rgba(124, 58, 237, 0.10);
 
   /* Severity Chips (Light) */
-  --chip-critical-bg: rgba(179, 38, 30, 0.12);
-  --chip-critical-text: #B3261E;
-  --chip-high-bg: rgba(184, 90, 14, 0.12);
-  --chip-high-text: #B85A0E;
-  --chip-medium-bg: rgba(154, 90, 8, 0.12);
-  --chip-medium-text: #9A5A08;
-  --chip-low-bg: rgba(27, 110, 65, 0.12);
-  --chip-low-text: #1B6E41;
+  --chip-critical-bg: rgba(220, 38, 38, 0.12);
+  --chip-critical-text: #DC2626;
+  --chip-high-bg: rgba(234, 88, 12, 0.12);
+  --chip-high-text: #EA580C;
+  --chip-medium-bg: rgba(217, 119, 6, 0.12);
+  --chip-medium-text: #D97706;
+  --chip-low-bg: rgba(21, 128, 61, 0.12);
+  --chip-low-text: #15803D;
 }
 
 /* 4. DARK THEME TOKENS */
