@@ -274,108 +274,110 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 <?php endif; ?>
 
-<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 20px;">
-    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-        <span style="color: var(--text-muted); font-size: 14px;">
-            Showing <strong><?= $totalGuards > 0 ? ($offset + 1) : 0 ?></strong>–<strong><?= min($totalGuards, $offset + count($guards)) ?></strong> of <strong><?= number_format($totalGuards) ?></strong> registered guards
-            <?php if ($totalPages > 1): ?>
-                <span style="color: var(--text-dim); margin-left: 6px;">(Page <?= $page ?> of <?= $totalPages ?>)</span>
-            <?php endif; ?>
-        </span>
+<!-- Guards Executive Table Card (Perfect Screen Fit & Reference Styling) -->
+<div class="dashboard-table-card">
+    <div class="table-banner-header">
+        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <div>
+                <h3>Security Staff (Guards &amp; Supervisors)</h3>
+                <p>On-duty patrol officers, login credentials, and site checkpoint authorizations</p>
+            </div>
+            <div class="table-badge-live">
+                <span class="pulse-dot"></span>
+                <?= number_format($totalGuards) ?> OFFICERS
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <form method="GET" action="" style="display: flex; gap: 6px;">
+                <input type="text" name="search" class="form-control" placeholder="Search staff ID, name..." value="<?= htmlspecialchars($search) ?>" style="width: 170px; font-size: 12.5px; padding: 6px 10px; background: rgba(0,0,0,0.3); border-color: rgba(255,209,102,0.3); color: #fff;">
+                <?php if ($search !== ''): ?>
+                    <a href="<?= APP_URL ?>/admin/guards.php" class="btn btn-secondary btn-sm" style="padding: 6px 10px; font-size: 12px;" title="Clear search">✕</a>
+                <?php endif; ?>
+                <button type="submit" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px; font-weight: 700;">Search</button>
+            </form>
+
+            <button class="btn btn-sm" onclick="document.getElementById('addGuardModal').style.display='flex'" style="background: #fbbf24; color: #081426; font-weight: 800; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 12.5px; display: inline-flex; align-items: gap: 4px;">
+                + Create Guard Account
+            </button>
+        </div>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-        <form method="GET" action="" style="display: flex; gap: 8px;">
-            <input type="text" name="search" class="form-control" placeholder="Search staff ID, name, username..." value="<?= htmlspecialchars($search) ?>" style="width: 250px; font-size: 13px; padding: 6px 12px;">
-            <?php if ($search !== ''): ?>
-                <a href="<?= APP_URL ?>/admin/guards.php" class="btn btn-secondary btn-sm" title="Clear search">✕</a>
-            <?php endif; ?>
-            <button type="submit" class="btn btn-secondary btn-sm">Search</button>
-        </form>
-        <button class="btn btn-primary" onclick="document.getElementById('addGuardModal').style.display='flex'">
-            + Create Guard Account
-        </button>
-    </div>
-</div>
-
-<!-- Guards Table -->
-<div class="card">
-    <div class="table-container">
-        <table class="data-table">
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="fit-screen-table">
             <thead>
                 <tr>
-                    <th>Staff ID</th>
-                    <th>Officer Name</th>
-                    <th>Designation</th>
-                    <th>Username</th>
-                    <th>Assigned Post (From Admin)</th>
-                    <th>Dossiers Filed</th>
-                    <th>Status</th>
-                    <th style="text-align: right;">Actions</th>
+                    <th style="width: 105px;">Staff ID</th>
+                    <th>Officer Name &amp; Designation</th>
+                    <th style="width: 125px;">Username</th>
+                    <th style="width: 135px;">Assigned Posts</th>
+                    <th style="width: 90px;">Dossiers</th>
+                    <th style="width: 90px;">Status</th>
+                    <th style="width: 195px; text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($guards)): ?>
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-dim);">
+                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-dim);">
                             No guard accounts created yet. Click "+ Create Guard Account" to add officers.
                         </td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($guards as $g): ?>
+                    <?php foreach ($guards as $g): 
+                        $sitesCount = (int)($g['assigned_sites_count'] ?? (!empty($g['assigned_site_ids']) ? count(explode(',', $g['assigned_site_ids'])) : 0));
+                    ?>
                         <tr>
                             <td>
-                                <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700;">
+                                <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38bdf8; background: rgba(56, 189, 248, 0.12); padding: 3px 8px; border-radius: 4px; display: inline-block; font-size: 12.5px;">
                                     <?= htmlspecialchars($g['staff_id']) ?>
                                 </span>
                             </td>
                             <td>
-                                <strong style="font-size: 14px;"><?= htmlspecialchars($g['full_name']) ?></strong>
+                                <strong style="font-size: 13.5px; color: #fff;"><?= htmlspecialchars($g['full_name']) ?></strong>
+                                <div style="font-size: 11.5px; color: #94a3b8; margin-top: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                    <span><?= htmlspecialchars($g['designation']) ?></span>
+                                    <?php if (!empty($g['is_supervisor'])): ?>
+                                        <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-weight: 800; font-size: 10px; padding: 1px 6px;">Supervisor</span>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                             <td>
-                                <span style="font-size: 13px;"><?= htmlspecialchars($g['designation']) ?></span>
-                                <?php if (!empty($g['is_supervisor'])): ?>
-                                    <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); font-weight: 700; margin-left: 4px;">Supervisor</span>
-                                <?php endif; ?>
+                                <code style="color: #38bdf8; font-size: 12px; font-family: 'JetBrains Mono', monospace;"><?= htmlspecialchars($g['username']) ?></code>
                             </td>
                             <td>
-                                <code style="color: var(--accent-cyan);"><?= htmlspecialchars($g['username']) ?></code>
-                            </td>
-                            <td>
-                                <?php 
-                                $sitesCount = (int)($g['assigned_sites_count'] ?? (!empty($g['assigned_site_ids']) ? count(explode(',', $g['assigned_site_ids'])) : 0));
-                                ?>
                                 <?php if ($sitesCount > 0): ?>
-                                    <strong style="color: #0284c7; font-size: 13.5px; font-weight: 800;" title="<?= htmlspecialchars($g['assigned_site_names'] ?? '') ?>">
-                                        <?= $sitesCount ?> <?= $sitesCount === 1 ? 'Site' : 'Sites' ?> Assigned
-                                    </strong>
+                                    <span style="color: #38bdf8; font-size: 12.5px; font-weight: 700; background: rgba(56, 189, 248, 0.12); padding: 2px 8px; border-radius: 4px; display: inline-block;" title="<?= htmlspecialchars($g['assigned_site_names'] ?? '') ?>">
+                                        <?= $sitesCount ?> <?= $sitesCount === 1 ? 'Site' : 'Sites' ?>
+                                    </span>
                                 <?php else: ?>
-                                    <span style="color: #dc2626; font-size: 12px; font-weight: 700;">0 Sites Assigned</span>
+                                    <span style="color: #f87171; font-size: 11.5px; font-weight: 700;">0 Sites Assigned</span>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <span style="font-weight: 700;"><?= $g['reports_filed'] ?></span>
+                                <strong style="color: #fff; font-size: 13px;"><?= $g['reports_filed'] ?></strong>
+                                <span style="font-size: 11px; color: #64748B;">filed</span>
                             </td>
                             <td>
                                 <?php if ($g['is_active']): ?>
-                                    <span class="badge" style="background: rgba(16, 185, 129, 0.16); color: #065f46 !important; font-weight: 800; border: 1px solid #059669; padding: 4px 10px; border-radius: 6px;">Active</span>
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.16); color: #34d399; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 11px;">Active</span>
                                 <?php else: ?>
-                                    <span class="badge" style="background: rgba(244, 63, 94, 0.15); color: #be123c !important; font-weight: 800; border: 1px solid #f43f5e; padding: 4px 10px; border-radius: 6px;">Suspended</span>
+                                    <span class="badge" style="background: rgba(244, 63, 94, 0.16); color: #fb7185; font-weight: 700; border: 1px solid rgba(244, 63, 94, 0.4); font-size: 11px;">Suspended</span>
                                 <?php endif; ?>
                             </td>
-                            <td style="text-align: right;">
-                                <div style="display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap;">
-                                    <button type="button" class="btn btn-primary btn-sm" onclick='openEditGuardModal(<?= htmlspecialchars(json_encode($g), ENT_QUOTES, "UTF-8") ?>)'>
-                                        Assign Post / Edit
+                            <td style="text-align: right; white-space: nowrap;">
+                                <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px;">
+                                    <button type="button" class="btn btn-primary btn-sm" style="padding: 5px 9px; font-size: 12px; border-radius: 6px;" onclick='openEditGuardModal(<?= htmlspecialchars(json_encode($g), ENT_QUOTES, "UTF-8") ?>)' title="Assign Sites &amp; Edit Guard">
+                                        ✏️ Edit
                                     </button>
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="openResetModal(<?= $g['id'] ?>, '<?= htmlspecialchars(addslashes($g['full_name'])) ?>')">
-                                        Reset Pass
+                                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 5px 9px; font-size: 12px; border-radius: 6px;" onclick="openResetModal(<?= $g['id'] ?>, '<?= htmlspecialchars(addslashes($g['full_name'])) ?>')" title="Reset Password">
+                                        🔑 Pass
                                     </button>
-                                    <a href="<?= APP_URL ?>/admin/guards.php?action=toggle&id=<?= $g['id'] ?>" class="btn btn-secondary btn-sm">
-                                        <?= $g['is_active'] ? 'Suspend' : 'Activate' ?>
+                                    <a href="<?= APP_URL ?>/admin/guards.php?action=toggle&id=<?= $g['id'] ?>" class="btn btn-secondary btn-sm" style="padding: 5px 8px; font-size: 12px; border-radius: 6px;" title="<?= $g['is_active'] ? 'Suspend Officer Account' : 'Activate Officer Account' ?>">
+                                        <?= $g['is_active'] ? '⏸️' : '▶️' ?>
                                     </a>
-                                    <a href="<?= APP_URL ?>/admin/guards.php?action=delete&id=<?= $g['id'] ?>" class="btn btn-secondary btn-sm" onclick="return confirm('Permanently delete guard account <?= htmlspecialchars(addslashes($g['full_name'])) ?> (<?= htmlspecialchars(addslashes($g['staff_id'])) ?>)?\n\nThis will remove their login access permanently.');" style="background: rgba(239, 68, 68, 0.15); color: #fb7185; border: 1px solid rgba(239, 68, 68, 0.3);" title="Permanently Delete Officer Account">
-                                        🗑️ Delete
+                                    <a href="<?= APP_URL ?>/admin/guards.php?action=delete&id=<?= $g['id'] ?>" class="btn btn-secondary btn-sm" onclick="return confirm('Permanently delete guard account <?= htmlspecialchars(addslashes($g['full_name'])) ?> (<?= htmlspecialchars(addslashes($g['staff_id'])) ?>)?\n\nThis will remove their login access permanently.');" style="background: rgba(239, 68, 68, 0.15); color: #fb7185; border: 1px solid rgba(239, 68, 68, 0.3); padding: 5px 8px; font-size: 12px; border-radius: 6px;" title="Permanently Delete Officer Account">
+                                        🗑️
                                     </a>
                                 </div>
                             </td>
@@ -386,69 +388,67 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
 
-    <?php if ($totalPages > 1 || $totalGuards > 25): ?>
-        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
-            <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted);">
-                <span>Rows per page:</span>
-                <select onchange="window.location.href=this.value" class="form-control" style="width: auto; padding: 4px 10px; font-size: 13px;">
-                    <?php 
-                    $currParams = $_GET;
-                    foreach ([25, 50, 100, 250] as $opt): 
-                        $currParams['per_page'] = $opt;
-                        $currParams['page'] = 1;
-                        $url = '?' . http_build_query($currParams);
-                    ?>
-                        <option value="<?= htmlspecialchars($url) ?>" <?= $perPage == $opt ? 'selected' : '' ?>><?= $opt ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                <?php
-                $paginationParams = $_GET;
-                $buildPageUrl = function($p) use ($paginationParams) {
-                    $paginationParams['page'] = $p;
-                    return '?' . http_build_query($paginationParams);
-                };
-                ?>
-
-                <!-- First / Prev -->
-                <?php if ($page > 1): ?>
-                    <a href="<?= htmlspecialchars($buildPageUrl(1)) ?>" class="btn btn-secondary btn-sm" title="First Page">&laquo;</a>
-                    <a href="<?= htmlspecialchars($buildPageUrl($page - 1)) ?>" class="btn btn-secondary btn-sm" title="Previous Page">&lsaquo;</a>
-                <?php else: ?>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&laquo;</span>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&lsaquo;</span>
-                <?php endif; ?>
-
-                <!-- Window of numbered pages -->
-                <?php
-                $startPage = max(1, $page - 2);
-                $endPage = min($totalPages, $page + 2);
-                if ($startPage > 1) {
-                    echo '<span style="padding: 0 4px; color: var(--text-dim);">...</span>';
-                }
-                for ($p = $startPage; $p <= $endPage; $p++):
-                ?>
-                    <a href="<?= htmlspecialchars($buildPageUrl($p)) ?>" class="btn <?= $p === $page ? 'btn-primary' : 'btn-secondary' ?> btn-sm" style="min-width: 32px; text-align: center;">
-                        <?= $p ?>
-                    </a>
-                <?php endfor; ?>
-                <?php if ($endPage < $totalPages): ?>
-                    <span style="padding: 0 4px; color: var(--text-dim);">...</span>
-                <?php endif; ?>
-
-                <!-- Next / Last -->
-                <?php if ($page < $totalPages): ?>
-                    <a href="<?= htmlspecialchars($buildPageUrl($page + 1)) ?>" class="btn btn-secondary btn-sm" title="Next Page">&rsaquo;</a>
-                    <a href="<?= htmlspecialchars($buildPageUrl($totalPages)) ?>" class="btn btn-secondary btn-sm" title="Last Page">&raquo;</a>
-                <?php else: ?>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&rsaquo;</span>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&raquo;</span>
-                <?php endif; ?>
-            </div>
+    <!-- Pagination Footer Matching Reference -->
+    <div class="pagination-container">
+        <div style="color: #94a3b8; font-size: 13px;">
+            Showing <strong style="color: #fff;"><?= $totalGuards > 0 ? ($offset + 1) : 0 ?>–<?= min($totalGuards, $offset + count($guards)) ?></strong> of <strong style="color: #fff;"><?= number_format($totalGuards) ?></strong> security staff
         </div>
-    <?php endif; ?>
+
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <?php
+            $paginationParams = $_GET;
+            $buildPageUrl = function($p) use ($paginationParams) {
+                $paginationParams['page'] = $p;
+                return '?' . http_build_query($paginationParams);
+            };
+            ?>
+
+            <span style="font-size: 12px; color: #64748B; margin-right: 2px;">Rows:</span>
+            <select onchange="window.location.href=this.value" class="form-control" style="width: auto; padding: 4px 8px; font-size: 12px; background: rgba(0,0,0,0.3); color: #fff; border-color: rgba(255,209,102,0.25); border-radius: 6px; margin-right: 8px;">
+                <?php 
+                $currParams = $_GET;
+                foreach ([10, 25, 50, 100, 250] as $opt): 
+                    $currParams['per_page'] = $opt;
+                    $currParams['page'] = 1;
+                    $url = '?' . http_build_query($currParams);
+                ?>
+                    <option value="<?= htmlspecialchars($url) ?>" <?= $perPage == $opt ? 'selected' : '' ?>><?= $opt ?></option>
+                <?php endforeach; ?>
+            </select>
+
+            <!-- Prev -->
+            <?php if ($page > 1): ?>
+                <a href="<?= htmlspecialchars($buildPageUrl($page - 1)) ?>" class="pagination-pill">&lsaquo; Prev</a>
+            <?php else: ?>
+                <span class="pagination-pill disabled">&lsaquo; Prev</span>
+            <?php endif; ?>
+
+            <!-- Page Number Pills -->
+            <?php
+            $startPage = max(1, $page - 2);
+            $endPage = min($totalPages, $page + 3);
+            if ($endPage - $startPage < 5) {
+                if ($startPage === 1) {
+                    $endPage = min($totalPages, $startPage + 5);
+                } else {
+                    $startPage = max(1, $endPage - 5);
+                }
+            }
+            for ($p = $startPage; $p <= $endPage; $p++):
+            ?>
+                <a href="<?= htmlspecialchars($buildPageUrl($p)) ?>" class="pagination-pill <?= $p === $page ? 'active' : '' ?>">
+                    <?= $p ?>
+                </a>
+            <?php endfor; ?>
+
+            <!-- Next -->
+            <?php if ($page < $totalPages): ?>
+                <a href="<?= htmlspecialchars($buildPageUrl($page + 1)) ?>" class="pagination-pill">Next &rsaquo;</a>
+            <?php else: ?>
+                <span class="pagination-pill disabled">Next &rsaquo;</span>
+            <?php endif; ?>
+        </div>
+    </div>
 </div>
 
 <!-- Modal: Create Guard Account -->

@@ -214,82 +214,68 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="alert alert-<?= $msgType ?>"><?= htmlspecialchars($msg) ?></div>
 <?php endif; ?>
 
-<!-- Top Action Header -->
-<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 20px;">
-    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-        <span style="color: var(--text-muted); font-size: 14px;">
-            Showing <strong><?= $totalSites > 0 ? ($offset + 1) : 0 ?></strong> – <strong><?= min($totalSites, $offset + count($sites)) ?></strong> of <strong><?= number_format($totalSites) ?></strong> registered checkpoints
-            <?php if ($totalPages > 1): ?>
-                <span style="color: var(--text-dim); margin-left: 6px;">(Page <?= $page ?> of <?= $totalPages ?>)</span>
-            <?php endif; ?>
-        </span>
-    </div>
-
-    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-        <form method="GET" action="" style="display: flex; gap: 8px;">
-            <input type="text" name="search" class="form-control" placeholder="Search site name, code, client..." value="<?= htmlspecialchars($search) ?>" style="width: 230px; font-size: 13px; padding: 6px 12px;">
-            <?php if ($search !== ''): ?>
-                <a href="<?= APP_URL ?>/admin/sites.php" class="btn btn-secondary btn-sm" title="Clear search">Clear</a>
-            <?php endif; ?>
-            <button type="submit" class="btn btn-secondary btn-sm">Search</button>
-        </form>
-
-        <a href="<?= APP_URL ?>/admin/bulk_qr_posters.php" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700;">
-            🖨️ Bulk Print QR Posters
-        </a>
-
-        <a href="<?= APP_URL ?>/admin/seed_500_enterprise_data.php" class="btn btn-sm" style="background: linear-gradient(135deg, #005f73, #0a9396); color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
-            🚀 Auto-Populate 500 Sites
-        </a>
-
-        <button class="btn btn-primary" onclick="document.getElementById('addSiteModal').style.display='flex'">
-            + Add New Patrol Site
-        </button>
-    </div>
-</div>
-
-<?php 
-$lanIps = get_lan_ips();
-$lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
-?>
-
-<?php if (!empty($publicTunnelUrl)): ?>
-    <div class="card" style="margin-bottom: 20px; border-left: 4px solid var(--accent-emerald); padding: 14px 18px; background: rgba(16, 185, 129, 0.05);">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+<!-- Sites Executive Table Card (Perfect Screen Fit & Reference Styling) -->
+<div class="dashboard-table-card">
+    <div class="table-banner-header">
+        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
             <div>
-                <strong style="color: #10b981;">🌐 Public Mobile QR Scanning Active (Cloudflare HTTPS):</strong>
-                <span style="font-size: 13px; color: var(--text-main);"> Checkpoint QR posters automatically encode your public HTTPS link (<strong><?= htmlspecialchars($publicTunnelUrl) ?></strong>). Any smartphone on 4G/5G or Wi-Fi connects instantly with camera & GPS support.</span>
+                <h3>Patrol Sites &amp; QR Checkpoints</h3>
+                <p>Manage physical checkpoints, GPS coordinates, and cryptographic access QR posters</p>
             </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <a href="<?= htmlspecialchars($publicTunnelUrl) ?>/g/index.php" target="_blank" class="btn btn-primary btn-sm" style="white-space: nowrap;">
-                    📱 Test Phone Link (HTTPS) &rarr;
-                </a>
+            <div class="table-badge-live">
+                <span class="pulse-dot"></span>
+                <?= number_format($totalSites) ?> CHECKPOINTS
             </div>
         </div>
-    </div>
-<?php endif; ?>
 
-<!-- Sites Table -->
-<div class="card">
-    <div class="table-container">
-        <table class="data-table sites-table">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <form method="GET" action="" style="display: flex; gap: 6px;">
+                <input type="text" name="search" class="form-control" placeholder="Search site, code, client..." value="<?= htmlspecialchars($search) ?>" style="width: 170px; font-size: 12.5px; padding: 6px 10px; background: rgba(0,0,0,0.3); border-color: rgba(255,209,102,0.3); color: #fff;">
+                <?php if ($search !== ''): ?>
+                    <a href="<?= APP_URL ?>/admin/sites.php" class="btn btn-secondary btn-sm" style="padding: 6px 10px; font-size: 12px;" title="Clear search">✕</a>
+                <?php endif; ?>
+                <button type="submit" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px; font-weight: 700;">Search</button>
+            </form>
+
+            <a href="<?= APP_URL ?>/admin/bulk_qr_posters.php" class="btn btn-sm" style="background: rgba(255,255,255,0.08); color: #e2e8f0; font-weight: 700; border: 1px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12.5px; display: inline-flex; align-items: center; gap: 4px;">
+                🖨️ Bulk Posters
+            </a>
+
+            <button class="btn btn-sm" onclick="document.getElementById('addSiteModal').style.display='flex'" style="background: #fbbf24; color: #081426; font-weight: 800; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 12.5px; display: inline-flex; align-items: center; gap: 4px;">
+                + Add New Site
+            </button>
+        </div>
+    </div>
+
+    <?php if (!empty($publicTunnelUrl)): ?>
+        <div style="margin-bottom: 16px; border-left: 4px solid var(--accent-emerald); padding: 10px 14px; background: rgba(16, 185, 129, 0.08); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+            <div style="font-size: 12.5px; color: #e2e8f0;">
+                <strong style="color: #10b981;">🌐 Mobile QR Scanning Active:</strong> QR posters automatically encode HTTPS link (<strong><?= htmlspecialchars($publicTunnelUrl) ?></strong>).
+            </div>
+            <a href="<?= htmlspecialchars($publicTunnelUrl) ?>/g/index.php" target="_blank" class="btn btn-primary btn-sm" style="padding: 4px 10px; font-size: 11.5px; white-space: nowrap;">
+                📱 Test Phone Link &rarr;
+            </a>
+        </div>
+    <?php endif; ?>
+
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="fit-screen-table">
             <thead>
-                <tr style="background: #081426 !important;">
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">ID</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Site Code</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Site / Facility Name</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Classification</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Assigned Guards</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Total Reports</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px;">Status</th>
-                    <th style="background: #081426 !important; color: #FFD166 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-align: right;">QR Posters & Actions</th>
+                <tr>
+                    <th style="width: 105px;">Site Code</th>
+                    <th>Site / Facility Name</th>
+                    <th style="width: 120px;">Classification</th>
+                    <th style="width: 85px;">Guards</th>
+                    <th style="width: 85px;">Reports</th>
+                    <th style="width: 90px;">Status</th>
+                    <th style="width: 210px; text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($sites)): ?>
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-dim);">
-                            No patrol sites configured. Click "+ Add New Patrol Site" or use "Auto-Populate 500 Sites" to populate your checkpoints.
+                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-dim);">
+                            No patrol sites configured. Click "+ Add New Site" to populate your checkpoints.
                         </td>
                     </tr>
                 <?php else: ?>
@@ -308,59 +294,48 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
                         
                         $siteGuardToken = get_stored_qr_token($s, 'active_qr_token_encrypted', 'active_qr_token');
                         $siteGuardUrl = $siteGuardToken !== '' ? APP_URL . '/g/index.php?token=' . urlencode($siteGuardToken) : '';
-                        
                         $siteSupToken = get_stored_qr_token($s, 'supervisor_qr_token_encrypted', 'supervisor_qr_token');
                     ?>
                         <tr>
-                            <td style="color: var(--text-dim); font-size: 12px; font-family: monospace;">#<?= $s['id'] ?></td>
                             <td>
-                                <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent-cyan); background: rgba(6, 182, 212, 0.1); padding: 3px 8px; border-radius: 4px;">
+                                <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38bdf8; background: rgba(56, 189, 248, 0.12); padding: 3px 8px; border-radius: 4px; display: inline-block; font-size: 12.5px;">
                                     <?= htmlspecialchars($s['code']) ?>
                                 </span>
+                                <div style="font-size: 11px; color: #64748B; margin-top: 2px; font-family: monospace;">#<?= $s['id'] ?></div>
                             </td>
                             <td>
-                                <strong style="font-size: 14px;"><?= htmlspecialchars($s['name']) ?></strong>
+                                <strong style="font-size: 13.5px; color: #fff;"><?= htmlspecialchars($s['name']) ?></strong>
                                 <?php if (!empty($s['address'])): ?>
-                                    <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;"><?= htmlspecialchars($s['address']) ?></div>
+                                    <div style="font-size: 11.5px; color: #94a3b8; margin-top: 2px;"><?= htmlspecialchars($s['address']) ?></div>
                                 <?php endif; ?>
-                                <?php if (!empty($s['latitude']) || !empty($s['longitude'])): ?>
-                                    <div style="font-size: 11px; color: var(--accent-cyan); margin-top: 3px; font-family: monospace;">
-                                        📍 Lat: <?= htmlspecialchars($s['latitude']) ?>, Long: <?= htmlspecialchars($s['longitude']) ?>
-                                    </div>
+                                <?php if (!empty($s['client_name'])): ?>
+                                    <div style="font-size: 11px; color: #38bdf8; margin-top: 2px;">👤 <?= htmlspecialchars($s['client_name']) ?></div>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <span class="badge" style="background: rgba(255, 255, 255, 0.05); color: inherit;">
+                                <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #e2e8f0; font-size: 11.5px;">
                                     <?= htmlspecialchars($s['type']) ?>
                                 </span>
                             </td>
                             <td>
-                                <span style="font-weight: 700;"><?= $s['guard_count'] ?></span>
-                                <span style="font-size: 11px; color: var(--text-dim);"> guards</span>
+                                <strong style="color: #fff; font-size: 13px;"><?= $s['guard_count'] ?></strong>
+                                <span style="font-size: 11px; color: #64748B;">guards</span>
                             </td>
                             <td>
-                                <span style="font-weight: 700;"><?= $s['incident_count'] ?></span>
-                                <span style="font-size: 11px; color: var(--text-dim);"> dossiers</span>
+                                <strong style="color: #fff; font-size: 13px;"><?= $s['incident_count'] ?></strong>
+                                <span style="font-size: 11px; color: #64748B;">dossiers</span>
                             </td>
                             <td>
                                 <?php if ($s['is_active']): ?>
-                                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">Active</span>
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.16); color: #34d399; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 11px;">Active</span>
                                 <?php else: ?>
-                                    <span class="badge" style="background: rgba(244, 63, 94, 0.15); color: #fb7185;">Inactive</span>
+                                    <span class="badge" style="background: rgba(244, 63, 94, 0.16); color: #fb7185; font-weight: 700; border: 1px solid rgba(244, 63, 94, 0.4); font-size: 11px;">Inactive</span>
                                 <?php endif; ?>
                             </td>
-                            <td style="text-align: right;">
-                                <div style="display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap;">
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick='openEditSiteModal(<?= json_encode($safeSiteData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' title="Edit Site Details & Coordinates">
-                                        ✏️ Edit
-                                    </button>
-                                    
-                                    <a href="<?= APP_URL ?>/admin/daily_report.php?site_id=<?= $s['id'] ?>" class="btn btn-secondary btn-sm" title="Sitewise Daily Security Incident Consolidated Report">
-                                        📊 Report
-                                    </a>
-
+                            <td style="text-align: right; white-space: nowrap;">
+                                <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px;">
                                     <?php if ($siteGuardUrl !== ''): ?>
-                                    <button type="button" class="btn btn-sm" style="background: #0284c7; color: #fff; font-weight: 700;" onclick='openQuickQrModal(<?= json_encode([
+                                    <button type="button" class="btn btn-sm" style="background: #0284c7; color: #fff; font-weight: 700; padding: 5px 9px; font-size: 12px; border-radius: 6px;" onclick='openQuickQrModal(<?= json_encode([
                                         "id" => $s["id"],
                                         "name" => $s["name"],
                                         "code" => $s["code"],
@@ -368,43 +343,50 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
                                         "longitude" => $s["longitude"] ?? "",
                                         "url" => $siteGuardUrl
                                     ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' title="View & Download Site QR Code">
-                                        📱 QR Code
+                                        📱 QR
                                     </button>
-                                    <a href="<?= APP_URL ?>/admin/qr_poster.php?id=<?= $s['id'] ?>" target="_blank" class="btn btn-primary btn-sm" title="Print A4 Guard Checkpoint QR Poster">
-                                        🖨️ Guard Poster
+                                    <a href="<?= APP_URL ?>/admin/qr_poster.php?id=<?= $s['id'] ?>" target="_blank" class="btn btn-primary btn-sm" style="padding: 5px 9px; font-size: 12px; border-radius: 6px;" title="Print A4 Guard Checkpoint Poster">
+                                        🖨️ Poster
                                     </a>
-                                    <?php else: ?>
-                                        <span class="btn btn-secondary btn-sm" aria-disabled="true">Guard QR not issued</span>
                                     <?php endif; ?>
 
-                                    <?php if (!empty($siteSupToken)): ?>
-                                    <a href="<?= APP_URL ?>/admin/qr_poster.php?id=<?= (int)$s['id'] ?>&amp;type=supervisor" target="_blank" class="btn btn-primary btn-sm" style="background: #0a9396; border-color: #0a9396;" title="Print Supervisor Visit QR Poster">
-                                        🖨️ Supervisor Poster
-                                    </a>
-                                    <?php else: ?>
-                                    <span class="btn btn-secondary btn-sm" aria-disabled="true">Supervisor QR not issued</span>
-                                    <?php endif; ?>
+                                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 5px 9px; font-size: 12px; border-radius: 6px;" onclick='openEditSiteModal(<?= json_encode($safeSiteData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' title="Edit Site Details">
+                                        ✏️
+                                    </button>
 
-                                    <form method="post" style="display:inline" onsubmit="return confirm('Regenerate the guard QR?');">
-                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
-                                        <input type="hidden" name="site_id" value="<?= (int)$s['id'] ?>">
-                                        <input type="hidden" name="qr_type" value="guard">
-                                        <button type="submit" name="regenerate_qr" class="btn btn-secondary btn-sm" title="Regenerate Guard QR">🔄 Guard QR</button>
-                                    </form>
-
-                                    <form method="post" style="display:inline" onsubmit="return confirm('Regenerate the supervisor QR?');">
-                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
-                                        <input type="hidden" name="site_id" value="<?= (int)$s['id'] ?>">
-                                        <input type="hidden" name="qr_type" value="supervisor">
-                                        <button type="submit" name="regenerate_qr" class="btn btn-secondary btn-sm" title="Issue or regenerate Supervisor QR">🔄 Supervisor QR</button>
-                                    </form>
-
-                                    <a href="<?= APP_URL ?>/admin/sites.php?action=toggle&id=<?= $s['id'] ?>" class="btn btn-secondary btn-sm">
-                                        <?= $s['is_active'] ? 'Disable' : 'Enable' ?>
-                                    </a>
-                                    <a href="<?= APP_URL ?>/admin/sites.php?action=delete&id=<?= $s['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('⚠️ Are you sure you want to delete site '<?= htmlspecialchars(addslashes($s['name'])) ?>'?');" title="Delete Site">
-                                        Delete
-                                    </a>
+                                    <div class="action-dropdown-wrapper">
+                                        <button type="button" class="btn btn-secondary btn-sm action-dropdown-trigger" style="padding: 5px 8px; font-size: 12px; border-radius: 6px;" title="More Actions">
+                                            ⋮
+                                        </button>
+                                        <div class="action-dropdown-menu">
+                                            <?php if (!empty($siteSupToken)): ?>
+                                            <a href="<?= APP_URL ?>/admin/qr_poster.php?id=<?= (int)$s['id'] ?>&amp;type=supervisor" target="_blank">
+                                                📋 Print Supervisor Poster
+                                            </a>
+                                            <?php endif; ?>
+                                            <a href="<?= APP_URL ?>/admin/daily_report.php?site_id=<?= $s['id'] ?>">
+                                                📊 Sitewise Daily Report
+                                            </a>
+                                            <form method="post" onsubmit="return confirm('Regenerate the guard QR?');" style="margin: 0;">
+                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
+                                                <input type="hidden" name="site_id" value="<?= (int)$s['id'] ?>">
+                                                <input type="hidden" name="qr_type" value="guard">
+                                                <button type="submit" name="regenerate_qr">🔄 Regenerate Guard QR</button>
+                                            </form>
+                                            <form method="post" onsubmit="return confirm('Regenerate the supervisor QR?');" style="margin: 0;">
+                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
+                                                <input type="hidden" name="site_id" value="<?= (int)$s['id'] ?>">
+                                                <input type="hidden" name="qr_type" value="supervisor">
+                                                <button type="submit" name="regenerate_qr">🔄 Regenerate Supervisor QR</button>
+                                            </form>
+                                            <a href="<?= APP_URL ?>/admin/sites.php?action=toggle&id=<?= $s['id'] ?>">
+                                                <?= $s['is_active'] ? '⏸️ Disable Site' : '▶️ Enable Site' ?>
+                                            </a>
+                                            <a href="<?= APP_URL ?>/admin/sites.php?action=delete&id=<?= $s['id'] ?>" onclick="return confirm('⚠️ Are you sure you want to delete site \'<?= htmlspecialchars(addslashes($s['name'])) ?>\'?');" style="color: #fb7185 !important;">
+                                                🗑️ Delete Site
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -414,70 +396,86 @@ $lanHost = !empty($lanIps) ? $lanIps[0] . ':8080' : 'localhost:8080';
         </table>
     </div>
 
-    <?php if ($totalPages > 1 || $totalSites > 25): ?>
-        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
-            <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted);">
-                <span>Rows per page:</span>
-                <select onchange="window.location.href=this.value" class="form-control" style="width: auto; padding: 4px 10px; font-size: 13px;">
-                    <?php 
-                    $currParams = $_GET;
-                    foreach ([25, 50, 100, 250, 500] as $opt): 
-                        $currParams['per_page'] = $opt;
-                        $currParams['page'] = 1;
-                        $url = '?' . http_build_query($currParams);
-                    ?>
-                        <option value="<?= htmlspecialchars($url) ?>" <?= $perPage == $opt ? 'selected' : '' ?>><?= $opt ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                <?php
-                $paginationParams = $_GET;
-                $buildPageUrl = function($p) use ($paginationParams) {
-                    $paginationParams['page'] = $p;
-                    return '?' . http_build_query($paginationParams);
-                };
-                ?>
-
-                <!-- First / Prev -->
-                <?php if ($page > 1): ?>
-                    <a href="<?= htmlspecialchars($buildPageUrl(1)) ?>" class="btn btn-secondary btn-sm" title="First Page">&laquo;</a>
-                    <a href="<?= htmlspecialchars($buildPageUrl($page - 1)) ?>" class="btn btn-secondary btn-sm" title="Previous Page">&lsaquo;</a>
-                <?php else: ?>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&laquo;</span>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&lsaquo;</span>
-                <?php endif; ?>
-
-                <!-- Window of numbered pages -->
-                <?php
-                $startPage = max(1, $page - 2);
-                $endPage = min($totalPages, $page + 2);
-                if ($startPage > 1) {
-                    echo '<span style="padding: 0 4px; color: var(--text-dim);">...</span>';
-                }
-                for ($p = $startPage; $p <= $endPage; $p++):
-                ?>
-                    <a href="<?= htmlspecialchars($buildPageUrl($p)) ?>" class="btn <?= $p === $page ? 'btn-primary' : 'btn-secondary' ?> btn-sm" style="min-width: 32px; text-align: center;">
-                        <?= $p ?>
-                    </a>
-                <?php endfor; ?>
-                <?php if ($endPage < $totalPages): ?>
-                    <span style="padding: 0 4px; color: var(--text-dim);">...</span>
-                <?php endif; ?>
-
-                <!-- Next / Last -->
-                <?php if ($page < $totalPages): ?>
-                    <a href="<?= htmlspecialchars($buildPageUrl($page + 1)) ?>" class="btn btn-secondary btn-sm" title="Next Page">&rsaquo;</a>
-                    <a href="<?= htmlspecialchars($buildPageUrl($totalPages)) ?>" class="btn btn-secondary btn-sm" title="Last Page">&raquo;</a>
-                <?php else: ?>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&rsaquo;</span>
-                    <span class="btn btn-secondary btn-sm" style="opacity: 0.4; pointer-events: none;">&raquo;</span>
-                <?php endif; ?>
-            </div>
+    <!-- Pagination Footer Matching Reference -->
+    <div class="pagination-container">
+        <div style="color: #94a3b8; font-size: 13px;">
+            Showing <strong style="color: #fff;"><?= $totalSites > 0 ? ($offset + 1) : 0 ?>–<?= min($totalSites, $offset + count($sites)) ?></strong> of <strong style="color: #fff;"><?= number_format($totalSites) ?></strong> patrol checkpoints
         </div>
-    <?php endif; ?>
+        
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <?php
+            $paginationParams = $_GET;
+            $buildPageUrl = function($p) use ($paginationParams) {
+                $paginationParams['page'] = $p;
+                return '?' . http_build_query($paginationParams);
+            };
+            ?>
+
+            <span style="font-size: 12px; color: #64748B; margin-right: 2px;">Rows:</span>
+            <select onchange="window.location.href=this.value" class="form-control" style="width: auto; padding: 4px 8px; font-size: 12px; background: rgba(0,0,0,0.3); color: #fff; border-color: rgba(255,209,102,0.25); border-radius: 6px; margin-right: 8px;">
+                <?php 
+                $currParams = $_GET;
+                foreach ([10, 25, 50, 100, 250, 500] as $opt): 
+                    $currParams['per_page'] = $opt;
+                    $currParams['page'] = 1;
+                    $url = '?' . http_build_query($currParams);
+                ?>
+                    <option value="<?= htmlspecialchars($url) ?>" <?= $perPage == $opt ? 'selected' : '' ?>><?= $opt ?></option>
+                <?php endforeach; ?>
+            </select>
+
+            <!-- Prev -->
+            <?php if ($page > 1): ?>
+                <a href="<?= htmlspecialchars($buildPageUrl($page - 1)) ?>" class="pagination-pill">&lsaquo; Prev</a>
+            <?php else: ?>
+                <span class="pagination-pill disabled">&lsaquo; Prev</span>
+            <?php endif; ?>
+
+            <!-- Page Number Pills -->
+            <?php
+            $startPage = max(1, $page - 2);
+            $endPage = min($totalPages, $page + 3);
+            if ($endPage - $startPage < 5) {
+                if ($startPage === 1) {
+                    $endPage = min($totalPages, $startPage + 5);
+                } else {
+                    $startPage = max(1, $endPage - 5);
+                }
+            }
+            for ($p = $startPage; $p <= $endPage; $p++):
+            ?>
+                <a href="<?= htmlspecialchars($buildPageUrl($p)) ?>" class="pagination-pill <?= $p === $page ? 'active' : '' ?>">
+                    <?= $p ?>
+                </a>
+            <?php endfor; ?>
+
+            <!-- Next -->
+            <?php if ($page < $totalPages): ?>
+                <a href="<?= htmlspecialchars($buildPageUrl($page + 1)) ?>" class="pagination-pill">Next &rsaquo;</a>
+            <?php else: ?>
+                <span class="pagination-pill disabled">Next &rsaquo;</span>
+            <?php endif; ?>
+        </div>
+    </div>
 </div>
+
+<script>
+// Universal dropdown listener
+document.addEventListener('click', function(e) {
+    var isTrigger = e.target.closest('.action-dropdown-trigger');
+    var openDropdown = document.querySelector('.action-dropdown-wrapper.open');
+    if (isTrigger) {
+        var wrapper = isTrigger.closest('.action-dropdown-wrapper');
+        if (openDropdown && openDropdown !== wrapper) {
+            openDropdown.classList.remove('open');
+        }
+        wrapper.classList.toggle('open');
+        e.stopPropagation();
+    } else if (openDropdown && !e.target.closest('.action-dropdown-menu')) {
+        openDropdown.classList.remove('open');
+    }
+});
+</script>
 
 <!-- Modal: Add New Patrol Site -->
 <div id="addSiteModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
