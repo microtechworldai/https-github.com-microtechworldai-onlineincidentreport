@@ -29,88 +29,110 @@ $adminUsername = htmlspecialchars($_SESSION['admin_username'] ?? 'admin');
         .sidebar-nav svg, .nav-item svg { width: 20px !important; height: 20px !important; min-width: 20px; max-height: 20px; flex-shrink: 0; }
         .kpi-icon svg { width: 24px !important; height: 24px !important; }
 
-        /* HIGH-CONTRAST CRISP WHITE TEXT FOR SIDEBAR NAVIGATION & BRAND */
+        /* PROFESSIONAL LIGHT WHITE DASHBOARD SIDEBAR THEME */
         .app-sidebar, aside.app-sidebar {
-            background: #12263F !important;
-            color: #FFFFFF !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+            background: #FFFFFF !important;
+            color: #1E293B !important;
+            border-right: 1px solid #E2E8F0 !important;
+            box-shadow: 1px 0 8px rgba(0, 0, 0, 0.03) !important;
         }
         .sidebar-brand, .sidebar-brand a {
-            color: #FFFFFF !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+            background: #FFFFFF !important;
+            color: #0F172A !important;
+            border-bottom: 1px solid #E2E8F0 !important;
         }
         .sidebar-brand .brand-company, .brand-title .brand-company {
-            color: #FFFFFF !important;
+            color: #0F172A !important;
             font-weight: 800 !important;
             font-size: 13.5px !important;
             letter-spacing: 0.3px !important;
         }
         .brand-title .brand-sub {
-            color: #93C5FD !important;
+            color: #0284C7 !important;
             font-weight: 700 !important;
             font-size: 10.5px !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
         }
         .nav-section-title {
-            color: #A3B8CC !important;
+            color: #64748B !important;
             font-size: 11px !important;
             font-weight: 800 !important;
             letter-spacing: 1px !important;
             text-transform: uppercase !important;
-            padding: 16px 14px 6px !important;
+            padding: 18px 14px 6px !important;
             display: block !important;
         }
         .nav-item, .sidebar-nav .nav-item {
-            color: #FFFFFF !important;
+            color: #334155 !important;
             font-size: 13.5px !important;
             font-weight: 600 !important;
             text-decoration: none !important;
             display: flex !important;
             align-items: center !important;
             gap: 12px !important;
-            padding: 10px 14px !important;
+            padding: 9px 12px !important;
+            margin: 2px 8px !important;
             border-radius: 8px !important;
             transition: all 0.2s ease !important;
         }
         .nav-item svg, .sidebar-nav .nav-item svg {
-            color: #FFFFFF !important;
-            stroke: #FFFFFF !important;
+            color: #64748B !important;
+            stroke: #64748B !important;
+            transition: all 0.2s ease !important;
         }
         .nav-item span, .sidebar-nav .nav-item span {
-            color: #FFFFFF !important;
+            color: #334155 !important;
         }
         .nav-item:hover, .sidebar-nav .nav-item:hover {
-            background: rgba(255, 255, 255, 0.16) !important;
-            color: #FFFFFF !important;
+            background: #F1F5F9 !important;
+            color: #0F172A !important;
             transform: translateX(2px) !important;
         }
         .nav-item:hover svg, .sidebar-nav .nav-item:hover svg {
-            color: #FFFFFF !important;
-            stroke: #FFFFFF !important;
+            color: #0F172A !important;
+            stroke: #0F172A !important;
+        }
+        .nav-item:hover span, .sidebar-nav .nav-item:hover span {
+            color: #0F172A !important;
         }
         .nav-item.active, .sidebar-nav .nav-item.active {
-            background: #005f73 !important;
-            color: #FFFFFF !important;
-            border-left: 4px solid #ee9b00 !important;
-            font-weight: 800 !important;
+            background: #EFF6FF !important;
+            color: #0284C7 !important;
+            border-left: 4px solid #0284C7 !important;
+            font-weight: 700 !important;
+            box-shadow: 0 1px 3px rgba(2, 132, 199, 0.08) !important;
+            border-radius: 6px !important;
         }
         .nav-item.active svg, .sidebar-nav .nav-item.active svg {
-            color: #FFFFFF !important;
-            stroke: #FFFFFF !important;
+            color: #0284C7 !important;
+            stroke: #0284C7 !important;
+        }
+        .nav-item.active span, .sidebar-nav .nav-item.active span {
+            color: #0284C7 !important;
+            font-weight: 700 !important;
         }
         .sidebar-footer {
-            background: rgba(0, 0, 0, 0.25) !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
-            color: #FFFFFF !important;
+            background: #F8FAFC !important;
+            border-top: 1px solid #E2E8F0 !important;
+            color: #0F172A !important;
+            padding: 14px 16px !important;
         }
         .admin-meta .name {
-            color: #FFFFFF !important;
+            color: #0F172A !important;
             font-weight: 700 !important;
             font-size: 13.5px !important;
         }
         .admin-meta .role {
-            color: #93C5FD !important;
+            color: #64748B !important;
             font-weight: 600 !important;
             font-size: 11px !important;
+        }
+        .admin-avatar {
+            background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%) !important;
+            color: #FFFFFF !important;
+            font-weight: 700 !important;
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25) !important;
         }
     </style>
     <link rel="icon" type="image/png" href="<?= APP_URL ?>/<?= htmlspecialchars($settings['logo_url']) ?>">
