@@ -6,7 +6,8 @@
 
 // Check if already installed
 $lockFile = __DIR__ . '/install.lock';
-$alreadyInstalled = file_exists($lockFile);
+$isReconfiguring = !empty($_GET['reconfigure']) || !empty($_GET['force']);
+$alreadyInstalled = file_exists($lockFile) && !$isReconfiguring;
 
 $step = $_GET['step'] ?? ($alreadyInstalled ? 'locked' : 'wizard');
 $error = '';
@@ -142,6 +143,7 @@ $autoUrl = rtrim(str_replace('\\', '/', $autoUrl), '/');
             🔒 <strong>System Already Installed:</strong> The application is already installed and protected by <code>install.lock</code>.
             <div style="margin-top: 14px;">
                 <a href="admin/login.php" class="btn btn-primary">Go to Super Admin Sign In &rarr;</a>
+                <a href="install.php?reconfigure=1" class="btn btn-secondary" style="margin-left: 10px; background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: 600;">⚙️ Update Database Password &rarr;</a>
             </div>
         </div>
     <?php elseif ($step === 'done'): ?>
@@ -196,11 +198,11 @@ $autoUrl = rtrim(str_replace('\\', '/', $autoUrl), '/');
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                     <label class="form-label">Database Name</label>
-                    <input type="text" name="db_name" class="form-control" placeholder="e.g. u123456789_uss" required>
+                    <input type="text" name="db_name" class="form-control" value="<?= htmlspecialchars(defined('DB_NAME') && DB_NAME !== 'uss_incidents' ? DB_NAME : 'u211560622_superadmin') ?>" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Database User</label>
-                    <input type="text" name="db_user" class="form-control" placeholder="e.g. u123456789_admin" required>
+                    <input type="text" name="db_user" class="form-control" value="<?= htmlspecialchars(defined('DB_USER') && DB_USER !== 'root' ? DB_USER : 'u211560622_superadmin') ?>" required>
                 </div>
             </div>
 
