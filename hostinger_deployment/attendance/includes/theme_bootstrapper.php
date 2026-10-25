@@ -1,16 +1,19 @@
 <?php
 /**
  * Zero-Flash Anti-Flicker Theme Bootstrapper
- * Defaults to luxurious Forest Green / Crisp White Light Theme inspired by UAE Enterprise Spec
+ * Injected in <head> to synchronously set data-theme before first paint.
  */
 ?>
 <script>
 (function() {
     try {
         var savedTheme = localStorage.getItem('uss_theme');
-        var theme = savedTheme || 'light';
+        var theme = savedTheme;
+        if (!theme || theme === 'system') {
+            theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
         document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.setAttribute('data-theme-preference', savedTheme || 'light');
+        document.documentElement.setAttribute('data-theme-preference', savedTheme || 'system');
     } catch (e) {
         document.documentElement.setAttribute('data-theme', 'light');
     }

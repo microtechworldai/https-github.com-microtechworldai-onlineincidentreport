@@ -25,51 +25,42 @@ $adminUsername = htmlspecialchars($_SESSION['admin_username'] ?? 'admin');
         <style>
         /* Defensive resets to prevent unstyled icon/layout explosions */
         svg { max-width: 100%; box-sizing: border-box; }
-        .sidebar-brand img, .brand-logo-frame img { max-width: 44px; max-height: 44px; object-fit: contain; }
-        .sidebar-nav svg, .nav-item svg { width: 19px !important; height: 19px !important; min-width: 19px; max-height: 19px; flex-shrink: 0; }
+        .sidebar-brand img, .brand-logo-frame img { max-width: 48px; max-height: 48px; object-fit: contain; }
+        .sidebar-nav svg, .nav-item svg { width: 20px !important; height: 20px !important; min-width: 20px; max-height: 20px; flex-shrink: 0; }
         .kpi-icon svg { width: 24px !important; height: 24px !important; }
 
-        /* ====================================================================
-           ENTERPRISE UAE CORPORATE THEME (INSPIRATION: DEEP FOREST GREEN & CRISP WHITE)
-           ==================================================================== */
-
-        /* 1. Deep Forest Green Sidebar */
+        /* HIGH-CONTRAST CRISP WHITE TEXT FOR SIDEBAR NAVIGATION & BRAND */
         .app-sidebar, aside.app-sidebar {
-            background: #062D1F !important; /* Deep Luxury UAE Forest Green */
+            background: #12263F !important;
             color: #FFFFFF !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
         }
         .sidebar-brand, .sidebar-brand a {
             color: #FFFFFF !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-            background: transparent !important;
-            padding: 18px 16px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
         }
         .sidebar-brand .brand-company, .brand-title .brand-company {
             color: #FFFFFF !important;
             font-weight: 800 !important;
-            font-size: 14px !important;
-            letter-spacing: 0.5px !important;
-            text-transform: uppercase !important;
+            font-size: 13.5px !important;
+            letter-spacing: 0.3px !important;
         }
         .brand-title .brand-sub {
-            color: #FBBF24 !important; /* Elegant Warm Gold Badge Subtitle */
+            color: #93C5FD !important;
             font-weight: 700 !important;
-            font-size: 10px !important;
-            letter-spacing: 0.8px !important;
-            text-transform: uppercase !important;
+            font-size: 10.5px !important;
         }
         .nav-section-title {
-            color: #769B89 !important; /* Sage Green Group Headers */
+            color: #A3B8CC !important;
             font-size: 11px !important;
             font-weight: 800 !important;
             letter-spacing: 1px !important;
             text-transform: uppercase !important;
-            padding: 18px 14px 6px !important;
+            padding: 16px 14px 6px !important;
             display: block !important;
         }
         .nav-item, .sidebar-nav .nav-item {
-            color: #CCE3D8 !important; /* Muted Mint / Silver Green */
+            color: #FFFFFF !important;
             font-size: 13.5px !important;
             font-weight: 600 !important;
             text-decoration: none !important;
@@ -81,14 +72,14 @@ $adminUsername = htmlspecialchars($_SESSION['admin_username'] ?? 'admin');
             transition: all 0.2s ease !important;
         }
         .nav-item svg, .sidebar-nav .nav-item svg {
-            color: #A3C7B6 !important;
-            stroke: #A3C7B6 !important;
+            color: #FFFFFF !important;
+            stroke: #FFFFFF !important;
         }
         .nav-item span, .sidebar-nav .nav-item span {
-            color: #CCE3D8 !important;
+            color: #FFFFFF !important;
         }
         .nav-item:hover, .sidebar-nav .nav-item:hover {
-            background: rgba(255, 255, 255, 0.08) !important;
+            background: rgba(255, 255, 255, 0.16) !important;
             color: #FFFFFF !important;
             transform: translateX(2px) !important;
         }
@@ -97,21 +88,18 @@ $adminUsername = htmlspecialchars($_SESSION['admin_username'] ?? 'admin');
             stroke: #FFFFFF !important;
         }
         .nav-item.active, .sidebar-nav .nav-item.active {
-            background: rgba(255, 255, 255, 0.14) !important;
+            background: #005f73 !important;
             color: #FFFFFF !important;
-            border-left: 3px solid #10B981 !important;
-            font-weight: 700 !important;
+            border-left: 4px solid #ee9b00 !important;
+            font-weight: 800 !important;
         }
         .nav-item.active svg, .sidebar-nav .nav-item.active svg {
             color: #FFFFFF !important;
             stroke: #FFFFFF !important;
         }
-        .nav-item.active span, .sidebar-nav .nav-item.active span {
-            color: #FFFFFF !important;
-        }
         .sidebar-footer {
             background: rgba(0, 0, 0, 0.25) !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
             color: #FFFFFF !important;
         }
         .admin-meta .name {
@@ -120,134 +108,9 @@ $adminUsername = htmlspecialchars($_SESSION['admin_username'] ?? 'admin');
             font-size: 13.5px !important;
         }
         .admin-meta .role {
-            color: #6EE7B7 !important;
+            color: #93C5FD !important;
             font-weight: 600 !important;
             font-size: 11px !important;
-        }
-
-        /* 2. Crisp White Top Header */
-        [data-theme="light"] .app-header {
-            background: #FFFFFF !important;
-            border-bottom: 1px solid #E2E8F0 !important;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
-        }
-        [data-theme="light"] .header-title-box h1 {
-            color: #0F172A !important;
-            font-weight: 800 !important;
-        }
-        [data-theme="light"] .header-title-box p {
-            color: #64748B !important;
-        }
-        .uae-corp-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            color: #0A5C36;
-            font-weight: 700;
-            font-size: 13.5px;
-            padding: 5px 12px;
-            border-radius: 6px;
-            background: rgba(10, 92, 54, 0.07);
-            border: 1px solid rgba(10, 92, 54, 0.16);
-        }
-
-        /* 3. Light Theme KPI Cards (Inspired by Image 1) */
-        [data-theme="light"] .kpi-card {
-            background: #FFFFFF !important;
-            border: 1px solid #E2E8F0 !important;
-            border-radius: 12px !important;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
-            border-left-width: 4px !important;
-        }
-        [data-theme="light"] .kpi-card.blue { border-left-color: #2563EB !important; }
-        [data-theme="light"] .kpi-card.rose { border-left-color: #DC2626 !important; }
-        [data-theme="light"] .kpi-card.amber { border-left-color: #D97706 !important; }
-        [data-theme="light"] .kpi-card.emerald { border-left-color: #059669 !important; }
-        [data-theme="light"] .kpi-val {
-            color: #0F172A !important;
-            font-weight: 800 !important;
-            font-size: 28px !important;
-        }
-        [data-theme="light"] .kpi-label {
-            color: #64748B !important;
-            font-weight: 700 !important;
-            text-transform: uppercase !important;
-            font-size: 11px !important;
-            letter-spacing: 0.5px !important;
-        }
-        [data-theme="light"] .kpi-icon.blue { background: #EFF6FF !important; color: #2563EB !important; }
-        [data-theme="light"] .kpi-icon.rose { background: #FEF2F2 !important; color: #DC2626 !important; }
-        [data-theme="light"] .kpi-icon.amber { background: #FFFBEB !important; color: #D97706 !important; }
-        [data-theme="light"] .kpi-icon.emerald { background: #ECFDF5 !important; color: #059669 !important; }
-
-        /* 4. General Panels & Cards */
-        [data-theme="light"] .card {
-            background: #FFFFFF !important;
-            border: 1px solid #E2E8F0 !important;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
-            border-radius: 12px !important;
-            color: #1E293B !important;
-        }
-        [data-theme="light"] .card h3, [data-theme="light"] .card h2 {
-            color: #0F172A !important;
-        }
-
-        /* 5. Clean Modern Tables */
-        [data-theme="light"] .data-table {
-            background: #FFFFFF !important;
-            color: #1E293B !important;
-        }
-        [data-theme="light"] .data-table th {
-            background: #F8FAFC !important;
-            color: #475569 !important;
-            border-bottom: 2px solid #E2E8F0 !important;
-            font-weight: 700 !important;
-            text-transform: uppercase !important;
-            font-size: 11.5px !important;
-            letter-spacing: 0.5px !important;
-        }
-        [data-theme="light"] .data-table td {
-            background: #FFFFFF !important;
-            color: #1E293B !important;
-            border-bottom: 1px solid #F1F5F9 !important;
-        }
-        [data-theme="light"] .data-table tr:hover td {
-            background: #F8FAFC !important;
-        }
-
-        /* 6. Primary Action Buttons */
-        [data-theme="light"] .btn-primary {
-            background: #0A5C36 !important;
-            color: #FFFFFF !important;
-            border: 1px solid #08492B !important;
-            box-shadow: 0 2px 5px rgba(10,92,54,0.2) !important;
-            font-weight: 700 !important;
-        }
-        [data-theme="light"] .btn-primary:hover {
-            background: #064E3B !important;
-        }
-        [data-theme="light"] .btn-secondary, [data-theme="light"] .btn-outline {
-            background: #FFFFFF !important;
-            color: #1E293B !important;
-            border: 1px solid #CBD5E1 !important;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
-            font-weight: 600 !important;
-        }
-        [data-theme="light"] .btn-secondary:hover, [data-theme="light"] .btn-outline:hover {
-            background: #F8FAFC !important;
-            border-color: #94A3B8 !important;
-        }
-
-        /* 7. Inputs & Filters */
-        [data-theme="light"] .form-control, [data-theme="light"] select.form-control, [data-theme="light"] input.form-control {
-            background: #FFFFFF !important;
-            border: 1px solid #CBD5E1 !important;
-            color: #0F172A !important;
-            border-radius: 8px !important;
-        }
-        [data-theme="light"] .form-control:focus {
-            border-color: #0A5C36 !important;
-            box-shadow: 0 0 0 3px rgba(10,92,54,0.15) !important;
         }
     </style>
     <link rel="icon" type="image/png" href="<?= APP_URL ?>/<?= htmlspecialchars($settings['logo_url']) ?>">
