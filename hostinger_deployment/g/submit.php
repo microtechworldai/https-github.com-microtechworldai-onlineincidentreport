@@ -256,7 +256,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incident Report | <?= htmlspecialchars($siteName) ?></title>
+    
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/design-tokens.css?v=<?= time() ?>">
+    <?php require_once __DIR__ . '/../includes/theme_bootstrapper.php'; ?>
+        
+<link rel="stylesheet" href="../assets/css/guard.css?v=<?= file_exists(__DIR__ . '/../assets/css/guard.css') ? filemtime(__DIR__ . '/../assets/css/guard.css') : time() ?>">
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/guard.css?v=<?= file_exists(__DIR__ . '/../assets/css/guard.css') ? filemtime(__DIR__ . '/../assets/css/guard.css') : time() ?>">
+    <style>
+        * { box-sizing: border-box; }
+        img, svg { max-width: 100%; height: auto; }
+        .guard-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-wrap: nowrap !important;
+            gap: 8px !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            padding: 10px 14px !important;
+        }
+        .guard-logo-box {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            overflow: hidden !important;
+        }
+        .guard-logo-box img {
+            max-height: 36px !important;
+            max-width: 110px !important;
+            width: auto !important;
+            object-fit: contain !important;
+            flex-shrink: 0 !important;
+        }
+        .guard-logo-text {
+            min-width: 0 !important;
+            overflow: hidden !important;
+        }
+        .guard-logo-text .title {
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.2 !important;
+        }
+        .guard-logo-text .sub {
+            font-size: 9px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        .guard-header-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            flex-shrink: 0 !important;
+        }
+        .guard-theme-btn, .btn-signout {
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
+            padding: 6px 10px !important;
+            font-size: 11px !important;
+        }
+        .card-official-header img {
+            max-height: 52px !important;
+            max-width: 160px !important;
+            width: auto !important;
+            object-fit: contain !important;
+            margin: 0 auto 10px !important;
+            display: block !important;
+        }
+        .patrol-ribbon {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+            padding: 8px 14px !important;
+            font-size: 11.5px !important;
+        }
+    </style>
     <script>
         (function() {
             var theme = localStorage.getItem('uss_theme') || 'dark';
@@ -275,7 +358,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="sub"><?= htmlspecialchars($settings['tagline'] ?: 'INCIDENT REPORT SYSTEM') ?></div>
         </div>
     </div>
-    <div style="display: flex; align-items: center; gap: 8px;">
+    <div class="guard-header-actions">
         <button type="button" class="guard-theme-btn" onclick="openThemePaletteModal()" title="Choose Theme Palette" style="display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: 12px; padding: 6px 10px; border-radius: 20px; cursor: pointer;">
             <span>🎨</span>
             <span id="activeThemeNameLabel">Theme</span>

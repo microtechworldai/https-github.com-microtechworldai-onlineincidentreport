@@ -3,7 +3,8 @@
    State-of-the-Art Production Design System with Light & Dark Themes
    ==================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('design-tokens.css');
+400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* --------------------------------------------------------------------
    1. Theme Variables: Dark (Default) & Light
@@ -1629,4 +1630,84 @@ img, video, canvas, svg { max-width: 100%; }
 .table-container td:first-child {
   white-space: normal !important;
   vertical-align: middle;
+}
+
+
+/* Wire USS Enterprise Design Tokens into Style System */
+:root, [data-theme="dark"], [data-theme="light"] {
+  --font-main: var(--font-sans);
+  --font-heading: var(--font-sans);
+  --font-code: var(--font-mono);
+  
+  --bg-main: var(--bg);
+  --bg-card: var(--surface);
+  --bg-card-hover: var(--surface-2);
+  --bg-sidebar: var(--header-band);
+  --bg-header: var(--header-band);
+  --bg-input: var(--surface);
+  --border-subtle: var(--border);
+  --border-focus: var(--focus);
+  
+  --primary-text: #FFFFFF;
+  --text-main: var(--text);
+  --text-muted: var(--text-2);
+  --text-dim: var(--text-muted);
+  
+  --table-th-bg: var(--primary);
+  --table-hover-bg: var(--surface-2);
+  
+  font-family: var(--font-sans);
+  font-size: var(--fs-admin-body);
+  line-height: var(--lh-admin-body);
+  color: var(--text);
+  background-color: var(--bg);
+}
+
+body {
+  font-family: var(--font-sans) !important;
+  font-size: var(--fs-admin-body) !important;
+  line-height: var(--lh-admin-body) !important;
+  color: var(--text) !important;
+  background-color: var(--bg) !important;
+}
+
+h1, .page-title {
+  font-size: var(--fs-admin-h1) !important;
+  font-weight: 600 !important;
+  color: var(--heading) !important;
+  letter-spacing: -0.3px !important;
+}
+
+h2, h3, .section-title {
+  font-size: var(--fs-admin-h2) !important;
+  font-weight: 600 !important;
+  color: var(--heading) !important;
+}
+
+th {
+  font-size: var(--fs-admin-table-hdr) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+  color: #FFFFFF !important;
+  background-color: var(--primary) !important;
+}
+
+td, .table td {
+  font-size: var(--fs-admin-body) !important;
+  color: var(--text) !important;
+}
+
+.btn {
+  font-size: var(--fs-admin-btn) !important;
+  font-weight: 500 !important;
+  min-height: 36px !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.caption, .badge, .form-hint, .meta-time {
+  font-size: var(--fs-admin-caption) !important;
+}
+
+.sidebar-nav-item, .nav-item {
+  font-size: var(--fs-admin-sidebar) !important;
 }

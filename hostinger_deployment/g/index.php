@@ -20,9 +20,7 @@ $token = trim($_GET['token'] ?? $_GET['qr'] ?? '');
 // If token provided, look up site using permanent active_qr_token or unique site code
 if (!empty($token)) {
     try {
-        $stmt = $db->prepare("SELECT * FROM sites WHERE (active_qr_token = ? OR code = ?) AND is_active = 1 LIMIT 1");
-        $stmt->execute([$token, $token]);
-        $site = $stmt->fetch();
+        $site = find_site_by_qr_token($db, $token);
         if (!$site) {
             $error = "This QR code token is invalid, revoked, or the site is currently inactive. Please report to the Super Admin.";
         }
@@ -31,18 +29,19 @@ if (!empty($token)) {
     }
 }
 
-// Supervisor Bridge: If supervisor is already authenticated and scans this checkpoint QR
+// Supervisor Checkpoint Router: If supervisor scans ANY site QR, take them directly to Supervisor Inspection & Time In/Out
 if (!empty($_SESSION['uss_supervisor_logged_in']) && !empty($_SESSION['supervisor_id'])) {
-    if (empty($_SESSION['uss_guard_logged_in'])) {
-        $_SESSION['uss_guard_logged_in'] = true;
-        $_SESSION['guard_id'] = $_SESSION['supervisor_id'];
-        $_SESSION['guard_name'] = $_SESSION['supervisor_name'] ?? 'Field Supervisor';
-        $_SESSION['guard_staff_id'] = $_SESSION['supervisor_staff_id'] ?? '';
-        $_SESSION['guard_designation'] = 'Field Supervisor';
+    if ($site || !empty($token)) {
+        $tokenParam = $token ?: ($site['active_qr_token'] ?? $site['code'] ?? '');
+        header("Location: " . APP_URL . "/sup/index.php?token=" . urlencode($tokenParam));
+        exit;
+    } else {
+        header("Location: " . APP_URL . "/sup/duty.php");
+        exit;
     }
 }
 
-// INSTANT QR CONNECT: If guard or supervisor is already authenticated on this phone and scans a QR poster, switch checkpoint and connect immediately with zero delay!
+// Guard Instant Connect: If guard is already logged in on this phone and scans a QR poster
 if (!empty($_SESSION['uss_guard_logged_in']) && !empty($_SESSION['guard_id'])) {
     if ($site) {
         try {
@@ -86,6 +85,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Invalid Officer credentials. Please verify your Staff ID / Username and Password.";
             log_audit('GUARD_LOGIN_FAILED', 'GUARD', null, ['username' => $username], 'GUARD');
         } else {
+            if (!empty($guard['is_supervisor'])) {
+                $_SESSION['uss_supervisor_logged_in'] = true;
+                $_SESSION['supervisor_id'] = (int)$guard['id'];
+                $_SESSION['supervisor_staff_id'] = $guard['staff_id'];
+                $_SESSION['supervisor_name'] = $guard['full_name'];
+                $_SESSION['supervisor_camp_id'] = $guard['assigned_camp_id'] ?? null;
+                $_SESSION['supervisor_session_issued_at'] = time();
+                $_SESSION['supervisor_last_activity'] = time();
+                $db->prepare("UPDATE guards SET last_login_at = NOW() WHERE id = ?")->execute([$guard['id']]);
+                log_audit('SUPERVISOR_LOGIN', 'SUPERVISOR', (string)$guard['id'], 'Authenticated from the checkpoint portal.', 'SUPERVISOR', $guard['id'], $guard['full_name']);
+                if ($token !== '') {
+                    header("Location: " . APP_URL . "/sup/index.php?token=" . urlencode($token));
+                } else {
+                    header("Location: " . APP_URL . "/sup/duty.php");
+                }
+                exit;
+            }
+
             // Guard / Supervisor authenticated successfully!
             // Retrieve assigned post(s) configured by Admin
             $currentSite = null;
@@ -145,15 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['current_site_lng'] = $currentSite['longitude'] ?? '';
                 $_SESSION['guard_last_activity'] = time();
 
-                // If user is also a supervisor, set supervisor session
-                if (!empty($guard['is_supervisor'])) {
-                    $_SESSION['uss_supervisor_logged_in'] = true;
-                    $_SESSION['supervisor_id'] = $guard['id'];
-                    $_SESSION['supervisor_staff_id'] = $guard['staff_id'];
-                    $_SESSION['supervisor_name'] = $guard['full_name'];
-                    $_SESSION['supervisor_camp_id'] = $guard['assigned_camp_id'] ?? null;
-                }
-
                 // Update last login timestamp
                 try {
                     $db->prepare("UPDATE guards SET last_login_at = NOW() WHERE id = ?")->execute([$guard['id']]);
@@ -174,7 +182,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patrol Login | <?= htmlspecialchars($settings['company_name']) ?></title>
-    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/guard.css">
+    
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/design-tokens.css?v=<?= time() ?>">
+    <?php require_once __DIR__ . '/../includes/theme_bootstrapper.php'; ?>
+        
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/guard.css">
     <script>
         (function() {
             var theme = localStorage.getItem('uss_theme') || 'dark';

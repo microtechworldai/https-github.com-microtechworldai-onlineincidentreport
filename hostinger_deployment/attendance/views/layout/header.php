@@ -17,6 +17,13 @@ $activeTab = $activeTab ?? 'sheet';
     <meta name="csrf-token" content="<?= htmlspecialchars(att_get_csrf_token()) ?>">
     <title><?= htmlspecialchars($pageTitle) ?> - Universal Security Services</title>
     <link rel="stylesheet" href="assets/css/att-style.css?v=<?= time() ?>">
+
+    <!-- USS Enterprise Design System Fonts Preload (Zero Third-Party Requests) -->
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-arabic-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/attendance/assets/css/design-tokens.css?v=<?= time() ?>">
+    <?php require_once __DIR__ . '/../../includes/theme_bootstrapper.php'; ?>
+    
 </head>
 <body class="att-body">
 

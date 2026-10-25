@@ -49,6 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
 
         try {
             $db->exec("ALTER TABLE system_settings ADD COLUMN supervisor_remarks_min_length INT NOT NULL DEFAULT 20");
+        try {
+            $db->exec("ALTER TABLE system_settings ADD COLUMN dense_table_font VARCHAR(100) NOT NULL DEFAULT 'Noto Sans Condensed'");
+        } catch (Exception $e) {}
+    
         } catch (Exception $e) {}
 
         // 3. Ensure the 'default-settings' row exists

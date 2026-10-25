@@ -22,98 +22,152 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $visitId = intval($_POST['visit_id'] ?? 0);
     $action = $_POST['action'];
     $adminNotes = trim($_POST['correction_notes'] ?? '');
-    $adminId = $_SESSION['admin_user_id'] ?? 'admin';
+    $adminId = (int)($_SESSION['admin_id'] ?? 0);
 
-    $stmt = $db->prepare("
-        SELECT v.*, g.full_name as supervisor_name, s.name as site_name, s.code as site_code 
-        FROM supervisor_visits v
-        JOIN guards g ON v.supervisor_id = g.id
-        JOIN sites s ON v.site_id = s.id
-        WHERE v.id = ?
-    ");
-    $stmt->execute([$visitId]);
-    $visit = $stmt->fetch();
-
-    if (!$visit) {
-        $msg = "Visit record not found.";
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        http_response_code(400);
+        $msg = "The form expired. Refresh the page and try again.";
+        $msgType = "danger";
+    } elseif ($visitId < 1 || !in_array($action, ['approve', 'reject'], true) || $adminNotes === '') {
+        $msg = "A valid request and Super Admin decision justification are required.";
         $msgType = "danger";
     } else {
-        if ($action === 'approve') {
-            // Use requested manual time out or adjusted time out
-            $finalTimeOut = trim($_POST['manual_timeout_time'] ?? $visit['manual_timeout_time']);
-            if (empty($finalTimeOut)) {
-                $finalTimeOut = $visit['manual_timeout_time'] ?: date('Y-m-d H:i:s');
+        try {
+            $db->beginTransaction();
+            $stmt = $db->prepare("
+                SELECT v.*, g.full_name AS supervisor_name, s.name AS site_name, s.code AS site_code
+                FROM supervisor_visits v
+                JOIN guards g ON v.supervisor_id = g.id
+                JOIN sites s ON v.site_id = s.id
+                WHERE v.id = ?
+                FOR UPDATE
+            ");
+            $stmt->execute([$visitId]);
+            $visit = $stmt->fetch();
+
+            if (!$visit || $visit['manual_timeout_status'] !== 'Pending') {
+                throw new DomainException('This pending correction request no longer exists or was already reviewed.');
             }
 
-            // Ensure format Y-m-d H:i:s
-            $finalTimeOutFormatted = date('Y-m-d H:i:s', strtotime($finalTimeOut));
-            $timeIn = $visit['time_in'];
+            $before = [
+                'time_in' => $visit['time_in'],
+                'time_out' => $visit['time_out'],
+                'minutes_spent' => (int)$visit['minutes_spent'],
+                'remarks' => $visit['remarks'],
+                'status' => $visit['status'],
+                'manual_timeout_status' => $visit['manual_timeout_status'],
+                'manual_timeout_time' => $visit['manual_timeout_time'],
+                'manual_timeout_reason' => $visit['manual_timeout_reason'],
+                'manual_timeout_remarks' => $visit['manual_timeout_remarks']
+            ];
+            $version = (int)$visit['correction_version'] + 1;
 
-            // Calculate minutes
-            $tIn = strtotime($timeIn);
-            $tOut = strtotime($finalTimeOutFormatted);
-            if ($tOut <= $tIn) {
-                $msg = "Time out must be after Time in (" . date('d M Y, h:i A', $tIn) . ").";
-                $msgType = "danger";
-            } else {
-                $minutesSpent = max(1, round(($tOut - $tIn) / 60));
-
+            if ($action === 'approve') {
+                $requestedTime = trim((string)($_POST['manual_timeout_time'] ?? ''));
+                $parsedTime = DateTime::createFromFormat('Y-m-d\TH:i', $requestedTime);
+                $dateErrors = DateTime::getLastErrors();
+                if (!$parsedTime || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))) {
+                    throw new DomainException('Enter a valid departure date and time.');
+                }
+                $finalTimeOut = $parsedTime->format('Y-m-d H:i:s');
+                $timeIn = strtotime($visit['time_in']);
+                $timeOut = strtotime($finalTimeOut);
+                if ($timeOut <= $timeIn) {
+                    throw new DomainException('Time out must be after Time in (' . date('d M Y, h:i A', $timeIn) . ').');
+                }
+                $minutesSpent = max(1, (int)round(($timeOut - $timeIn) / 60));
                 $updateStmt = $db->prepare("
                     UPDATE supervisor_visits SET
-                        time_out = ?,
-                        minutes_spent = ?,
-                        status = 'Completed',
-                        is_draft = 0,
-                        manual_timeout_status = 'Approved',
-                        corrected_by_admin_id = ?,
-                        correction_notes = ?,
+                        time_out = ?, minutes_spent = ?, remarks = manual_timeout_remarks,
+                        status = 'Completed', is_draft = 0, manual_timeout_status = 'Approved',
+                        corrected_by_admin_id = ?, correction_notes = ?, correction_version = ?,
                         updated_at = NOW()
-                    WHERE id = ?
+                    WHERE id = ? AND manual_timeout_status = 'Pending'
                 ");
-                $updateStmt->execute([
-                    $finalTimeOutFormatted,
-                    $minutesSpent,
-                    $adminId,
-                    $adminNotes,
-                    $visitId
-                ]);
-
-                // Update duty totals if duty_id is linked
-                if (!empty($visit['duty_id'])) {
-                    $sumStmt = $db->prepare("SELECT SUM(minutes_spent) FROM supervisor_visits WHERE duty_id = ? AND status = 'Completed'");
-                    $sumStmt->execute([$visit['duty_id']]);
-                    $totalMins = intval($sumStmt->fetchColumn() ?: 0);
-
-                    $updDuty = $db->prepare("UPDATE supervisor_duties SET total_minutes_on_sites = ?, updated_at = NOW() WHERE id = ?");
-                    $updDuty->execute([$totalMins, $visit['duty_id']]);
+                $updateStmt->execute([$finalTimeOut, $minutesSpent, $adminId, $adminNotes, $version, $visitId]);
+                if ($updateStmt->rowCount() !== 1) {
+                    throw new DomainException('The request changed before it could be approved. Refresh and try again.');
                 }
 
-                log_audit('APPROVE_MANUAL_TIMEOUT', 'SUPERVISOR_VISIT', $visit['visit_ref'] ?: (string)$visitId, "Approved manual time out of {$minutesSpent}m for {$visit['supervisor_name']} at {$visit['site_name']}. Notes: {$adminNotes}");
-                $msg = "Visit [{$visit['visit_ref']}] successfully approved and finalized ({$minutesSpent} minutes).";
-            }
-        } elseif ($action === 'reject') {
-            if (empty($adminNotes)) {
-                $msg = "Rejection reason / admin notes are mandatory when rejecting a manual time out request.";
-                $msgType = "danger";
+                $after = [
+                    'time_in' => $visit['time_in'],
+                    'time_out' => $finalTimeOut,
+                    'minutes_spent' => $minutesSpent,
+                    'remarks' => $visit['manual_timeout_remarks'],
+                    'status' => 'Completed',
+                    'manual_timeout_status' => 'Approved',
+                    'manual_timeout_time' => $finalTimeOut,
+                    'manual_timeout_reason' => $visit['manual_timeout_reason'],
+                    'manual_timeout_remarks' => $visit['manual_timeout_remarks']
+                ];
+                $historyAction = 'Approve Timeout';
+                $message = "Visit [{$visit['visit_ref']}] successfully approved and finalized ({$minutesSpent} minutes).";
+
+                if (!empty($visit['duty_id'])) {
+                    $totals = $db->prepare("
+                        SELECT COUNT(*) AS total_sites, COALESCE(SUM(minutes_spent), 0) AS total_minutes
+                        FROM supervisor_visits
+                        WHERE duty_id = ? AND status = 'Completed'
+                    ");
+                    $totals->execute([$visit['duty_id']]);
+                    $sum = $totals->fetch();
+                    $db->prepare("
+                        UPDATE supervisor_duties
+                        SET total_sites = ?, total_minutes = ?, updated_at = NOW()
+                        WHERE id = ?
+                    ")->execute([(int)$sum['total_sites'], (int)$sum['total_minutes'], $visit['duty_id']]);
+                }
             } else {
                 $updateStmt = $db->prepare("
                     UPDATE supervisor_visits SET
-                        manual_timeout_status = 'Rejected',
-                        status = 'In Progress',
+                        manual_timeout_status = 'Rejected', correction_version = ?,
                         corrected_by_admin_id = ?,
                         correction_notes = ?,
                         updated_at = NOW()
-                    WHERE id = ?
+                    WHERE id = ? AND manual_timeout_status = 'Pending'
                 ");
-                $updateStmt->execute([
-                    $adminId,
-                    $adminNotes,
-                    $visitId
-                ]);
-
-                log_audit('REJECT_MANUAL_TIMEOUT', 'SUPERVISOR_VISIT', $visit['visit_ref'] ?: (string)$visitId, "Rejected manual time out request for {$visit['supervisor_name']} at {$visit['site_name']}. Reason: {$adminNotes}");
-                $msg = "Manual time-out request for visit [{$visit['visit_ref']}] has been rejected. Visit remains flagged as In Progress.";
+                $updateStmt->execute([$version, $adminId, $adminNotes, $visitId]);
+                if ($updateStmt->rowCount() !== 1) {
+                    throw new DomainException('The request changed before it could be rejected. Refresh and try again.');
+                }
+                $after = $before;
+                $after['manual_timeout_status'] = 'Rejected';
+                $historyAction = 'Reject Timeout';
+                $message = "Manual time-out request for visit [{$visit['visit_ref']}] was rejected. Official visit times were not changed.";
             }
+
+            $history = $db->prepare("
+                INSERT INTO supervisor_visit_corrections
+                    (visit_id, version_number, action, reason, before_json, after_json, admin_id, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+            ");
+            $history->execute([
+                $visitId, $version, $historyAction, $adminNotes,
+                json_encode($before, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                json_encode($after, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                $adminId
+            ]);
+            log_audit(
+                $action === 'approve' ? 'APPROVE_MANUAL_TIMEOUT' : 'REJECT_MANUAL_TIMEOUT',
+                'SUPERVISOR_VISIT',
+                $visit['visit_ref'] ?: (string)$visitId,
+                ['reason' => $adminNotes, 'version' => $version]
+            );
+            $db->commit();
+            $msg = $message;
+        } catch (DomainException $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            $msg = $e->getMessage();
+            $msgType = 'danger';
+        } catch (Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log('Supervisor correction failed: ' . $e->getMessage());
+            $msg = 'The correction was not saved. Please retry or contact the Super Admin.';
+            $msgType = 'danger';
         }
     }
 }
@@ -307,6 +361,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <form method="POST" action="" id="approvalForm" style="margin: 0;">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
             <input type="hidden" name="visit_id" id="modalVisitId">
             <input type="hidden" name="action" id="modalAction" value="approve">
 
@@ -360,7 +415,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <label class="form-label" style="font-weight: 700;">
                         Super Admin Decision Notes / Audit Justification:
                     </label>
-                    <textarea name="correction_notes" id="modalAdminNotes" class="form-control" rows="3" placeholder="Enter notes or audit justification (Mandatory if rejecting)..."></textarea>
+                    <textarea name="correction_notes" id="modalAdminNotes" class="form-control" rows="3" placeholder="Enter the required Super Admin decision reason or audit justification..."></textarea>
                 </div>
 
             </div>
@@ -391,7 +446,7 @@ function openReviewModal(visit) {
     document.getElementById('modalSite').innerText = visit.site_name;
     document.getElementById('modalTimeIn').innerText = visit.time_in;
     document.getElementById('modalReason').innerText = visit.manual_timeout_reason || 'No reason provided';
-    document.getElementById('modalRemarks').innerText = visit.remarks || '(No remarks entered)';
+    document.getElementById('modalRemarks').innerText = visit.manual_timeout_remarks || visit.remarks || '(No remarks entered)';
     document.getElementById('modalAdminNotes').value = visit.correction_notes || '';
 
     // Set time-out input default (convert to YYYY-MM-DDTHH:MM)

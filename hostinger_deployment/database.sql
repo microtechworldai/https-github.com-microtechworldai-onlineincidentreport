@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS `admins` (
   `email` VARCHAR(150) NULL,
   `must_change_password` TINYINT(1) NOT NULL DEFAULT 1,
   `last_login_at` DATETIME NULL,
+  `supervisor_session_revoked_at` DATETIME NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `system_settings` (
   `logo_url` VARCHAR(255) NULL DEFAULT 'assets/images/logo.png',
   `timezone` VARCHAR(100) NOT NULL DEFAULT 'Asia/Dubai',
   `supervisor_remarks_min_length` INT NOT NULL DEFAULT 20,
+  `supervisor_visit_config` LONGTEXT NULL,
   `shift_options` TEXT NULL,
   `cause_options` TEXT NULL,
   `disciplinary_options` TEXT NULL,
@@ -52,18 +54,25 @@ CREATE TABLE IF NOT EXISTS `sites` (
   `longitude` VARCHAR(100) NULL,
   `client_name` VARCHAR(150) NULL,
   `client_contact` VARCHAR(150) NULL,
-  `active_qr_token` VARCHAR(100) NOT NULL UNIQUE,
+  `active_qr_token` VARCHAR(100) NULL UNIQUE,
   `min_visits_per_week` INT NOT NULL DEFAULT 7,
   `min_night_visits_per_week` INT NOT NULL DEFAULT 2,
   `min_minutes_per_visit` INT NOT NULL DEFAULT 20,
   `max_minutes_per_visit` INT NOT NULL DEFAULT 120,
   `supervisor_qr_token` VARCHAR(100) NULL,
+  `active_qr_token_hash` CHAR(64) NULL,
+  `active_qr_token_encrypted` TEXT NULL,
+  `supervisor_qr_token_hash` CHAR(64) NULL,
+  `supervisor_qr_token_encrypted` TEXT NULL,
+  `geofence_radius_meters` INT UNSIGNED NOT NULL DEFAULT 250,
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX `idx_sites_code` (`code`),
   INDEX `idx_sites_qr` (`active_qr_token`),
   INDEX `idx_sites_sup_qr` (`supervisor_qr_token`),
+  UNIQUE KEY `uniq_sites_active_qr_hash` (`active_qr_token_hash`),
+  UNIQUE KEY `uniq_sites_supervisor_qr_hash` (`supervisor_qr_token_hash`),
   INDEX `idx_sites_active` (`is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -222,7 +231,9 @@ CREATE TABLE IF NOT EXISTS `camps` (
   `camp_code` VARCHAR(50) NOT NULL UNIQUE,
   `camp_name` VARCHAR(200) NOT NULL,
   `location` TEXT NULL,
-  `qr_token` VARCHAR(100) NOT NULL UNIQUE,
+  `qr_token` VARCHAR(100) NULL UNIQUE,
+  `qr_token_hash` CHAR(64) NULL UNIQUE,
+  `qr_token_encrypted` TEXT NULL,
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -239,7 +250,9 @@ CREATE TABLE IF NOT EXISTS `supervisor_duties` (
   `duty_date` DATE NOT NULL,
   `shift_type` ENUM('Day', 'Night') NOT NULL DEFAULT 'Day',
   `camp_out_time` DATETIME NOT NULL,
+  `client_camp_out_time` DATETIME NULL,
   `camp_in_time` DATETIME NULL,
+  `client_camp_in_time` DATETIME NULL,
   `status` ENUM('Active', 'Completed') NOT NULL DEFAULT 'Active',
   `total_sites` INT NOT NULL DEFAULT 0,
   `total_minutes` INT NOT NULL DEFAULT 0,
@@ -277,6 +290,7 @@ CREATE TABLE IF NOT EXISTS `supervisor_visits` (
   `manual_timeout_requested` TINYINT(1) NOT NULL DEFAULT 0,
   `manual_timeout_time` DATETIME NULL,
   `manual_timeout_reason` TEXT NULL,
+  `manual_timeout_remarks` TEXT NULL,
   `manual_timeout_status` ENUM('None', 'Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'None',
   `corrected_by_admin_id` INT UNSIGNED NULL,
   `correction_notes` TEXT NULL,
@@ -284,6 +298,9 @@ CREATE TABLE IF NOT EXISTS `supervisor_visits` (
   `is_draft` TINYINT(1) NOT NULL DEFAULT 0,
   `is_offline_sync` TINYINT(1) NOT NULL DEFAULT 0,
   `client_scan_time` DATETIME NULL,
+  `corrected_time_in` DATETIME NULL,
+  `corrected_time_out` DATETIME NULL,
+  `correction_version` INT UNSIGNED NOT NULL DEFAULT 0,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX `idx_visit_duty` (`duty_id`),
@@ -346,12 +363,116 @@ CREATE TABLE IF NOT EXISTS `supervisor_alerts` (
   INDEX `idx_alerts_created` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 17. Idempotent scan receipts and client/server timestamp comparison
+CREATE TABLE IF NOT EXISTS `supervisor_scan_events` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `idempotency_key` CHAR(36) NOT NULL UNIQUE,
+  `supervisor_id` INT UNSIGNED NOT NULL,
+  `duty_id` INT UNSIGNED NULL,
+  `visit_id` INT UNSIGNED NULL,
+  `token_hash` CHAR(64) NOT NULL,
+  `scan_action` ENUM('Camp Out', 'Camp In', 'Time In', 'Time Out', 'Rejected') NOT NULL,
+  `server_time` DATETIME NOT NULL,
+  `client_time` DATETIME NULL,
+  `device_hash` CHAR(64) NULL,
+  `is_offline_sync` TINYINT(1) NOT NULL DEFAULT 0,
+  `location_encrypted` TEXT NULL,
+  `result_json` LONGTEXT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_scan_sup_time` (`supervisor_id`, `server_time`),
+  INDEX `idx_scan_site_duty` (`duty_id`, `server_time`),
+  CONSTRAINT `fk_scan_sup` FOREIGN KEY (`supervisor_id`) REFERENCES `guards` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_scan_duty` FOREIGN KEY (`duty_id`) REFERENCES `supervisor_duties` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_scan_visit` FOREIGN KEY (`visit_id`) REFERENCES `supervisor_visits` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 18. Immutable before/after history for Super Admin corrections
+CREATE TABLE IF NOT EXISTS `supervisor_visit_corrections` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `visit_id` INT UNSIGNED NOT NULL,
+  `version_number` INT UNSIGNED NOT NULL,
+  `action` ENUM('Approve Timeout', 'Reject Timeout', 'Edit', 'Force Close', 'Restore') NOT NULL,
+  `reason` TEXT NOT NULL,
+  `before_json` LONGTEXT NOT NULL,
+  `after_json` LONGTEXT NOT NULL,
+  `admin_id` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `uniq_visit_correction_version` (`visit_id`, `version_number`),
+  INDEX `idx_correction_admin_time` (`admin_id`, `created_at`),
+  CONSTRAINT `fk_correction_visit` FOREIGN KEY (`visit_id`) REFERENCES `supervisor_visits` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_correction_admin` FOREIGN KEY (`admin_id`) REFERENCES `admins` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 19. Date-specific leave and supervisor/site swaps
+CREATE TABLE IF NOT EXISTS `supervisor_schedule_exceptions` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `supervisor_id` INT UNSIGNED NOT NULL,
+  `exception_date` DATE NOT NULL,
+  `exception_type` ENUM('Leave', 'Swap', 'Override') NOT NULL,
+  `replacement_supervisor_id` INT UNSIGNED NULL,
+  `site_id` INT UNSIGNED NULL,
+  `shift_type` ENUM('Day', 'Night') NULL,
+  `reason` TEXT NOT NULL,
+  `created_by_admin_id` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_schedule_exception_date` (`exception_date`, `supervisor_id`),
+  CONSTRAINT `fk_schedule_exception_sup` FOREIGN KEY (`supervisor_id`) REFERENCES `guards` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_schedule_exception_replacement` FOREIGN KEY (`replacement_supervisor_id`) REFERENCES `guards` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_schedule_exception_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_schedule_exception_admin` FOREIGN KEY (`created_by_admin_id`) REFERENCES `admins` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 20. Admin-configurable report fields; values are stored in supervisor_visits.site_report
+CREATE TABLE IF NOT EXISTS `supervisor_visit_form_fields` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `field_key` VARCHAR(80) NOT NULL UNIQUE,
+  `label` VARCHAR(200) NOT NULL,
+  `field_type` ENUM('text', 'textarea', 'number', 'select', 'rating', 'photo') NOT NULL,
+  `options_json` TEXT NULL,
+  `is_required` TINYINT(1) NOT NULL DEFAULT 0,
+  `required_on_issue` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `updated_by_admin_id` INT UNSIGNED NULL,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_visit_form_active_sort` (`is_active`, `sort_order`),
+  CONSTRAINT `fk_visit_form_admin` FOREIGN KEY (`updated_by_admin_id`) REFERENCES `admins` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 21. Admin-triggered bulk report generation and immutable issued copies
+CREATE TABLE IF NOT EXISTS `supervisor_report_jobs` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `job_ref` VARCHAR(100) NOT NULL UNIQUE,
+  `report_type` ENUM('Daily Supervisor', 'Monthly Supervisor', 'Monthly Site', 'Excel') NOT NULL,
+  `filters_json` LONGTEXT NOT NULL,
+  `status` ENUM('Queued', 'Running', 'Completed', 'Failed') NOT NULL DEFAULT 'Queued',
+  `progress_total` INT UNSIGNED NOT NULL DEFAULT 0,
+  `progress_done` INT UNSIGNED NOT NULL DEFAULT 0,
+  `error_message` TEXT NULL,
+  `created_by_admin_id` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_report_job_status` (`status`, `created_at`),
+  CONSTRAINT `fk_report_job_admin` FOREIGN KEY (`created_by_admin_id`) REFERENCES `admins` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `supervisor_report_archive` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `report_ref` VARCHAR(100) NOT NULL UNIQUE,
+  `report_type` ENUM('Daily Supervisor', 'Monthly Supervisor', 'Monthly Site', 'Excel') NOT NULL,
+  `filters_json` LONGTEXT NOT NULL,
+  `file_path` VARCHAR(255) NOT NULL,
+  `content_sha256` CHAR(64) NOT NULL,
+  `issued_by_admin_id` INT UNSIGNED NOT NULL,
+  `issued_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_report_archive_issued` (`issued_at`),
+  CONSTRAINT `fk_report_archive_admin` FOREIGN KEY (`issued_by_admin_id`) REFERENCES `admins` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ====================================================================
--- INITIAL SEED DATA
--- Default Super Admin: superadmin / Admin@Sprinzo2026!
--- Default Guard: tariq.guard / Guard@12345
+-- INITIAL CONFIGURATION
 -- ====================================================================
 
 -- Default Settings
@@ -373,47 +494,3 @@ VALUES (
   '["Move In & Out", "Fire & Safety", "Intrusion & Access", "Theft and loss", "CCTV & Systems", "Utilities & Building", "Accident & Medical", "Disturbance", "Property Damage", "Parking & Vehicles", "Visitors & Contractors", "Others"]',
   '["Police", "Ambulance", "Civil Defense", "Client Management", "USS Management", "Others"]'
 ) ON DUPLICATE KEY UPDATE `updated_at` = CURRENT_TIMESTAMP;
-
--- Initial Super Admin Account: superadmin (Password: Admin@Sprinzo2026!)
--- Hash generated via standard PHP password_hash PASSWORD_DEFAULT
-INSERT INTO `admins` (`id`, `username`, `password_hash`, `full_name`, `email`, `must_change_password`, `created_at`)
-VALUES (
-  1,
-  'superadmin',
-  '$2y$10$w3qYx.XlTqWp5c13kL5o1eb9qZ6q1H3iR8eTqB9LzL.eW5eT1G2tK', -- fallback hash, rehashed on first install/login
-  'USS Super Administrator',
-  'admin@sprinzo.in',
-  1,
-  NOW()
-) ON DUPLICATE KEY UPDATE `updated_at` = CURRENT_TIMESTAMP;
-
--- Sample Verified Demonstration Site
-INSERT INTO `sites` (`id`, `name`, `code`, `type`, `address`, `client_name`, `client_contact`, `active_qr_token`, `is_active`)
-VALUES (
-  1,
-  'Burj Crown Tower Downtown',
-  'BUR01',
-  'Commercial',
-  'Downtown Dubai, Sheikh Mohammed bin Rashid Blvd, Dubai, UAE',
-  'Emaar Properties PJSC',
-  'ops.crown@emaar.ae | +971 4 366 1688',
-  'uss_token_burj_crown_demo_982173',
-  1
-) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
-
--- Sample Security Guard (Patrol Staff): Staff ID: USS-1001, username: tariq.guard (Password: Guard@12345)
-INSERT INTO `guards` (`id`, `staff_id`, `full_name`, `designation`, `username`, `password_hash`, `is_active`)
-VALUES (
-  1,
-  'USS-1001',
-  'Muhammad Tariq',
-  'Patrol Security Officer',
-  'tariq.guard',
-  '$2y$10$7zD1aM9v7G3y3rL.j5K2QeQ1w8W.s5T2o7U3v2W9p1R8eTqB9LzL.',
-  1
-) ON DUPLICATE KEY UPDATE `full_name` = VALUES(`full_name`);
-
--- Assign Guard to Burj Crown Tower
-INSERT INTO `guard_site_assignments` (`guard_id`, `site_id`)
-VALUES (1, 1)
-ON DUPLICATE KEY UPDATE `site_id` = VALUES(`site_id`);

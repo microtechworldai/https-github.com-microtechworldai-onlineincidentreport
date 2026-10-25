@@ -20,7 +20,7 @@ Options -Indexes
 </IfModule>
 
 # Protect sensitive database & lock files
-<FilesMatch "(database\.sql|install\.lock|\.env)$">
+<FilesMatch "(database\.sql|install\.lock|config\.local\.php|\.env)$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>

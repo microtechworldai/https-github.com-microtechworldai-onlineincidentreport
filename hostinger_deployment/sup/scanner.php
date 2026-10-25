@@ -13,6 +13,7 @@ if (empty($_SESSION['uss_supervisor_logged_in']) || empty($_SESSION['supervisor_
     header("Location: " . APP_URL . "/sup/login.php");
     exit;
 }
+require_supervisor_auth();
 
 $settings = get_system_settings();
 ?>
@@ -22,7 +23,12 @@ $settings = get_system_settings();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Scan Patrol QR Code | <?= htmlspecialchars($settings['company_name']) ?></title>
-    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
+    
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/design-tokens.css?v=<?= time() ?>">
+    <?php require_once __DIR__ . '/../includes/theme_bootstrapper.php'; ?>
+        
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         body {

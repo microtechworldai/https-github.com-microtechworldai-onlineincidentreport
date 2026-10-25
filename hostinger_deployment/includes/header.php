@@ -30,13 +30,13 @@ $adminUsername = htmlspecialchars($_SESSION['admin_username'] ?? 'admin');
         .kpi-icon svg { width: 24px !important; height: 24px !important; }
     </style>
     <link rel="icon" type="image/png" href="<?= APP_URL ?>/<?= htmlspecialchars($settings['logo_url']) ?>">
-    <script>
-        // Anti-flicker theme initialization
-        (function() {
-            var theme = localStorage.getItem('uss_theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
+    
+    <!-- USS Enterprise Design System Fonts Preload (Zero Third-Party Requests) -->
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-arabic-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/design-tokens.css?v=<?= time() ?>">
+    <?php require_once __DIR__ . '/theme_bootstrapper.php'; ?>
+    
 </head>
 <body>
 

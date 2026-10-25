@@ -158,6 +158,53 @@ function hash_qr_token($token) {
     return hash_hmac('sha256', trim($token), $pepper);
 }
 
+function create_qr_token_secret($prefix) {
+    $token = $prefix . bin2hex(random_bytes(32));
+    return [
+        'token' => $token,
+        'hash' => hash_qr_token($token),
+        'encrypted' => encrypt_field($token)
+    ];
+}
+
+function get_stored_qr_token(array $record, $encryptedField, $legacyField) {
+    if (!empty($record[$encryptedField])) {
+        return decrypt_field($record[$encryptedField]);
+    }
+    return (string)($record[$legacyField] ?? '');
+}
+
+function find_camp_by_qr_token(PDO $db, $token) {
+    $tokenHash = hash_qr_token($token);
+    $stmt = $db->prepare("
+        SELECT * FROM camps
+        WHERE (qr_token_hash = ? OR qr_token = ?) AND is_active = 1
+        LIMIT 1
+    ");
+    $stmt->execute([$tokenHash, trim($token)]);
+    return $stmt->fetch();
+}
+
+function find_site_by_qr_token(PDO $db, $token, $supervisorOnly = false) {
+    $tokenHash = hash_qr_token($token);
+    if ($supervisorOnly) {
+        $stmt = $db->prepare("
+            SELECT * FROM sites
+            WHERE (supervisor_qr_token_hash = ? OR supervisor_qr_token = ?) AND is_active = 1
+            LIMIT 1
+        ");
+        $stmt->execute([$tokenHash, trim($token)]);
+    } else {
+        $stmt = $db->prepare("
+            SELECT * FROM sites
+            WHERE (active_qr_token_hash = ? OR active_qr_token = ? OR code = ?) AND is_active = 1
+            LIMIT 1
+        ");
+        $stmt->execute([$tokenHash, trim($token), trim($token)]);
+    }
+    return $stmt->fetch();
+}
+
 /**
  * Comprehensive Security & Append-Only Tamper-Evident Audit Logging
  * Implements cryptographic hash chaining: each entry incorporates the previous entry's hash

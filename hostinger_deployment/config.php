@@ -94,6 +94,7 @@ define('ENABLE_AUTO_EMAIL_REPORTS', false); // Scheduled report emailing is OFF 
 // Session Cookie Lifetimes
 define('ADMIN_SESSION_LIFETIME', 28800);       // 8 Hours for Admin
 define('GUARD_SESSION_LIFETIME', 28800);       // 8 Hours for Guard patrol shift (prevents premature logouts)
+define('SUPERVISOR_SESSION_LIFETIME', 57600); // 16 Hours for supervisor duty session
 
 // File Upload Constraints
 define('MAX_FILE_SIZE_MB', 15);
@@ -208,7 +209,7 @@ function get_base_url() {
     // Calculate folder offset if hosted in a subfolder
     $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
     $scriptDir = $scriptName ? dirname($scriptName) : '';
-    $scriptDir = str_replace(['/admin', '/g', '/api'], '', $scriptDir);
+    $scriptDir = preg_replace('#/(admin|g|api|sup|attendance)(/.*)?$#i', '', str_replace('\\', '/', $scriptDir));
     $scriptDir = str_replace('\\', '/', $scriptDir);
     $scriptDir = rtrim($scriptDir, '/');
     if ($scriptDir === '.' || $scriptDir === '/') {

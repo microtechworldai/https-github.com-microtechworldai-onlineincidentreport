@@ -8,6 +8,7 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/pdf_tokens.php';
 
 require_admin_auth();
 
@@ -371,6 +372,51 @@ $companyDisplayName = !empty($settings['company_name'])
     <meta charset="UTF-8">
     <title>Incident_Report_<?= htmlspecialchars(str_replace('/', '-', $formattedRef)) ?></title>
     <style>
+    @page {
+        size: A4 portrait;
+        margin: 8mm 10mm;
+    }
+    body {
+        font-family: PDF_FONT_PRIMARY, Arial, Helvetica, sans-serif;
+        color: #000000;
+        background: #FFFFFF;
+        font-size: 9pt;
+        line-height: 1.25;
+    }
+    .doc-title {
+        font-size: 20pt !important;
+        font-weight: 700 !important;
+        text-decoration: underline !important;
+        text-align: center !important;
+        margin-bottom: 4px !important;
+    }
+    .field-label {
+        font-size: 10pt !important;
+        font-weight: 700 !important;
+    }
+    .category-chip, .option-label {
+        font-size: 9pt !important;
+    }
+    .desc-box {
+        font-size: 11pt !important; /* Exactly 11pt so 15 lines fit cleanly */
+        line-height: 1.35 !important;
+        min-height: 220px !important;
+        max-height: 250px !important;
+        overflow: hidden !important;
+        border: 1px solid #000000 !important;
+        padding: 8px !important;
+    }
+    .company-name-hdr {
+        font-size: 10pt !important;
+        font-weight: 700 !important;
+    }
+    .company-meta-hdr {
+        font-size: 7pt !important;
+    }
+    .footer-pt, .signoff-pt {
+        font-size: 8pt !important;
+    }
+
         @page {
             size: A4 portrait;
             margin: 6mm 10mm 6mm 10mm;

@@ -27,6 +27,10 @@ CREATE TABLE IF NOT EXISTS `att_sites` (
   `site_name` VARCHAR(180) NOT NULL,
   `site_code` VARCHAR(50) NOT NULL UNIQUE,
   `client_name` VARCHAR(180) NULL,
+  `req_day` INT NOT NULL DEFAULT 1,
+  `req_night` INT NOT NULL DEFAULT 1,
+  `contract_start` DATE NULL,
+  `contract_end` DATE NULL,
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -160,4 +164,20 @@ CREATE TABLE IF NOT EXISTS `att_audit` (
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX `idx_att_audit_action` (`action`),
   INDEX `idx_att_audit_entity` (`entity_type`, `entity_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- Additional Deployments Table
+CREATE TABLE IF NOT EXISTS `att_additional_deployments` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `sheet_id` INT UNSIGNED NOT NULL,
+  `day_number` TINYINT UNSIGNED NOT NULL,
+  `add_day` INT NOT NULL DEFAULT 0,
+  `add_night` INT NOT NULL DEFAULT 0,
+  `notes` VARCHAR(255) NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `uk_add_sheet_day` (`sheet_id`, `day_number`),
+  INDEX `idx_add_deploy_sheet` (`sheet_id`),
+  CONSTRAINT `fk_add_deploy_sheet` FOREIGN KEY (`sheet_id`) REFERENCES `att_sheets` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

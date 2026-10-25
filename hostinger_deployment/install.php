@@ -71,20 +71,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
             ");
             $stmtAdmin->execute([$adminUser, $adminHash, $adminName, $adminEmail]);
 
-            // 4. Update config.php with these credentials
-            $configTemplate = file_get_contents(__DIR__ . '/config.php');
-            $configTemplate = preg_replace("/define\('DB_HOST', '.*?'\);/", "define('DB_HOST', '{$dbHost}');", $configTemplate);
-            $configTemplate = preg_replace("/define\('DB_PORT', \d+\);/", "define('DB_PORT', {$dbPort});", $configTemplate);
-            $configTemplate = preg_replace("/define\('DB_NAME', '.*?'\);/", "define('DB_NAME', '{$dbName}');", $configTemplate);
-            $configTemplate = preg_replace("/define\('DB_USER', '.*?'\);/", "define('DB_USER', '{$dbUser}');", $configTemplate);
-            $configTemplate = preg_replace("/define\('DB_PASS', '.*?'\);/", "define('DB_PASS', '" . addslashes($dbPass) . "');", $configTemplate);
+            // 4. Save host-specific credentials separately from deployable source.
+            $localConfig = "<?php\n";
+            $localConfig .= "define('DB_HOST', " . var_export($dbHost, true) . ");\n";
+            $localConfig .= "define('DB_PORT', " . var_export($dbPort, true) . ");\n";
+            $localConfig .= "define('DB_NAME', " . var_export($dbName, true) . ");\n";
+            $localConfig .= "define('DB_USER', " . var_export($dbUser, true) . ");\n";
+            $localConfig .= "define('DB_PASS', " . var_export($dbPass, true) . ");\n";
+            $localConfig .= "define('DB_CHARSET', 'utf8mb4');\n";
             if (!empty($appUrl)) {
-                $configTemplate = preg_replace("/define\('APP_URL_OVERRIDE', '.*?'\);/", "define('APP_URL_OVERRIDE', '{$appUrl}');", $configTemplate);
+                $localConfig .= "define('APP_URL_OVERRIDE', " . var_export($appUrl, true) . ");\n";
             }
-            file_put_contents(__DIR__ . '/config.php', $configTemplate);
+            if (file_put_contents(__DIR__ . '/config.local.php', $localConfig, LOCK_EX) === false) {
+                throw new RuntimeException('Could not save config.local.php. Check write permissions for the application directory.');
+            }
 
             // 5. Create lock file
-            file_put_contents($lockFile, "Installed on " . date('Y-m-d H:i:s'));
+            if (file_put_contents($lockFile, "Installed on " . date('Y-m-d H:i:s'), LOCK_EX) === false) {
+                throw new RuntimeException('Could not create install.lock. Check write permissions for the application directory.');
+            }
 
             $success = "Installation completed successfully! You can now log into your Super Admin Portal.";
             $step = 'done';

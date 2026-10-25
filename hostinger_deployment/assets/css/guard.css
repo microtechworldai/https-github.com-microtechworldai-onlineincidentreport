@@ -3,7 +3,8 @@
    Mobile-First UX Optimized for Security Guards with Light & Dark Themes
    ==================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
+@import url('design-tokens.css');
+500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
 
 /* ====================================================================
    10 INSPIRATION PROJECT THEMES FOR MOBILE GUARD SCREENS
@@ -1428,4 +1429,76 @@ html, body.guard-body { max-width: 100%; overflow-x: hidden; }
 /* Very small phones */
 @media (max-width: 380px) {
   .guard-container { padding-left: 8px; padding-right: 8px; }
+}
+
+
+/* Wire USS Enterprise Design Tokens into Guard Mobile System */
+:root, [data-theme="dark"], [data-theme="light"] {
+  --g-bg: var(--bg);
+  --g-card: var(--surface);
+  --g-card-active: var(--surface-2);
+  --g-border: var(--border);
+  --g-border-strong: var(--border-strong);
+  --g-primary: var(--primary);
+  --g-primary-hover: var(--primary-hover);
+  --g-primary-text: #FFFFFF;
+  --g-accent: var(--accent);
+  --g-danger: var(--danger);
+  --g-success: var(--success);
+  --g-warning: var(--warning);
+  --g-text: var(--text);
+  --g-text-muted: var(--text-muted);
+  --g-input-bg: var(--surface);
+  --g-header-bg: var(--header-band);
+  --g-sticky-bg: var(--header-band);
+}
+
+body.guard-body, .guard-body {
+  font-family: var(--font-sans) !important;
+  font-size: var(--fs-mobile-body) !important;
+  line-height: var(--lh-mobile-body) !important;
+  color: var(--text) !important;
+  background-color: var(--bg) !important;
+}
+
+.form-control, input, select, textarea {
+  font-family: var(--font-sans) !important;
+  font-size: var(--fs-mobile-input) !important; /* >= 16px strictly prevents iOS zoom */
+  min-height: 44px !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid var(--border-strong) !important;
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+.form-label, label {
+  font-size: var(--fs-mobile-label) !important;
+  font-weight: 500 !important;
+  color: var(--text-2) !important;
+  margin-bottom: 6px !important;
+}
+
+.form-help, .field-hint {
+  font-size: var(--fs-mobile-help) !important;
+  color: var(--text-muted) !important;
+}
+
+.btn-guard-submit, .btn-action, .touch-btn {
+  font-family: var(--font-sans) !important;
+  font-size: var(--fs-mobile-btn) !important;
+  font-weight: 600 !important;
+  min-height: var(--min-touch-target) !important;
+  border-radius: var(--radius-sm) !important;
+  margin: 4px 0 !important;
+}
+
+.doc-title, .screen-title {
+  font-size: var(--fs-mobile-h1) !important;
+  font-weight: 600 !important;
+  color: var(--heading) !important;
+}
+
+.doc-subtitle, .section-heading {
+  font-size: var(--fs-mobile-h2) !important;
+  font-weight: 600 !important;
 }

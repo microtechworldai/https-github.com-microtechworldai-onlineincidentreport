@@ -51,6 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['supervisor_staff_id'] = $guard['staff_id'];
                 $_SESSION['supervisor_name'] = $guard['full_name'];
                 $_SESSION['supervisor_camp_id'] = $guard['assigned_camp_id'];
+                $_SESSION['supervisor_session_issued_at'] = time();
+                $_SESSION['supervisor_last_activity'] = time();
 
                 $db->prepare("UPDATE guards SET last_login_at = NOW() WHERE id = ?")->execute([$guard['id']]);
                 log_audit('SUPERVISOR_LOGIN', "Supervisor logged in ({$guard['staff_id']} - {$guard['full_name']})", null, 'guards', $guard['id']);
@@ -76,7 +78,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Supervisor Login | <?= htmlspecialchars($settings['company_name']) ?></title>
-    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
+    
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/design-tokens.css?v=<?= time() ?>">
+    <?php require_once __DIR__ . '/../includes/theme_bootstrapper.php'; ?>
+        
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
     <script>
         (function() {
             var theme = localStorage.getItem('uss_theme') || 'dark';

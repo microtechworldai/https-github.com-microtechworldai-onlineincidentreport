@@ -88,6 +88,48 @@ function require_guard_auth() {
     return true;
 }
 
+function require_supervisor_auth() {
+    if (empty($_SESSION['uss_supervisor_logged_in']) || empty($_SESSION['supervisor_id'])) {
+        header("Location: " . APP_URL . "/sup/login.php");
+        exit;
+    }
+
+    $lastActivity = (int)($_SESSION['supervisor_last_activity'] ?? 0);
+    if ($lastActivity && time() - $lastActivity > SUPERVISOR_SESSION_LIFETIME) {
+        destroy_supervisor_session();
+        header("Location: " . APP_URL . "/sup/login.php?msg=expired");
+        exit;
+    }
+
+    $db = get_db();
+    $stmt = $db->prepare("
+        SELECT is_active, is_supervisor, supervisor_session_revoked_at
+        FROM guards
+        WHERE id = ?
+        LIMIT 1
+    ");
+    $stmt->execute([(int)$_SESSION['supervisor_id']]);
+    $supervisor = $stmt->fetch();
+    $issuedAt = (int)($_SESSION['supervisor_session_issued_at'] ?? 0);
+    $revokedAt = !empty($supervisor['supervisor_session_revoked_at'])
+        ? strtotime($supervisor['supervisor_session_revoked_at'])
+        : false;
+
+    if (
+        !$supervisor
+        || empty($supervisor['is_active'])
+        || empty($supervisor['is_supervisor'])
+        || ($revokedAt !== false && $revokedAt >= $issuedAt)
+    ) {
+        destroy_supervisor_session();
+        header("Location: " . APP_URL . "/sup/login.php?msg=revoked");
+        exit;
+    }
+
+    $_SESSION['supervisor_last_activity'] = time();
+    return true;
+}
+
 /**
  * Destroy Super Admin Session
  */
@@ -117,3 +159,12 @@ function destroy_guard_session() {
     unset($_SESSION['guard_last_activity']);
 }
 
+function destroy_supervisor_session() {
+    unset($_SESSION['uss_supervisor_logged_in']);
+    unset($_SESSION['supervisor_id']);
+    unset($_SESSION['supervisor_staff_id']);
+    unset($_SESSION['supervisor_name']);
+    unset($_SESSION['supervisor_camp_id']);
+    unset($_SESSION['supervisor_last_activity']);
+    unset($_SESSION['supervisor_session_issued_at']);
+}

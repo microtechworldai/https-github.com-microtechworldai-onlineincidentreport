@@ -1,3 +1,4 @@
+@import url('design-tokens.css');
 /* Universal Security Services - Attendance & Payroll Module Stylesheet */
 /* File: hostinger_deployment/attendance/assets/css/att-style.css */
 /* Strict prefix: all classes start with att- */
@@ -666,4 +667,82 @@ body.att-body {
 
 .att-staff-item:hover {
   background: #f8fafc;
+}
+
+
+/* Wire USS Enterprise Design Tokens into Attendance & Payroll Module */
+:root, [data-theme="dark"], [data-theme="light"] {
+  --att-primary: var(--primary);
+  --att-primary-hover: var(--primary-hover);
+  --att-danger: var(--danger);
+  --att-warning: var(--warning);
+  --att-success: var(--success);
+  --att-bg: var(--bg);
+  --att-card-bg: var(--surface);
+  --att-text: var(--text);
+  --att-text-muted: var(--text-muted);
+  --att-border: var(--border-strong);
+  --att-font-condensed: var(--font-table);
+  --att-font-body: var(--font-sans);
+}
+
+body.att-body {
+  font-family: var(--font-sans) !important;
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+/* Dense Attendance & Payroll Tables */
+.att-table {
+  font-family: var(--font-table) !important;
+  border-collapse: collapse !important;
+  width: 100% !important;
+}
+
+.att-table th, .att-table td {
+  border: 1px solid var(--border-strong) !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.att-table thead tr:first-child {
+  height: var(--row-h-att-header) !important; /* 45px header */
+}
+
+.att-table thead th {
+  font-family: var(--font-table) !important;
+  font-size: var(--fs-att-header) !important;
+  font-weight: 600 !important;
+  color: #FFFFFF !important;
+  background-color: var(--primary) !important;
+}
+
+.att-table .att-weekday-hdr {
+  font-size: var(--fs-att-weekday) !important; /* 7px weekday */
+  font-weight: 600 !important;
+  background-color: var(--header-band) !important;
+  color: #FFFFFF !important;
+}
+
+.att-table tbody tr {
+  height: var(--row-h-att-row) !important; /* 20px rows */
+}
+
+.att-table td {
+  font-size: var(--fs-att-cell) !important;
+  font-weight: 400 !important;
+  padding: 0 4px !important;
+  white-space: nowrap !important;
+}
+
+.att-table .att-code-cell {
+  font-weight: 600 !important;
+  font-size: var(--fs-att-cell) !important;
+}
+
+.att-table tfoot tr, .att-table .att-total-row {
+  height: var(--row-h-att-row) !important;
+  font-weight: 600 !important;
+  font-size: var(--fs-att-total) !important;
+  background-color: var(--surface-2) !important;
 }

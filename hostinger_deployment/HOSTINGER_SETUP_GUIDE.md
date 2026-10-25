@@ -98,8 +98,11 @@ This package has been converted into a **native, pure PHP 8.x + MySQL (MariaDB)*
    - Verify connection.
    - Execute all tables with UTF8mb4 charset and relations.
    - Seed default Dubai company configurations.
-   - Save your credentials to `config.php`.
+   - Save your credentials to `config.local.php`, separate from deployable application files.
    - Create `install.lock` to secure the system.
+
+### Existing installation upgrade: Supervisor Visit Tracking
+For an existing database, take and verify a full database backup before deploying the updated PHP files. Then run `migrations/20261025_supervisor_visit_tracking.sql` once in phpMyAdmin against the application's database. This migration is not idempotent; do not run it a second time. Confirm it completed successfully before allowing the updated application to serve requests. Fresh installations use the current `database.sql` and must not run this migration.
 
 ---
 

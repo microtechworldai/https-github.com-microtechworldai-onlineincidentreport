@@ -23,6 +23,13 @@ if (empty($_SESSION['uss_supervisor_logged_in']) || empty($_SESSION['supervisor_
     exit;
 }
 
+require_supervisor_auth();
+
+if (!empty($_GET['camp']) || !empty($_GET['token']) || !empty($_GET['qr']) || $_SERVER['REQUEST_METHOD'] === 'POST') {
+    require __DIR__ . '/scan.php';
+    exit;
+}
+
 $db = get_db();
 $settings = get_system_settings();
 $supervisorId = (int)$_SESSION['supervisor_id'];
@@ -382,7 +389,12 @@ if ($openVisit) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?= htmlspecialchars($pageTitle) ?> | <?= htmlspecialchars($settings['company_name']) ?></title>
-    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
+    
+    <link rel="preload" href="<?= APP_URL ?>/assets/fonts/noto-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/design-tokens.css?v=<?= time() ?>">
+    <?php require_once __DIR__ . '/../includes/theme_bootstrapper.php'; ?>
+        
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= time() ?>">
     <script>
         (function() {
             var theme = localStorage.getItem('uss_theme') || 'dark';
@@ -485,7 +497,46 @@ if ($openVisit) {
             display: flex;
             justify-content: space-between;
         }
-    </style>
+    
+    /* Mobile Defensive Checklist CSS */
+    * { box-sizing: border-box; }
+    img, svg { max-width: 100%; height: auto; }
+    .rating-pills {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        margin-top: 6px;
+    }
+    .rating-pill {
+        flex: 1 1 0;
+        text-align: center;
+        padding: 10px 8px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 42px;
+        touch-action: manipulation;
+    }
+    .checklist-group {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    .checklist-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 6px;
+    }
+    
+</style>
 </head>
 <body>
 

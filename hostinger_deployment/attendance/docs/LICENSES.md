@@ -1,29 +1,16 @@
-# Third-Party Libraries & Commercial Licensing Notice
-**Module:** Attendance & Payroll Subsystem for Ultimate Security Services (USS)
-**Date:** October 2026
+# Third-Party Software & Font Licences
 
-The Attendance & Payroll module utilizes only strictly permissive, commercially compatible open-source libraries. None of these libraries are shared with or loaded by the core incident management application.
+## Noto Sans, Noto Sans Condensed, Noto Sans Arabic
+- **Copyright:** Copyright 2026 The Noto Project Authors (https://github.com/notofonts)
+- **Licence:** SIL Open Font License (OFL), Version 1.1 (http://scripts.sil.org/OFL)
+- **Permissions:** Commercial use, distribution, bundling, embedding, and modification permitted.
+- **Hosting:** 100% locally self-hosted WOFF2 files in assets/fonts/ with zero third-party requests.
 
----
+--------------------------------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+--------------------------------------------------------------------------------
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide development of collaborative font projects, to support the font creation efforts of academic and linguistic communities, and to provide a free and open framework in which fonts may be shared and improved in partnership with others.
 
-### 1. PhpSpreadsheet (Spreadsheet Engine)
-- **Author:** PHPOffice Team
-- **Website:** https://github.com/PHPOffice/PhpSpreadsheet
-- **License:** MIT License
-- **Permitted Use:** Commercial, private, distribution, and modification allowed without royalties.
-- **Purpose in Module:** High-precision Microsoft Excel (`.xlsx`) generation for Attendance Sheets and Consolidated Payroll with native formulas (`COUNTIF`, `SUM`), cell formatting, frozen panes, and print scaling.
-
----
-
-### 2. Dompdf (HTML to PDF Converter)
-- **Author:** Dompdf Team / Fabien Ménager
-- **Website:** https://github.com/dompdf/dompdf
-- **License:** GNU Lesser General Public License (LGPL v2.1)
-- **Permitted Use:** Commercial use permitted as a dynamic/unmodified library.
-- **Purpose in Module:** Rendering strict single-page A4 Landscape Attendance Sheets with 20px row heights and border alignment.
-
----
-
-### 3. Typography & Fonts
-- **Primary:** Franklin Gothic Demi Cond / Arial Narrow / Liberation Sans Narrow
-- **Status:** Uses system-rendered fonts or permissive OFL / Liberation fonts for PDF rasterization.
+PERMISSION & CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining a copy of the Font Software, to use, study, copy, merge, embed, modify, redistribute, and sell modified and unmodified copies of the Font Software, subject to the conditions of the SIL Open Font License.
