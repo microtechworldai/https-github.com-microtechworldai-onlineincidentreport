@@ -179,7 +179,9 @@ function get_base_url() {
     $isHttps = false;
     if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
         $isHttps = true;
-    } elseif (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) {
+    } elseif (isset($_SERVER['SERVER_PORT']) && in_array((int)$_SERVER['SERVER_PORT'], [443, 8443])) {
+        $isHttps = true;
+    } elseif (!empty($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] === 'https') {
         $isHttps = true;
     } elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https') {
         $isHttps = true;
@@ -187,7 +189,7 @@ function get_base_url() {
         $isHttps = true;
     } elseif (!empty($_SERVER['HTTP_CF_VISITOR']) && strpos($_SERVER['HTTP_CF_VISITOR'], 'https') !== false) {
         $isHttps = true;
-    } elseif (strpos($host, 'trycloudflare.com') !== false || strpos($host, 'localtunnel.me') !== false || strpos($host, 'ngrok') !== false) {
+    } elseif (strpos($host, 'sprinzo.in') !== false || strpos($host, 'trycloudflare.com') !== false || strpos($host, 'localtunnel.me') !== false || strpos($host, 'ngrok') !== false) {
         $isHttps = true;
     }
     

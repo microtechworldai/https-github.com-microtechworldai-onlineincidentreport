@@ -19,7 +19,16 @@ $adminUsername = htmlspecialchars($_SESSION['admin_username'] ?? 'admin');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' | ' : '' ?><?= htmlspecialchars($settings['company_name']) ?> - Admin Portal</title>
+    <!-- Core Stylesheet with relative and absolute fallbacks -->
+    <link rel="stylesheet" href="../assets/css/style.css?v=<?= file_exists(__DIR__ . '/../assets/css/style.css') ? filemtime(__DIR__ . '/../assets/css/style.css') : time() ?>">
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= file_exists(__DIR__ . '/../assets/css/style.css') ? filemtime(__DIR__ . '/../assets/css/style.css') : time() ?>">
+    <style>
+        /* Defensive resets to prevent unstyled icon/layout explosions */
+        svg { max-width: 100%; box-sizing: border-box; }
+        .sidebar-brand img, .brand-logo-frame img { max-width: 48px; max-height: 48px; object-fit: contain; }
+        .sidebar-nav svg, .nav-item svg { width: 20px !important; height: 20px !important; min-width: 20px; max-height: 20px; flex-shrink: 0; }
+        .kpi-icon svg { width: 24px !important; height: 24px !important; }
+    </style>
     <link rel="icon" type="image/png" href="<?= APP_URL ?>/<?= htmlspecialchars($settings['logo_url']) ?>">
     <script>
         // Anti-flicker theme initialization
