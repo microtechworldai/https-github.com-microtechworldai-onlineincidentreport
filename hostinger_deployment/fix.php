@@ -52,7 +52,18 @@ if (file_exists($headerFile)) {
     $results[] = "⚠️ File attendance/views/layout/header.php not found.";
 }
 
-// 4. Database Self-Healing: Verify DB connection & missing tables
+
+// 4. Ensure admin/index.php exists to prevent 403 Forbidden
+$adminIndexFile = $baseDir . '/admin/index.php';
+$adminIndexContent = '<?php\nrequire_once __DIR__ . "/../config.php";\nrequire_once __DIR__ . "/../includes/auth.php";\nif (!empty($_SESSION["uss_admin_logged_in"]) && !empty($_SESSION["admin_id"])) {\n    header("Location: " . APP_URL . "/admin/dashboard.php");\n} else {\n    header("Location: " . APP_URL . "/admin/login.php");\n}\nexit;\n';
+if (!file_exists($adminIndexFile)) {
+    file_put_contents($adminIndexFile, $adminIndexContent);
+    $results[] = "✅ Created admin/index.php (Resolves 403 Forbidden on /admin/)!";
+} else {
+    $results[] = "✅ admin/index.php is present and active.";
+}
+
+// 5. Database Self-Healing: Verify DB connection & missing tables
 try {
     require_once $baseDir . '/config.php';
     require_once $baseDir . '/includes/db.php';
