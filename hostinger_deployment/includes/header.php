@@ -22,12 +22,96 @@ $adminUsername = htmlspecialchars($_SESSION['admin_username'] ?? 'admin');
     <!-- Core Stylesheet with relative and absolute fallbacks -->
     <link rel="stylesheet" href="../assets/css/style.css?v=<?= file_exists(__DIR__ . '/../assets/css/style.css') ? filemtime(__DIR__ . '/../assets/css/style.css') : time() ?>">
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css?v=<?= file_exists(__DIR__ . '/../assets/css/style.css') ? filemtime(__DIR__ . '/../assets/css/style.css') : time() ?>">
-    <style>
+        <style>
         /* Defensive resets to prevent unstyled icon/layout explosions */
         svg { max-width: 100%; box-sizing: border-box; }
         .sidebar-brand img, .brand-logo-frame img { max-width: 48px; max-height: 48px; object-fit: contain; }
         .sidebar-nav svg, .nav-item svg { width: 20px !important; height: 20px !important; min-width: 20px; max-height: 20px; flex-shrink: 0; }
         .kpi-icon svg { width: 24px !important; height: 24px !important; }
+
+        /* HIGH-CONTRAST CRISP WHITE TEXT FOR SIDEBAR NAVIGATION & BRAND */
+        .app-sidebar, aside.app-sidebar {
+            background: #12263F !important;
+            color: #FFFFFF !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+        }
+        .sidebar-brand, .sidebar-brand a {
+            color: #FFFFFF !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+        }
+        .sidebar-brand .brand-company, .brand-title .brand-company {
+            color: #FFFFFF !important;
+            font-weight: 800 !important;
+            font-size: 13.5px !important;
+            letter-spacing: 0.3px !important;
+        }
+        .brand-title .brand-sub {
+            color: #93C5FD !important;
+            font-weight: 700 !important;
+            font-size: 10.5px !important;
+        }
+        .nav-section-title {
+            color: #A3B8CC !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            letter-spacing: 1px !important;
+            text-transform: uppercase !important;
+            padding: 16px 14px 6px !important;
+            display: block !important;
+        }
+        .nav-item, .sidebar-nav .nav-item {
+            color: #FFFFFF !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 10px 14px !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+        .nav-item svg, .sidebar-nav .nav-item svg {
+            color: #FFFFFF !important;
+            stroke: #FFFFFF !important;
+        }
+        .nav-item span, .sidebar-nav .nav-item span {
+            color: #FFFFFF !important;
+        }
+        .nav-item:hover, .sidebar-nav .nav-item:hover {
+            background: rgba(255, 255, 255, 0.16) !important;
+            color: #FFFFFF !important;
+            transform: translateX(2px) !important;
+        }
+        .nav-item:hover svg, .sidebar-nav .nav-item:hover svg {
+            color: #FFFFFF !important;
+            stroke: #FFFFFF !important;
+        }
+        .nav-item.active, .sidebar-nav .nav-item.active {
+            background: #005f73 !important;
+            color: #FFFFFF !important;
+            border-left: 4px solid #ee9b00 !important;
+            font-weight: 800 !important;
+        }
+        .nav-item.active svg, .sidebar-nav .nav-item.active svg {
+            color: #FFFFFF !important;
+            stroke: #FFFFFF !important;
+        }
+        .sidebar-footer {
+            background: rgba(0, 0, 0, 0.25) !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+            color: #FFFFFF !important;
+        }
+        .admin-meta .name {
+            color: #FFFFFF !important;
+            font-weight: 700 !important;
+            font-size: 13.5px !important;
+        }
+        .admin-meta .role {
+            color: #93C5FD !important;
+            font-weight: 600 !important;
+            font-size: 11px !important;
+        }
     </style>
     <link rel="icon" type="image/png" href="<?= APP_URL ?>/<?= htmlspecialchars($settings['logo_url']) ?>">
     
