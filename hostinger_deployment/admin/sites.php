@@ -16,6 +16,20 @@ require_admin_auth();
 $pageTitle = "Patrol Sites & QR Checkpoints";
 $pageSubtitle = "Manage physical buildings, facilities, and cryptographic access QR tokens (500+ Sites Supported)";
 $db = get_db();
+
+// Self-healing: Ensure required tables and schema compatibility
+try {
+    $db->exec("CREATE TABLE IF NOT EXISTS `guard_site_assignments` (
+      `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      `guard_id` INT UNSIGNED NOT NULL,
+      `site_id` INT UNSIGNED NOT NULL,
+      `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY `uniq_guard_site` (`guard_id`,`site_id`),
+      INDEX `idx_assignment_guard` (`guard_id`),
+      INDEX `idx_assignment_site` (`site_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+} catch (\Throwable $e) {}
+
 $msg = '';
 $msgType = 'success';
 
@@ -169,9 +183,17 @@ if ($page > $totalPages && $totalSites > 0) {
 $offset = ($page - 1) * $perPage;
 
 // Fetch Paginated Sites using B-Tree index scan
+$guardCountSql = "0 as guard_count";
+try {
+    $checkGsa = $db->query("SHOW TABLES LIKE 'guard_site_assignments'")->fetch();
+    if ($checkGsa) {
+        $guardCountSql = "(SELECT COUNT(*) FROM guard_site_assignments a WHERE a.site_id = s.id) as guard_count";
+    }
+} catch (\Throwable $e) {}
+
 $sql = "
     SELECT s.*,
-           (SELECT COUNT(*) FROM guard_site_assignments a WHERE a.site_id = s.id) as guard_count,
+           " . $guardCountSql . ",
            (SELECT COUNT(*) FROM incidents i WHERE i.site_id = s.id AND i.deleted_at IS NULL) as incident_count
     FROM sites s
     {$whereSql}
