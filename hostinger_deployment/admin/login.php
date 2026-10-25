@@ -14,17 +14,6 @@ if (!empty($_SESSION['uss_admin_logged_in']) && !empty($_SESSION['admin_id'])) {
     exit;
 }
 
-// Local quick login helper for development / browser inspection
-if (!empty($isLocal) && (isset($_GET['quick_login']) || isset($_GET['auto']))) {
-    $_SESSION['uss_admin_logged_in'] = true;
-    $_SESSION['admin_id'] = 1;
-    $_SESSION['admin_username'] = 'superadmin';
-    $_SESSION['admin_name'] = 'System Administrator';
-    $_SESSION['admin_last_activity'] = time();
-    header("Location: " . APP_URL . "/admin/dashboard.php");
-    exit;
-}
-
 $settings = get_system_settings();
 $error = '';
 $info = '';
