@@ -955,6 +955,26 @@ INSERT INTO `guards` (`id`, `staff_id`, `full_name`, `designation`, `is_supervis
 ('303', 'USS-GRD-249', 'Bikash Sen', 'Security Officer', '0', '2', 'guard.bikash249', '$2y$10$MFoKH4myqJUkwiRLAcaj3.EYpRs5AzhxauU8Y686AF3iyd87t7A7.', '1', NULL, '2026-10-25 13:45:46', '2026-10-25 13:45:46'),
 ('304', 'USS-GRD-250', 'Inder Pandey', 'Security Officer', '0', '2', 'guard.inder250', '$2y$10$0Uk2qrCaFJeP/3/TnEYTXe8F64nwvK2AbRaePx8F8UFRNPbpNyD8O', '1', NULL, '2026-10-25 13:45:46', '2026-10-25 13:45:46');
 
+DROP TABLE IF EXISTS `guard_site_assignments`;
+CREATE TABLE `guard_site_assignments` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `guard_id` int(10) unsigned NOT NULL,
+  `site_id` int(10) unsigned NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_guard_site` (`guard_id`,`site_id`),
+  KEY `idx_assignment_guard` (`guard_id`),
+  KEY `idx_assignment_site` (`site_id`),
+  CONSTRAINT `fk_assignment_guard` FOREIGN KEY (`guard_id`) REFERENCES `guards` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_assignment_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `guard_site_assignments` (`id`, `guard_id`, `site_id`, `created_at`) VALUES
+('6', '3', '2', '2026-10-20 19:35:29'),
+('7', '4', '2', '2026-10-20 19:45:55'),
+('10', '2', '3', '2026-10-20 19:59:29'),
+('11', '2', '2', '2026-10-20 19:59:29');
+
 DROP TABLE IF EXISTS `supervisor_duties`;
 CREATE TABLE `supervisor_duties` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
