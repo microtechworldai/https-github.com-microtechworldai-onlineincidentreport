@@ -14,6 +14,12 @@ if (defined('USS_CONFIG_LOADED')) {
 }
 define('USS_CONFIG_LOADED', true);
 
+// Keep host-specific credentials outside the deployable source tree.
+$localConfigPath = __DIR__ . '/config.local.php';
+if (is_file($localConfigPath)) {
+    require_once $localConfigPath;
+}
+
 // 1. Error Reporting (Set to false / 0 in strict production)
 define('APP_DEBUG', false);
 if (APP_DEBUG) {
@@ -46,19 +52,23 @@ if ($isLocal) {
     define('DB_PASS', '');
     define('DB_CHARSET', 'utf8mb4');
 } else {
-    // Hostinger Production Credentials (Configure for Hostinger)
+    // ====================================================================
+    // HOSTINGER DATABASE CREDENTIALS
+    // ====================================================================
     define('DB_HOST', 'localhost');
     define('DB_PORT', 3306);
-    define('DB_NAME', 'u211560622_superadmin');  // Replace with your Hostinger DB name (e.g. u123456789_incidents)
-    define('DB_USER', 'u211560622_superadmin');      // Replace with your Hostinger DB user
-    define('DB_PASS', 'YourStrongDbPassword123!');  // Replace with your Hostinger DB password
+    define('DB_NAME', 'u211560622_superadmin');
+    define('DB_USER', 'u211560622_superadmin');
+    define('DB_PASS', ''); // <--- TYPE YOUR DATABASE PASSWORD BETWEEN THESE QUOTES
     define('DB_CHARSET', 'utf8mb4');
 }
 
 // 3. Application Domain & URLs
 // Set to your Hostinger subdomain (e.g. 'https://incidents.sprinzo.in')
 // If empty, auto-detects current protocol and host
-define('APP_URL_OVERRIDE', ''); 
+if (!defined('APP_URL_OVERRIDE')) {
+    define('APP_URL_OVERRIDE', getenv('USS_APP_URL') ?: '');
+}
 
 // 4. Timezone & Security
 define('DEFAULT_TIMEZONE', 'Asia/Dubai');
@@ -208,4 +218,3 @@ function get_base_url() {
     return rtrim($protocol . $host . $scriptDir, '/');
 }
 define('APP_URL', get_base_url());
-
