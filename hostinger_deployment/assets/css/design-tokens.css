@@ -190,33 +190,36 @@
   --chip-low-text: #1B6E41;
 }
 
-/* 4. DARK THEME TOKENS */
+/* 4. DARK THEME TOKENS (NEXORA CRM REFERENCE INSPIRATION) */
 [data-theme="dark"] {
-  --sidebar-bg: #FFFFFF;
-  --sidebar-text: #0F172A;
-  --sidebar-muted: #64748B;
-  --sidebar-item-text: #334155;
-  --sidebar-hover: #F1F5F9;
-  --sidebar-hover-text: #0F172A;
-  --sidebar-active-bg: #FF5A1F;
-  --sidebar-active-text: #FFFFFF;
-  --sidebar-active-icon: #FFFFFF;
-  --sidebar-active-shadow: 0 4px 14px rgba(255, 90, 31, 0.4);
-  --sidebar-divider: #E2E8F0;
-  --sidebar-footer-bg: #F8FAFC;
+  /* Left Sidebar in Dark Theme - Deep Midnight Navy & Teal/Cyan Active Pill */
+  --sidebar-bg: #0B192C;                     /* Nexora Deep Midnight Navy */
+  --sidebar-text: #FFFFFF;                   /* Crisp White Brand Header */
+  --sidebar-muted: #64748B;                  /* Soft Slate Category & Section Headers */
+  --sidebar-item-text: #8FA0B5;              /* Soft Slate-Blue Inactive Menu Items */
+  --sidebar-hover: rgba(255, 255, 255, 0.08); /* Translucent Modern Navy Hover */
+  --sidebar-hover-text: #FFFFFF;             /* Pure White on Hover */
+  --sidebar-active-bg: #0E7490;              /* Nexora Teal/Cyan Selection Pill */
+  --sidebar-active-text: #FFFFFF;            /* Pure White Active Text */
+  --sidebar-active-icon: #FFFFFF;            /* Pure White Active Icon */
+  --sidebar-active-shadow: 0 4px 14px rgba(14, 116, 144, 0.40); /* Radiant Teal Glow */
+  --sidebar-divider: rgba(255, 255, 255, 0.08); /* Crisp Subtle Divider */
+  --sidebar-footer-bg: rgba(0, 0, 0, 0.25);  /* Deep Subdued Admin Footer */
 
-  --dashboard-bg: #0B1320;
-  --card-bg: #111C2E;
+  /* Dashboard Canvas & Cards in Dark Theme */
+  --dashboard-bg: #0B1320;                  /* Rich Executive Dark Navy Canvas */
+  --card-bg: #111C2E;                       /* Elevated Midnight Card Surface */
   --card-bg-hover: #16243B;
-  --card-border: rgba(255, 255, 255, 0.08);
-  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --card-border: rgba(255, 255, 255, 0.08); /* Crisp Subtle Card Border */
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.45);
   --border-color: rgba(255, 255, 255, 0.08);
   --border-subtle: rgba(255, 255, 255, 0.08);
 
-  --header-bg: #0E1829;
+  --header-bg: #0E1829;                     /* Midnight Top Header */
   --header-border: rgba(255, 255, 255, 0.08);
-  --header-title: #F8FAFC;
-  --header-sub: #94A3B8;
+  --header-title: #F8FAFC;                  /* Crisp White Header Title */
+  --header-sub: #94A3B8;                    /* Readable Slate Subtitle */
 
   --table-th-bg: #0E1829;
   --table-th-text: #94A3B8;
@@ -228,26 +231,28 @@
   --input-bg: #111C2E;
   --input-border: #2A3A52;
   --input-text: #F8FAFC;
+  --input-focus-border: #0E7490;
+  --input-focus-ring: rgba(14, 116, 144, 0.25);
 
-  --bg: #0F1417;            /* Never pure pitch black */
-  --surface: #172024;
-  --surface-2: #1D2A2F;
-  --border: #2F3E44;
-  --border-strong: #6B7F87; /* 4.1:1 on surface */
-  --text: #E6EEF0;          /* 14.1:1 on surface */
-  --text-2: #B4C3C9;        /* 9.1:1 on surface */
-  --text-muted: #93A4AB;    /* 6.4:1 on surface */
-  --heading: #F2F7F8;       /* 15.3:1 on surface */
-  --primary: #2F7478;       /* 5.4:1 with white text */
-  --primary-hover: #3A8C91;
-  --link: #6CC4CC;          /* 8.2:1 on surface */
-  --header-band: #0B1A2B;
-  --accent: #4FB3BA;
-  --success: #5CC78A;       /* 7.9:1 on surface */
-  --warning: #F0B060;       /* 8.7:1 on surface */
-  --danger: #FF8E85;        /* 7.5:1 on surface */
-  --info: #8AB4E8;          /* 7.7:1 on surface */
-  --focus: #6CC4CC;
+  --bg: #0B1320;
+  --surface: #111C2E;
+  --surface-2: #16243B;
+  --border: #2A3A52;
+  --border-strong: #475569;
+  --text: #F1F5F9;
+  --text-2: #94A3B8;
+  --text-muted: #64748B;
+  --heading: #F8FAFC;
+  --primary: #0E7490;
+  --primary-hover: #0891B2;
+  --link: #38BDF8;
+  --header-band: #0B192C;
+  --accent: #06B6D4;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #38BDF8;
+  --focus: #0E7490;
 
   --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   --modal-overlay: rgba(0, 0, 0, 0.75);
@@ -271,8 +276,8 @@
   --chip-high-text: #F5A25D;
   --chip-medium-bg: rgba(240, 176, 96, 0.16);
   --chip-medium-text: #F0B060;
-  --chip-low-bg: rgba(92, 199, 138, 0.16);
-  --chip-low-text: #5CC78A;
+  --chip-low-bg: rgba(16, 185, 129, 0.16);
+  --chip-low-text: #10B981;
 }
 
 /* 5. ALWAYS-LIGHT PRINT & EXPORT OVERRIDE */

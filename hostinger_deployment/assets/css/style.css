@@ -725,17 +725,7 @@ body {
   color: #ca8a04 !important;
 }
 
-[data-theme="dark"] .nav-item.active,
-[data-theme="dark"] .sidebar-nav .nav-item.active {
-  background: linear-gradient(90deg, rgba(251, 191, 36, 0.25) 0%, rgba(251, 191, 36, 0.05) 100%) !important;
-  color: #fbbf24 !important;
-  border-left: 3.5px solid #fbbf24 !important;
-}
-
-[data-theme="dark"] .nav-item.active svg,
-[data-theme="dark"] .sidebar-nav .nav-item.active svg {
-  color: #fbbf24 !important;
-}
+/* legacy dark nav active override cleaned to use enterprise tokens */
 
 .nav-item svg {
   width: 18px;
@@ -2805,4 +2795,82 @@ aside.app-sidebar {
   .uae-time-box {
     display: none !important;
   }
+}
+
+/* --- DARK THEME OVERRIDES FOR SIDEBAR (NEXORA CRM REFERENCE) --- */
+[data-theme="dark"] .app-sidebar,
+[data-theme="dark"] aside.app-sidebar {
+  background: var(--sidebar-bg) !important;
+  border-right: 1px solid var(--sidebar-divider) !important;
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="dark"] .brand-logo-frame {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] .brand-company,
+[data-theme="dark"] .brand-title .brand-company {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .brand-sub {
+  color: #38BDF8 !important;
+}
+
+[data-theme="dark"] .nav-section-title {
+  color: var(--sidebar-muted) !important;
+}
+
+[data-theme="dark"] .sidebar-nav .nav-item {
+  color: var(--sidebar-item-text) !important;
+}
+
+[data-theme="dark"] .sidebar-nav .nav-item svg {
+  color: var(--sidebar-item-text) !important;
+  stroke: var(--sidebar-item-text) !important;
+}
+
+[data-theme="dark"] .sidebar-nav .nav-item:hover {
+  background: var(--sidebar-hover) !important;
+  color: var(--sidebar-hover-text) !important;
+}
+
+[data-theme="dark"] .sidebar-nav .nav-item:hover svg {
+  color: var(--sidebar-hover-text) !important;
+  stroke: var(--sidebar-hover-text) !important;
+}
+
+[data-theme="dark"] .nav-item.active,
+[data-theme="dark"] .sidebar-nav .nav-item.active {
+  background: var(--sidebar-active-bg) !important;
+  color: var(--sidebar-active-text) !important;
+  box-shadow: var(--sidebar-active-shadow) !important;
+  font-weight: 700 !important;
+  border: none !important;
+}
+
+[data-theme="dark"] .nav-item.active svg,
+[data-theme="dark"] .sidebar-nav .nav-item.active svg {
+  color: var(--sidebar-active-icon) !important;
+  stroke: var(--sidebar-active-icon) !important;
+}
+
+[data-theme="dark"] .admin-avatar {
+  background: linear-gradient(135deg, #0E7490 0%, #06B6D4 100%) !important;
+  box-shadow: 0 2px 10px rgba(14, 116, 144, 0.35) !important;
+}
+
+[data-theme="dark"] .sidebar-footer {
+  background: var(--sidebar-footer-bg) !important;
+  border-top: 1px solid var(--sidebar-divider) !important;
+}
+
+[data-theme="dark"] .admin-meta .name {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .admin-meta .role {
+  color: var(--sidebar-item-text) !important;
 }
