@@ -38,6 +38,55 @@
 
 /* 2. UNIVERSAL DESIGN TOKENS */
 :root {
+  /* ====================================================================
+   * MASTER REDESIGN TOKENS (PickShipHub & Nexora CRM Reference Inspiration)
+   * ==================================================================== */
+  --sidebar-w: 260px;
+  --header-h: 70px;
+  --sidebar-bg: #0B192C;                     /* Deep Executive Midnight Navy */
+  --sidebar-text: #F8FAFC;                   /* Crisp White Brand & Section Header */
+  --sidebar-muted: #94A3B8;                  /* Slate for Inactive Icons & Categories */
+  --sidebar-item-text: #CBD5E1;              /* High-Contrast Inactive Menu Text */
+  --sidebar-hover: rgba(255, 255, 255, 0.08); /* Translucent Modern Hover */
+  --sidebar-hover-text: #FFFFFF;             /* Pure White on Hover */
+  --sidebar-active-bg: #FF5A1F;              /* Radiant Solid Orange Active Pill (Reference Image 1) */
+  --sidebar-active-text: #FFFFFF;            /* Pure White Active Text */
+  --sidebar-active-icon: #FFFFFF;            /* Pure White Active Icon */
+  --sidebar-active-shadow: 0 4px 14px rgba(255, 90, 31, 0.35); /* Subtle Radiant Glow */
+  --sidebar-divider: rgba(255, 255, 255, 0.08); /* Crisp Menu Section Divider */
+  --sidebar-footer-bg: rgba(0, 0, 0, 0.22);  /* Grounded Admin Footer */
+
+  --dashboard-bg: #F4F7FB;                  /* Crisp Clean Slate-Gray Dashboard Canvas */
+  --card-bg: #FFFFFF;                       /* Pure White Dashboard Cards */
+  --card-bg-hover: #F8FAFC;
+  --card-border: #E2E8F0;                   /* Subtle Elegant Card Border */
+  --card-shadow: 0 1px 3px rgba(11, 25, 44, 0.04), 0 4px 12px rgba(11, 25, 44, 0.03);
+  --card-shadow-hover: 0 4px 8px -1px rgba(11, 25, 44, 0.06), 0 12px 24px -4px rgba(11, 25, 44, 0.08);
+  --border-color: #E2E8F0;
+  --border-subtle: #E2E8F0;
+
+  --header-bg: #FFFFFF;                     /* Clean Top Header */
+  --header-border: #E2E8F0;
+  --header-title: #0F172A;                  /* High Contrast Heading */
+  --header-sub: #64748B;                    /* Crisp Subtitle */
+
+  --brand-primary: #FF5A1F;                 /* PickShipHub Radiant Orange */
+  --brand-primary-hover: #E04B16;
+  --brand-navy: #0B192C;
+
+  --table-th-bg: #F8FAFC;
+  --table-th-text: #475569;
+  --table-th-border: #E2E8F0;
+  --table-td-border: #F1F5F9;
+  --table-hover-bg: #F8FAFC;
+  --table-text: #1E293B;
+
+  --input-bg: #FFFFFF;
+  --input-border: #CBD5E1;
+  --input-text: #0F172A;
+  --input-focus-border: #FF5A1F;
+  --input-focus-ring: rgba(255, 90, 31, 0.18);
+
   /* Typography Families */
   --font-sans: 'Noto Sans', 'Noto Sans Arabic', Arial, 'Helvetica Neue', system-ui, sans-serif;
   --font-table: 'Noto Sans Condensed', 'Arial Narrow', Arial, sans-serif;
@@ -143,6 +192,43 @@
 
 /* 4. DARK THEME TOKENS */
 [data-theme="dark"] {
+  --sidebar-bg: #060E19;
+  --sidebar-text: #F8FAFC;
+  --sidebar-muted: #8FA0B5;
+  --sidebar-item-text: #CBD5E1;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-hover-text: #FFFFFF;
+  --sidebar-active-bg: #FF5A1F;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-icon: #FFFFFF;
+  --sidebar-active-shadow: 0 4px 14px rgba(255, 90, 31, 0.4);
+  --sidebar-divider: rgba(255, 255, 255, 0.08);
+  --sidebar-footer-bg: rgba(0, 0, 0, 0.35);
+
+  --dashboard-bg: #0B1320;
+  --card-bg: #111C2E;
+  --card-bg-hover: #16243B;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+
+  --header-bg: #0E1829;
+  --header-border: rgba(255, 255, 255, 0.08);
+  --header-title: #F8FAFC;
+  --header-sub: #94A3B8;
+
+  --table-th-bg: #0E1829;
+  --table-th-text: #94A3B8;
+  --table-th-border: rgba(255, 255, 255, 0.08);
+  --table-td-border: rgba(255, 255, 255, 0.05);
+  --table-hover-bg: rgba(255, 255, 255, 0.03);
+  --table-text: #E2E8F0;
+
+  --input-bg: #111C2E;
+  --input-border: #2A3A52;
+  --input-text: #F8FAFC;
+
   --bg: #0F1417;            /* Never pure pitch black */
   --surface: #172024;
   --surface-2: #1D2A2F;

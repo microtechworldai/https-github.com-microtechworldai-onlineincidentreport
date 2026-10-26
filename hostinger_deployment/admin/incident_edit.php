@@ -114,9 +114,9 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div style="max-width: 900px; margin: 0 auto;">
     <!-- Header Banner Styled matching Image 1: #081426 background & #fbbf24 gold text -->
-    <div style="background: #081426 !important; color: #fbbf24 !important; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid rgba(251, 191, 36, 0.35); box-shadow: 0 4px 12px rgba(0,0,0,0.18);">
+    <div style="background: #081426 !important; color: var(--brand-primary); padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid rgba(251, 191, 36, 0.35); box-shadow: 0 4px 12px rgba(0,0,0,0.18);">
         <div>
-            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 800; color: #fbbf24 !important;">Edit Incident Report</div>
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 800; color: var(--brand-primary);">Edit Incident Report</div>
             <h2 style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 800; color: #ffffff !important; margin: 3px 0 0 0; letter-spacing: 0.5px;">
                 <?= htmlspecialchars($incident['ref_number']) ?>
             </h2>
@@ -229,7 +229,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="card incident-edit-card">
         <form method="POST" action="">
                         <!-- Section Heading 1: Incident Timeline & Priority -->
-            <h4 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 9px 14px; border-radius: 6px; margin-bottom: 16px; display: block; border-left: 4px solid #fbbf24;">Incident Timeline &amp; Priority</h4>
+            <h4 class="section-header-banner">Incident Timeline &amp; Priority</h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
                 <div class="form-group">
                     <label class="form-label">Incident Date (dd/mm/yyyy)</label>
@@ -273,7 +273,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
                         <!-- Section Heading 2: Classification & Triggers -->
-            <h4 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 9px 14px; border-radius: 6px; margin-top: 22px; margin-bottom: 16px; display: block; border-left: 4px solid #fbbf24;">Classification &amp; Triggers</h4>
+            <h4 class="section-header-banner">Classification &amp; Triggers</h4>
             <!-- Main Causes -->
             <div class="form-group">
                 <label class="form-label">Main Causes</label>
@@ -329,7 +329,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
                         <!-- Section Heading 3: Executive Summary & Narrative -->
-            <h4 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 9px 14px; border-radius: 6px; margin-top: 22px; margin-bottom: 16px; display: block; border-left: 4px solid #fbbf24;">Executive Summary &amp; Narrative Description</h4>
+            <h4 class="section-header-banner">Executive Summary &amp; Narrative Description</h4>
             <!-- Summary -->
             <div class="form-group">
                 <label class="form-label">Executive Summary Line</label>
