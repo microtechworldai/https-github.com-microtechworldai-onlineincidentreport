@@ -43,18 +43,18 @@
    * ==================================================================== */
   --sidebar-w: 260px;
   --header-h: 70px;
-  --sidebar-bg: #0B192C;                     /* Deep Executive Midnight Navy */
-  --sidebar-text: #F8FAFC;                   /* Crisp White Brand & Section Header */
-  --sidebar-muted: #94A3B8;                  /* Slate for Inactive Icons & Categories */
-  --sidebar-item-text: #CBD5E1;              /* High-Contrast Inactive Menu Text */
-  --sidebar-hover: rgba(255, 255, 255, 0.08); /* Translucent Modern Hover */
-  --sidebar-hover-text: #FFFFFF;             /* Pure White on Hover */
+  --sidebar-bg: #FFFFFF;                     /* Deep Executive Midnight Navy */
+  --sidebar-text: #0F172A;                   /* Crisp White Brand & Section Header */
+  --sidebar-muted: #64748B;                  /* Slate for Inactive Icons & Categories */
+  --sidebar-item-text: #334155;              /* High-Contrast Inactive Menu Text */
+  --sidebar-hover: #F1F5F9; /* Translucent Modern Hover */
+  --sidebar-hover-text: #0F172A;             /* Pure White on Hover */
   --sidebar-active-bg: #FF5A1F;              /* Radiant Solid Orange Active Pill (Reference Image 1) */
   --sidebar-active-text: #FFFFFF;            /* Pure White Active Text */
   --sidebar-active-icon: #FFFFFF;            /* Pure White Active Icon */
   --sidebar-active-shadow: 0 4px 14px rgba(255, 90, 31, 0.35); /* Subtle Radiant Glow */
-  --sidebar-divider: rgba(255, 255, 255, 0.08); /* Crisp Menu Section Divider */
-  --sidebar-footer-bg: rgba(0, 0, 0, 0.22);  /* Grounded Admin Footer */
+  --sidebar-divider: #E2E8F0; /* Crisp Menu Section Divider */
+  --sidebar-footer-bg: #F8FAFC;  /* Grounded Admin Footer */
 
   --dashboard-bg: #F4F7FB;                  /* Crisp Clean Slate-Gray Dashboard Canvas */
   --card-bg: #FFFFFF;                       /* Pure White Dashboard Cards */
@@ -192,18 +192,18 @@
 
 /* 4. DARK THEME TOKENS */
 [data-theme="dark"] {
-  --sidebar-bg: #060E19;
-  --sidebar-text: #F8FAFC;
-  --sidebar-muted: #8FA0B5;
-  --sidebar-item-text: #CBD5E1;
-  --sidebar-hover: rgba(255, 255, 255, 0.08);
-  --sidebar-hover-text: #FFFFFF;
+  --sidebar-bg: #FFFFFF;
+  --sidebar-text: #0F172A;
+  --sidebar-muted: #64748B;
+  --sidebar-item-text: #334155;
+  --sidebar-hover: #F1F5F9;
+  --sidebar-hover-text: #0F172A;
   --sidebar-active-bg: #FF5A1F;
   --sidebar-active-text: #FFFFFF;
   --sidebar-active-icon: #FFFFFF;
   --sidebar-active-shadow: 0 4px 14px rgba(255, 90, 31, 0.4);
-  --sidebar-divider: rgba(255, 255, 255, 0.08);
-  --sidebar-footer-bg: rgba(0, 0, 0, 0.35);
+  --sidebar-divider: #E2E8F0;
+  --sidebar-footer-bg: #F8FAFC;
 
   --dashboard-bg: #0B1320;
   --card-bg: #111C2E;
