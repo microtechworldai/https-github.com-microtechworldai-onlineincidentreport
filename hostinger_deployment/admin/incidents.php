@@ -263,16 +263,16 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="table-container">
         <table class="data-table">
             <thead>
-                <tr style="background: #081426 !important;">
-                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase;">Ref Number</th>
-                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase;">Site</th>
-                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase;">Reported By</th>
-                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase;">Date & Shift</th>
-                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase;">Summary</th>
-                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase;">Priority</th>
-                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase;">Status</th>
-                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase;">Photos</th>
-                    <th style="background: #081426 !important; color: #fbbf24 !important; font-weight: 800 !important; font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase; text-align: right;">Actions</th>
+                <tr>
+                    <th>Ref Number</th>
+                    <th>Site</th>
+                    <th>Reported By</th>
+                    <th>Date & Shift</th>
+                    <th>Summary</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Photos</th>
+                    <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody id="incidentsTableBody">
@@ -404,7 +404,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php if ($p <= $totalPages || $p <= 6): ?>
                     <a href="<?= htmlspecialchars($buildPageUrl($p)) ?>" 
                        class="btn <?= $p === $page ? 'btn-primary' : 'btn-secondary' ?> btn-sm" 
-                       style="min-width: 34px; text-align: center; font-weight: <?= $p === $page ? '800' : '600' ?>; <?= $p === $page ? 'background: #081426 !important; color: #fbbf24 !important; border: 1.5px solid #fbbf24 !important;' : '' ?>">
+                       style="min-width: 34px; text-align: center; font-weight: <?= $p === $page ? '800' : '600' ?>;">
                         <?= $p ?>
                     </a>
                 <?php endif; ?>

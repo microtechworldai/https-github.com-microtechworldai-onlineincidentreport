@@ -230,9 +230,9 @@ require_once __DIR__ . '/../includes/header.php';
     <div>
         <div class="card" style="margin-bottom: 24px;">
             <!-- Reference Header Banner (Image 1 Theme: #081426 background & #fbbf24 gold text) -->
-            <div style="background: #081426 !important; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid rgba(251, 191, 36, 0.35); box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+            <div class="live-patrol-banner" style="margin-bottom: 20px;">
                 <div>
-                    <span style="display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: 1.2px; color: #fbbf24 !important; font-weight: 800;">Official Reference</span>
+                    <span style="display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--brand-primary); font-weight: 800;">Official Reference</span>
                     <h2 style="font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 800; color: #ffffff !important; margin: 4px 0 0 0; letter-spacing: 0.5px;">
                         <?= htmlspecialchars($incident['ref_number']) ?>
                     </h2>
@@ -277,7 +277,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Category Classifications -->
             <div style="margin-bottom: 24px;">
-                <h4 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 9px 14px; border-radius: 6px; margin-bottom: 12px; display: block; border-left: 4px solid #fbbf24;">Classification &amp; Triggers</h4>
+                <h4 class="section-header-banner">Classification &amp; Triggers</h4>
                 
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <div>
@@ -321,12 +321,12 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Summary & Detailed Description -->
             <div style="margin-bottom: 24px;">
-                <h4 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 9px 14px; border-radius: 6px; margin-bottom: 10px; display: block; border-left: 4px solid #fbbf24;">Executive Summary</h4>
+                <h4 class="section-header-banner">Executive Summary</h4>
                 <div style="background: var(--bg-card-hover); border: 1px solid var(--border-subtle); padding: 14px 18px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; margin-bottom: 18px;">
                     <?= htmlspecialchars($incident['summary_line']) ?>
                 </div>
 
-                <h4 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 9px 14px; border-radius: 6px; margin-bottom: 10px; display: block; border-left: 4px solid #fbbf24;">Patrol Officer Narrative (Detailed Occurrence)</h4>
+                <h4 class="section-header-banner">Patrol Officer Narrative (Detailed Occurrence)</h4>
                 <div style="background: var(--bg-card-hover); border: 1px solid var(--border-subtle); padding: 18px; border-radius: var(--radius-sm); font-size: 14.5px; line-height: 1.7;">
 <?= render_rich_description($incident['description']) ?>
                 </div>
@@ -334,7 +334,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Attached Photographic Evidence Gallery -->
             <div>
-                <h4 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 9px 14px; border-radius: 6px; margin-bottom: 12px; display: block; border-left: 4px solid #fbbf24;">Attached Photographic Evidence (<?= count($photos) ?> / <?= MAX_PHOTOS_PER_INCIDENT ?>)</h4>
+                <h4 class="section-header-banner">Attached Photographic Evidence (<?= count($photos) ?> / <?= MAX_PHOTOS_PER_INCIDENT ?>)</h4>
 
                 <?php if (empty($photos)): ?>
                     <p style="font-size: 13px; color: var(--text-dim); font-style: italic;">No photographic evidence was attached to this report.</p>
@@ -408,7 +408,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div>
         <!-- Management Sign-Off Box -->
         <div class="card" style="margin-bottom: 24px;">
-            <h3 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border-left: 4px solid #fbbf24;">✍️ Official Management Sign-Off</h3>
+            <h3 class="section-header-banner">✍️ Official Management Sign-Off</h3>
 
             <form method="POST" action="" enctype="multipart/form-data">
                 <input type="hidden" name="update_management" value="1">
@@ -526,7 +526,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <!-- Internal Notes Box -->
         <div class="card">
-            <h3 style="background: #081426 !important; color: #fbbf24 !important; font-size: 13.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border-left: 4px solid #fbbf24;">💬 Internal Audit Notes</h3>
+            <h3 class="section-header-banner">💬 Internal Audit Notes</h3>
 
             <form method="POST" action="" style="margin-bottom: 18px;">
                 <input type="hidden" name="add_note" value="1">

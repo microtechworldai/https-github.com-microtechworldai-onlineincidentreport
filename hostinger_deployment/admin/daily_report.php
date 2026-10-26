@@ -192,7 +192,7 @@ require_once __DIR__ . '/../includes/header.php';
             <span style="font-size: 12.5px; color: var(--text-muted);">
                 Showing <strong><?= count($incidents) ?></strong> of <strong><?= $totalConsolidatedCount ?></strong> logged incident<?= $totalConsolidatedCount !== 1 ? 's' : '' ?>
                 <?php if ($totalPages > 1): ?>
-                    &bull; <span style="color: #fbbf24; font-weight: 700;">Page <?= $page ?> of <?= $totalPages ?></span>
+                    &bull; <span style="color: var(--brand-primary); font-weight: 700;">Page <?= $page ?> of <?= $totalPages ?></span>
                 <?php endif; ?>
             </span>
         </div>
@@ -230,7 +230,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         </a>
                                     </div>
                                 <?php else: ?>
-                                    <div style="font-size: 15px; font-weight: 800; color: #fbbf24; margin-bottom: 4px;">
+                                    <div style="font-size: 15px; font-weight: 800; color: var(--brand-primary); margin-bottom: 4px;">
                                         NO INCIDENTS ON PAGE <?= $page ?>
                                     </div>
                                     <div style="font-size: 13px; color: var(--text-dim); margin-top: 8px;">
@@ -293,7 +293,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div style="font-size: 13px; color: var(--text-muted);">
                 Showing <strong style="color: #fff;"><?= $totalConsolidatedCount > 0 ? ($offset + 1) : 0 ?></strong>–<strong style="color: #fff;"><?= min($totalConsolidatedCount, $offset + count($incidents)) ?></strong> of <strong style="color: #fff;"><?= number_format($totalConsolidatedCount) ?></strong> consolidated incident<?= $totalConsolidatedCount !== 1 ? 's' : '' ?>
                 <?php if ($totalPages > 1): ?>
-                    <span style="color: #fbbf24; font-weight: 700; margin-left: 6px;">(Page <?= $page ?> of <?= $totalPages ?>)</span>
+                    <span style="color: var(--brand-primary); font-weight: 700; margin-left: 6px;">(Page <?= $page ?> of <?= $totalPages ?>)</span>
                 <?php endif; ?>
             </div>
 
@@ -321,7 +321,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php if ($p <= $totalPages || $p <= 6): ?>
                         <a href="<?= htmlspecialchars($buildConsolidatedUrl($p)) ?>" 
                            class="btn <?= $p === $page ? 'btn-primary' : 'btn-secondary' ?> btn-sm" 
-                           style="min-width: 34px; text-align: center; font-weight: <?= $p === $page ? '800' : '600' ?>; <?= $p === $page ? 'background: #081426 !important; color: #fbbf24 !important; border: 1.5px solid #fbbf24 !important;' : '' ?>">
+                           style="min-width: 34px; text-align: center; font-weight: <?= $p === $page ? '800' : '600' ?>;">
                             <?= $p ?>
                         </a>
                     <?php endif; ?>

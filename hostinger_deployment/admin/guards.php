@@ -297,7 +297,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <button type="submit" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px; font-weight: 700;">Search</button>
             </form>
 
-            <button class="btn btn-sm" onclick="document.getElementById('addGuardModal').style.display='flex'" style="background: #fbbf24; color: #081426; font-weight: 800; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 12.5px; display: inline-flex; align-items: gap: 4px;">
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('addGuardModal').style.display='flex'" style="cursor: pointer;">
                 + Create Guard Account
             </button>
         </div>

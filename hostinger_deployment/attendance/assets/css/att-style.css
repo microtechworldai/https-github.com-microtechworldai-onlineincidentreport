@@ -49,16 +49,17 @@ body.att-body {
 
 /* Header & Top Navigation */
 .att-topbar {
-  background: linear-gradient(135deg, #005f73 0%, #0a9396 100%);
+  background: var(--sidebar-bg, #0B192C);
   color: #ffffff;
-  padding: 8px 16px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 12px rgba(11, 25, 44, 0.15);
   position: sticky;
   top: 0;
   z-index: 100;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .att-topbar-left {
@@ -91,9 +92,16 @@ body.att-body {
   background: rgba(255,255,255,0.08);
 }
 
-.att-nav-btn:hover, .att-nav-btn.att-active {
-  background: rgba(255,255,255,0.25);
+.att-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
+}
+
+.att-nav-btn.att-active {
+  background: var(--sidebar-active-bg, #FF5A1F) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(255, 90, 31, 0.35);
+  font-weight: 700;
 }
 
 .att-nav-btn.att-back {
