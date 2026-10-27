@@ -33,12 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function flushSaveQueue() {
         if (saveQueue.length === 0) {
             isSaving = false;
-            setStatus('saved', '✓ Stored in Database (MySQL)');
+            setStatus('saved', '● Stored in Database (MySQL)');
             return;
         }
 
         isSaving = true;
-        setStatus('saving', 'Saving...');
+        setStatus('saving', 'Saving changes...');
         const item = saveQueue.shift();
 
         const formData = new FormData();
@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     input.classList.remove('att-cell-conflict');
                 }
                 recalculateColumn(item.day);
+                recalculateMonthTotals();
             } else {
                 setStatus('error', 'Error: ' + (data.error || 'Failed to save'));
 
@@ -90,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showDuplicateWarning(data.error);
 
                     recalculateColumn(item.day);
+                    recalculateMonthTotals();
                 } else {
                     alert(data.error || 'Failed to save');
                 }
@@ -100,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setStatus('error', 'Connection error');
         })
         .finally(() => {
-            setTimeout(flushSaveQueue, 60);
+            setTimeout(flushSaveQueue, 40);
         });
     }
 
@@ -113,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isSaving) {
                 flushSaveQueue();
             }
-        }, 120);
+        }, 50);
     }
 
     // Dynamic Recalculation of Column (Per-Day) Totals
@@ -131,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function recalculateColumn(day) {
-        const dayInputs = document.querySelectorAll(`.att-cell-input[data-day="${day}"]`);
+        const dayInputs = document.querySelectorAll(`.att-row-staff .att-cell-input[data-day="${day}"]`);
         let dayCount = 0;
         let nightCount = 0;
 
@@ -146,20 +148,54 @@ document.addEventListener('DOMContentLoaded', () => {
         const grandTotalCell = document.querySelector(`.att-col-total-grand[data-day="${day}"]`);
 
         if (dayTotalCell) {
-            dayTotalCell.textContent = dayCount || '0';
+            dayTotalCell.textContent = dayCount;
             const reqD = parseInt(dayTotalCell.dataset.reqD || '0', 10);
             updateDeploymentClass(dayTotalCell, dayCount, reqD);
+            dayTotalCell.title = `Day ${day} Day Shift: Deployed ${dayCount} / Required ${reqD}`;
         }
         if (nightTotalCell) {
-            nightTotalCell.textContent = nightCount || '0';
+            nightTotalCell.textContent = nightCount;
             const reqN = parseInt(nightTotalCell.dataset.reqN || '0', 10);
             updateDeploymentClass(nightTotalCell, nightCount, reqN);
+            nightTotalCell.title = `Day ${day} Night Shift: Deployed ${nightCount} / Required ${reqN}`;
         }
         if (grandTotalCell) {
             const grandCount = dayCount + nightCount;
-            grandTotalCell.textContent = grandCount || '0';
+            grandTotalCell.textContent = grandCount;
             const reqTotal = parseInt(grandTotalCell.dataset.reqTotal || '0', 10);
             updateDeploymentClass(grandTotalCell, grandCount, reqTotal);
+            grandTotalCell.title = `Day ${day} Total Duty: Deployed ${grandCount} / Required ${reqTotal}`;
+        }
+    }
+
+    // Dynamic Recalculation of Month Total Ribbon
+    function recalculateMonthTotals() {
+        let totalDay = 0;
+        let totalNight = 0;
+        let totalReq = 0;
+
+        document.querySelectorAll('.att-col-total-d').forEach(td => {
+            totalDay += parseInt(td.textContent || '0', 10) || 0;
+        });
+        document.querySelectorAll('.att-col-total-n').forEach(tn => {
+            totalNight += parseInt(tn.textContent || '0', 10) || 0;
+        });
+        document.querySelectorAll('.att-col-total-grand').forEach(tg => {
+            totalReq += parseInt(tg.dataset.reqTotal || '0', 10) || 0;
+        });
+
+        const totalDuties = totalDay + totalNight;
+        const elD = document.getElementById('att-month-total-d');
+        const elN = document.getElementById('att-month-total-n');
+        const elDuties = document.getElementById('att-month-total-duties');
+        const elRate = document.getElementById('att-month-delivery-rate');
+
+        if (elD) elD.textContent = totalDay;
+        if (elN) elN.textContent = totalNight;
+        if (elDuties) elDuties.textContent = totalDuties;
+        if (elRate) {
+            const pct = totalReq > 0 ? Math.round((totalDuties / totalReq) * 100) : 0;
+            elRate.textContent = pct + '%';
         }
     }
 
@@ -173,11 +209,60 @@ document.addEventListener('DOMContentLoaded', () => {
     function moveToNextDay(currentInput) {
         const currentRow = currentInput.closest('tr');
         const day = parseInt(currentInput.dataset.day, 10);
-        const nextInput = currentRow.querySelector(`.att-cell-input[data-day="${day + 1}"]`);
+        const nextInput = currentRow?.querySelector(`.att-cell-input[data-day="${day + 1}"]`);
         if (nextInput) {
             nextInput.focus();
             nextInput.select();
         }
+    }
+
+    function moveToPrevDay(currentInput) {
+        const currentRow = currentInput.closest('tr');
+        const day = parseInt(currentInput.dataset.day, 10);
+        const prevInput = currentRow?.querySelector(`.att-cell-input[data-day="${day - 1}"]`);
+        if (prevInput) {
+            prevInput.focus();
+            prevInput.select();
+        }
+    }
+
+    // Unified Cell Value Handler: Instant Real-time Calculation & Instant Auto-Save
+    function handleCellUpdate(input, requestedVal) {
+        let val = '';
+        const raw = (requestedVal !== undefined ? requestedVal : input.value).trim().toUpperCase();
+
+        if (raw === '' || raw === ' ' || raw === '-' || raw === '0') {
+            val = '';
+        } else if (raw === 'O' || raw.endsWith('O') || raw === 'OFF') {
+            val = 'OFF';
+        } else {
+            const lastChar = raw.slice(-1);
+            if (['D', 'N', 'S', 'B'].includes(lastChar)) {
+                val = lastChar;
+            } else {
+                val = '';
+            }
+        }
+
+        input.value = val;
+        applyCellColor(input, val);
+
+        const rowEl = input.closest('tr');
+        const rowId = rowEl ? rowEl.dataset.rowId : null;
+        const day = input.dataset.day;
+
+        // 1. Instant calculation & update at the exact same time
+        if (day) {
+            recalculateColumn(day);
+            recalculateMonthTotals();
+        }
+
+        // 2. Instant auto-save at the exact same time (both for adding shift and removing shift)
+        if (rowId && day) {
+            queueSave(input.parentElement, rowEl, rowId, day, val);
+        }
+
+        return val;
     }
 
     if (table && !isLocked) {
@@ -186,41 +271,23 @@ document.addEventListener('DOMContentLoaded', () => {
             applyCellColor(inp, inp.value.trim().toUpperCase());
         });
 
+        // Initial live sync of all column counts & month summary totals
+        for (let d = 1; d <= 31; d++) {
+            recalculateColumn(d);
+        }
+        recalculateMonthTotals();
+
         table.addEventListener('focusin', (e) => {
             if (e.target.classList.contains('att-cell-input')) {
                 e.target.dataset.prevVal = e.target.value.trim().toUpperCase();
+                e.target.select();
             }
         });
 
         table.addEventListener('input', (e) => {
             if (!e.target.classList.contains('att-cell-input')) return;
             const input = e.target;
-            let raw = input.value.trim().toUpperCase();
-
-            let val = '';
-            if (raw === 'O' || raw.endsWith('O')) {
-                val = 'OFF';
-            } else {
-                const lastChar = raw.slice(-1);
-                if (['D', 'N', 'S', 'B'].includes(lastChar)) {
-                    val = lastChar;
-                } else if (raw === 'OFF') {
-                    val = 'OFF';
-                } else {
-                    input.value = '';
-                    applyCellColor(input, '');
-                    return;
-                }
-            }
-
-            input.value = val;
-            applyCellColor(input, val);
-
-            const rowEl = input.closest('tr');
-            const rowId = rowEl.dataset.rowId;
-            const day = input.dataset.day;
-
-            queueSave(input.parentElement, rowEl, rowId, day, val);
+            const val = handleCellUpdate(input);
 
             if (['D', 'N', 'B', 'S', 'OFF'].includes(val)) {
                 moveToNextDay(input);
@@ -233,25 +300,47 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentRow = current.closest('tr');
             const day = parseInt(current.dataset.day, 10);
 
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                if (current.value !== '') {
+                    e.preventDefault();
+                    handleCellUpdate(current, '');
+                } else if (e.key === 'Backspace') {
+                    // Already empty: move to previous day cell
+                    e.preventDefault();
+                    moveToPrevDay(current);
+                }
+                return;
+            }
+
             let target = null;
             if (e.key === 'ArrowRight') {
-                target = currentRow.querySelector(`.att-cell-input[data-day="${day + 1}"]`);
+                target = currentRow?.querySelector(`.att-cell-input[data-day="${day + 1}"]`);
                 if (target) { e.preventDefault(); target.focus(); target.select(); }
             } else if (e.key === 'ArrowLeft') {
-                target = currentRow.querySelector(`.att-cell-input[data-day="${day - 1}"]`);
+                target = currentRow?.querySelector(`.att-cell-input[data-day="${day - 1}"]`);
                 if (target) { e.preventDefault(); target.focus(); target.select(); }
             } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
-                const nextRow = currentRow.nextElementSibling;
+                const nextRow = currentRow?.nextElementSibling;
                 if (nextRow && nextRow.classList.contains('att-row-staff')) {
                     target = nextRow.querySelector(`.att-cell-input[data-day="${day}"]`);
                     if (target) { e.preventDefault(); target.focus(); target.select(); }
                 }
             } else if (e.key === 'ArrowUp') {
-                const prevRow = currentRow.previousElementSibling;
+                const prevRow = currentRow?.previousElementSibling;
                 if (prevRow && prevRow.classList.contains('att-row-staff')) {
                     target = prevRow.querySelector(`.att-cell-input[data-day="${day}"]`);
                     if (target) { e.preventDefault(); target.focus(); target.select(); }
                 }
+            }
+        });
+
+        table.addEventListener('paste', (e) => {
+            if (!e.target.classList.contains('att-cell-input')) return;
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            const val = handleCellUpdate(e.target, text);
+            if (['D', 'N', 'B', 'S', 'OFF'].includes(val)) {
+                moveToNextDay(e.target);
             }
         });
     }

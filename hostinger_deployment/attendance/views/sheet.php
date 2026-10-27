@@ -871,7 +871,7 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                 <div class="att-chip-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b;">🎯</div>
                 <div class="att-chip-info">
                     <span class="att-chip-lbl">Contract Delivery Rate</span>
-                    <span class="att-chip-val" style="color:#10b981;"><?= $fulfillmentPct ?>%</span>
+                    <span class="att-chip-val" id="att-month-delivery-rate" style="color:#10b981;"><?= $fulfillmentPct ?>%</span>
                 </div>
             </div>
         </div>
