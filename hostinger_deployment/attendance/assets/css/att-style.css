@@ -1,35 +1,66 @@
 @import url('design-tokens.css');
 /* Universal Security Services - Attendance & Payroll Module Stylesheet */
 /* File: hostinger_deployment/attendance/assets/css/att-style.css */
-/* Strict prefix: all classes start with att- */
+/* Executive Enterprise Design System */
 
 :root {
   --att-primary: #005f73;
   --att-primary-hover: #0a9396;
+  --att-primary-gradient: linear-gradient(135deg, #094857 0%, #005f73 50%, #0a9396 100%);
   --att-accent: #ee9b00;
   --att-accent-dark: #ca6702;
-  --att-danger: #ae2012;
-  --att-danger-bg: #fdf0ed;
-  --att-warning-bg: #fff8e6;
-  --att-success: #2a9d8f;
+  --att-danger: #ef4444;
+  --att-danger-bg: rgba(239, 68, 68, 0.12);
+  --att-warning: #f59e0b;
+  --att-warning-bg: rgba(245, 158, 11, 0.12);
+  --att-success: #10b981;
+  --att-success-bg: rgba(16, 185, 129, 0.12);
+  --att-info: #0ea5e9;
+  --att-info-bg: rgba(14, 165, 233, 0.12);
   --att-bg: #f8fafc;
   --att-card-bg: #ffffff;
-  --att-text: #1e293b;
+  --att-card-border: #e2e8f0;
+  --att-text: #0f172a;
   --att-text-muted: #64748b;
-  --att-border: #000000;
-  --att-border-light: #cbd5e1;
+  --att-border: #cbd5e1;
+  --att-border-light: #e2e8f0;
+  --att-border-strong: #94a3b8;
+  --att-cell-hover: #f0fdfa;
+  --att-weekend-bg: #f8fafc;
   --att-font-condensed: "Franklin Gothic Demi Cond", "Franklin Gothic Demi", "Franklin Gothic Medium Cond", "Arial Narrow", Arial, sans-serif;
   --att-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --att-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --att-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --att-shadow-lg: 0 10px 25px rgba(15, 23, 42, 0.12);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --att-border: #94a3b8; /* Light grey border in dark mode */
-    --att-bg: #0f172a;
-    --att-card-bg: #1e293b;
-    --att-text: #f1f5f9;
-    --att-text-muted: #94a3b8;
-  }
+[data-theme="dark"] {
+  --att-primary: #0ea5e9;
+  --att-primary-hover: #38bdf8;
+  --att-primary-gradient: linear-gradient(135deg, #083344 0%, #0e4e5e 50%, #0891b2 100%);
+  --att-accent: #f59e0b;
+  --att-accent-dark: #d97706;
+  --att-danger: #f87171;
+  --att-danger-bg: rgba(239, 68, 68, 0.2);
+  --att-warning: #fbbf24;
+  --att-warning-bg: rgba(245, 158, 11, 0.2);
+  --att-success: #34d399;
+  --att-success-bg: rgba(16, 185, 129, 0.2);
+  --att-info: #38bdf8;
+  --att-info-bg: rgba(14, 165, 233, 0.2);
+  --att-bg: #0b1320;
+  --att-card-bg: #111c2e;
+  --att-card-border: rgba(255, 255, 255, 0.1);
+  --att-text: #f8fafc;
+  --att-text-muted: #94a3b8;
+  --att-border: #334155;
+  --att-border-light: rgba(255, 255, 255, 0.08);
+  --att-border-strong: #475569;
+  --att-cell-hover: rgba(56, 189, 248, 0.08);
+  --att-weekend-bg: rgba(15, 23, 42, 0.6);
+  --att-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --att-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --att-shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.6);
 }
 
 * {
@@ -39,97 +70,260 @@
 body.att-body {
   margin: 0;
   padding: 0;
-  background-color: var(--att-bg);
-  color: var(--att-text);
+  background-color: var(--att-bg) !important;
+  color: var(--att-text) !important;
   font-family: var(--att-font-body);
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Header & Top Navigation */
+/* ====================================================================
+ * 1. HEADER & GLOBAL NAVIGATION BAR
+ * ==================================================================== */
 .att-topbar {
-  background: var(--sidebar-bg, #0B192C);
+  background: linear-gradient(135deg, #0b192c 0%, #0f2540 100%);
   color: #ffffff;
-  padding: 10px 20px;
+  padding: 10px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 2px 12px rgba(11, 25, 44, 0.15);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
   position: sticky;
   top: 0;
-  z-index: 100;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .att-topbar-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 24px;
+}
+
+.att-brand-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.att-logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
 }
 
 .att-logo-badge {
-  background: rgba(255,255,255,0.15);
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
   font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.att-logo-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
 .att-nav-links {
   display: flex;
+  align-items: center;
   gap: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .att-nav-btn {
-  color: #ffffff;
+  color: #cbd5e1;
   text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-weight: 500;
-  transition: background 0.2s;
-  background: rgba(255,255,255,0.08);
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12.5px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .att-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
 }
 
 .att-nav-btn.att-active {
-  background: var(--sidebar-active-bg, #FF5A1F) !important;
+  background: #ff5a1f !important;
   color: #ffffff !important;
-  box-shadow: 0 2px 8px rgba(255, 90, 31, 0.35);
+  box-shadow: 0 2px 10px rgba(255, 90, 31, 0.45);
   font-weight: 700;
-}
-
-.att-nav-btn.att-back {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.4);
-}
-
-.att-nav-btn.att-back:hover {
-  background: rgba(255,255,255,0.15);
 }
 
 .att-topbar-right {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 12px;
 }
 
-/* Control Bar */
+.att-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.att-user-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.att-theme-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+}
+
+.att-nav-btn.att-back {
+  background: rgba(2, 132, 199, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.att-nav-btn.att-back:hover {
+  background: rgba(2, 132, 199, 0.35);
+  color: #ffffff;
+}
+
+/* ====================================================================
+ * 2. EXECUTIVE KPI RIBBON & STAT CARDS (TOP STRIP)
+ * ==================================================================== */
+.att-kpi-ribbon {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin: 14px 16px 8px 16px;
+}
+
+.att-kpi-card {
+  background: var(--att-card-bg);
+  border: 1px solid var(--att-card-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: var(--att-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.att-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--att-shadow-md);
+}
+
+.att-kpi-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+}
+
+.att-kpi-primary::before { background: #0ea5e9; }
+.att-kpi-success::before { background: #10b981; }
+.att-kpi-warning::before { background: #f59e0b; }
+.att-kpi-purple::before  { background: #8b5cf6; }
+
+.att-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.att-kpi-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--att-text-muted);
+}
+
+.att-kpi-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.att-tag-green { background: var(--att-success-bg); color: var(--att-success); }
+.att-tag-amber { background: var(--att-warning-bg); color: var(--att-warning); }
+.att-tag-blue  { background: var(--att-info-bg); color: var(--att-info); }
+.att-tag-red   { background: var(--att-danger-bg); color: var(--att-danger); }
+
+.att-kpi-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--att-text);
+  line-height: 1.2;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.att-kpi-subval {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--att-text-muted);
+}
+
+.att-kpi-meta {
+  font-size: 12px;
+  color: var(--att-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ====================================================================
+ * 3. MODERN CONTROL & ACTION TOOLBAR
+ * ==================================================================== */
 .att-controlbar {
   background: var(--att-card-bg);
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--att-border-light);
+  padding: 12px 18px;
+  margin: 0 16px 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--att-card-border);
+  box-shadow: var(--att-shadow-sm);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
 }
 
 .att-filters {
@@ -140,19 +334,21 @@ body.att-body {
 }
 
 .att-select, .att-input {
-  padding: 5px 10px;
-  border: 1px solid #94a3b8;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--att-border);
+  border-radius: 7px;
   font-size: 13px;
   font-family: inherit;
-  background-color: #ffffff;
-  color: #111;
+  font-weight: 600;
+  background-color: var(--att-card-bg);
+  color: var(--att-text);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .att-select:focus, .att-input:focus {
   outline: none;
-  border-color: var(--att-primary);
-  box-shadow: 0 0 0 2px rgba(0, 95, 115, 0.2);
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25);
 }
 
 .att-actions {
@@ -166,435 +362,540 @@ body.att-body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
   cursor: pointer;
   text-decoration: none;
-  border: none;
-  transition: all 0.15s ease-in-out;
+  border: 1px solid transparent;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.att-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
 .att-btn-primary {
-  background: var(--att-primary);
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
   color: #ffffff;
+  border-color: #0284c7;
 }
-
 .att-btn-primary:hover {
-  background: var(--att-primary-hover);
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  color: #ffffff;
 }
 
 .att-btn-secondary {
-  background: #e2e8f0;
-  color: #334155;
+  background: var(--att-card-bg);
+  color: var(--att-text);
+  border-color: var(--att-border);
 }
-
 .att-btn-secondary:hover {
-  background: #cbd5e1;
+  background: var(--att-cell-hover);
+  border-color: #0ea5e9;
+  color: #0ea5e9;
 }
 
 .att-btn-success {
-  background: #2a9d8f;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #ffffff;
+  border-color: #10b981;
 }
-
 .att-btn-success:hover {
-  background: #238276;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
 }
 
 .att-btn-warning {
-  background: #ee9b00;
-  color: #000000;
-}
-
-.att-btn-warning:hover {
-  background: #d48b00;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border-color: #f59e0b;
 }
 
 .att-btn-danger {
-  background: var(--att-danger);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: #ffffff;
-}
-
-.att-btn-danger:hover {
-  background: #8e1a0e;
+  border-color: #ef4444;
 }
 
 /* Save Status Indicator */
 .att-status-indicator {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 3px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-}
-
-.att-status-saving {
-  background: #fef3c7;
-  color: #92400e;
+  gap: 6px;
 }
 
 .att-status-saved {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.att-status-saving {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .att-status-error {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-/* Main Content & Table Container */
+/* ====================================================================
+ * 4. GRID WRAPPER & EXECUTIVE TABLE STYLING
+ * ==================================================================== */
 .att-container {
-  padding: 12px 16px;
+  padding: 0 16px 24px 16px;
 }
 
 .att-grid-wrapper {
-  background: #ffffff;
-  border: 2px solid var(--att-border); /* Thicker outer border around whole sheet */
+  background: var(--att-card-bg);
+  border: 2px solid var(--att-border-strong);
+  border-radius: 10px;
   overflow-x: auto;
   overflow-y: auto;
-  max-height: calc(100vh - 160px);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  max-height: calc(100vh - 180px);
+  box-shadow: var(--att-shadow-md);
   position: relative;
 }
 
-/* Table Specs: Franklin Gothic Demi Cond, font-size: 12px for body, row height: 20px */
-.att-table, .att-roster-outer-table {
+/* Custom Scrollbar for Grid */
+.att-grid-wrapper::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+.att-grid-wrapper::-webkit-scrollbar-track {
+  background: var(--att-card-bg);
+}
+.att-grid-wrapper::-webkit-scrollbar-thumb {
+  background: var(--att-border-strong);
+  border-radius: 5px;
+}
+.att-grid-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #0ea5e9;
+}
+
+.att-roster-outer-table, .att-table {
   border-collapse: collapse;
-  font-family: var(--att-font-condensed) !important;
-  font-size: 12px !important;
   width: 100%;
-  color: #000000;
-  table-layout: auto;
-  border: 2px solid var(--att-border) !important;
-}
-
-.att-table th, .att-table td, 
-.att-roster-outer-table th, .att-roster-outer-table td {
-  border: 1px solid var(--att-border) !important; /* Single black borders, locked during scroll */
-  padding: 1px 2px;
-  height: 20px;
-  text-align: center !important;
-  vertical-align: middle;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: normal;
   font-family: var(--att-font-condensed) !important;
   font-size: 12px !important;
+  color: var(--att-text);
+  table-layout: auto;
 }
 
-.att-table tr, .att-roster-outer-table tr {
-  height: 20px;
-}
-
-/* Dark Teal Title Banner: 55px height and 25px font size */
-.att-th-banner-darkteal {
-  background-color: #005f73 !important;
-  color: #ffffff !important;
-  font-weight: bold !important;
-  font-size: 25px !important;
-  height: 55px !important;
-  line-height: 55px !important;
-  letter-spacing: 0.5px;
+.att-roster-outer-table th, .att-roster-outer-table td,
+.att-table th, .att-table td {
+  border: 1px solid var(--att-border-strong) !important;
+  padding: 2px 4px;
+  height: 24px;
   text-align: center !important;
   vertical-align: middle !important;
-  border: 1px solid var(--att-border) !important;
-  padding: 0 8px !important;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-/* 1st Header Row (Emp No, Name, Site Name, Day Numbers 1 to 31): height 28px, font-size 18px, bold, column fit */
+/* Title Banner: Executive Gradient */
+.att-th-banner-darkteal {
+  height: 52px !important;
+  font-size: 20px !important;
+  line-height: 52px !important;
+  background: linear-gradient(135deg, #094857 0%, #005f73 50%, #0a9396 100%) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  letter-spacing: 0.8px;
+  border-bottom: 2px solid var(--att-accent) !important;
+  text-transform: uppercase;
+}
+
+/* 1st Header Row (Emp No, Name, Site, Day Numbers) */
 .att-th-top-row {
   height: 28px !important;
   background-color: #0a9396 !important;
   color: #ffffff !important;
-  font-weight: bold !important;
-  font-size: 18px !important;
+  font-weight: 800 !important;
+  font-size: 15px !important;
   position: sticky;
   top: 0;
   z-index: 10;
-  border: 1px solid var(--att-border) !important;
-  padding: 1px 3px !important;
-  white-space: nowrap !important;
-  text-align: center !important;
-  vertical-align: middle !important;
-  box-sizing: border-box !important;
-}
-
-.att-th-teal-sub {
-  height: 28px !important;
-  background-color: #0a9396 !important;
-  color: #ffffff !important;
-  font-weight: bold !important;
-  font-size: 14px !important;
-  border: 1px solid var(--att-border) !important;
   padding: 2px 4px !important;
-  white-space: nowrap !important;
-  text-align: center !important;
-  vertical-align: middle !important;
-  box-sizing: border-box !important;
 }
 
-.att-th-teal-weekend {
-  background-color: #007788 !important;
+/* Weekday Sub-Header Row */
+.att-th-teal-sub {
+  height: 26px !important;
+  background-color: #087f82 !important;
   color: #ffffff !important;
-  border: 1px solid var(--att-border) !important;
+  font-weight: 800 !important;
+  font-size: 12.5px !important;
+  padding: 2px 4px !important;
+}
+
+/* Weekend Column Highlights */
+.att-th-teal-weekend {
+  background-color: #00606b !important;
+  color: #fde047 !important;
 }
 
 .att-td-weekend {
-  background-color: #f0fdfa;
+  background-color: var(--att-weekend-bg) !important;
 }
 
-.att-col-no {
-  width: 90px;
-  min-width: 90px;
-}
-
+/* Sticky Left Columns */
 .att-col-emp {
-  width: auto !important;
-  white-space: nowrap !important;
-  text-align: center !important;
-  font-weight: bold !important;
-  padding: 2px 8px !important;
+  position: sticky;
+  left: 0;
+  z-index: 8;
+  background-color: var(--att-card-bg);
+  width: 75px !important;
+  min-width: 75px !important;
 }
 
 .att-col-name {
-  width: auto !important;
-  white-space: nowrap !important;
-  text-align: center !important;
-  font-weight: bold !important;
-  padding: 2px 10px !important;
-  font-size: 12px !important;
+  position: sticky;
+  left: 75px;
+  z-index: 8;
+  background-color: var(--att-card-bg);
+  width: 140px !important;
+  min-width: 140px !important;
 }
 
 .att-col-site {
-  width: auto !important;
-  white-space: nowrap !important;
-  font-size: 12px !important;
-  color: #005f73;
-  font-weight: bold !important;
-  text-align: center !important;
-  padding: 2px 10px !important;
+  position: sticky;
+  left: 215px;
+  z-index: 8;
+  background-color: var(--att-card-bg);
+  width: 150px !important;
+  min-width: 150px !important;
+  color: #0ea5e9;
+  box-shadow: 3px 0 6px rgba(0, 0, 0, 0.08);
 }
 
-.att-col-action {
-  width: auto !important;
-  white-space: nowrap !important;
-  text-align: center !important;
-  font-weight: bold !important;
-  padding: 2px 6px !important;
+.att-th-top-row.att-col-emp,
+.att-th-top-row.att-col-name,
+.att-th-top-row.att-col-site {
+  z-index: 25 !important;
+  background-color: #0a9396 !important;
 }
 
-/* Day Columns: Exactly 38px width */
 .att-col-day {
-  width: 38px !important;
-  min-width: 38px !important;
-  max-width: 38px !important;
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
   padding: 0 !important;
-  height: 20px !important;
 }
 
-.att-col-stat {
-  width: 40px;
-  min-width: 40px;
-  font-weight: bold;
-  background-color: #f1f5f9;
-  font-size: 12px !important;
-  text-align: center !important;
-}
-
-.att-col-total {
-  width: 52px;
-  min-width: 52px;
-  font-weight: bold;
-  background-color: #e2e8f0;
-  font-size: 12px !important;
-  text-align: center !important;
+/* Row Hover Highlight */
+tr.att-row-staff:hover td {
+  background-color: var(--att-cell-hover) !important;
 }
 
 /* Interactive Cell Input */
 .att-cell-input {
   width: 100%;
-  height: 19px;
+  height: 24px;
   border: none;
   background: transparent;
   text-align: center !important;
   font-family: var(--att-font-condensed) !important;
-  font-size: 12px !important;
-  font-weight: bold;
-  color: #000000;
+  font-size: 13px !important;
+  font-weight: 800;
+  color: var(--att-text);
   text-transform: uppercase;
   padding: 0;
   margin: 0;
   cursor: pointer;
+  transition: all 0.12s ease;
 }
 
 .att-cell-input:focus {
-  outline: 2px solid var(--att-primary);
-  background-color: #e0f2fe;
+  outline: none;
+  background-color: rgba(14, 165, 233, 0.15) !important;
+  box-shadow: 0 0 0 2px #0ea5e9, 0 0 10px rgba(14, 165, 233, 0.5) !important;
+  border-radius: 4px;
+  z-index: 15;
+  position: relative;
 }
 
-/* Code Color Coding */
+/* Soft Color-Coded Shift Tags */
 .att-code-D {
-  color: #005f73 !important;
-  font-weight: 800 !important;
+  color: #059669 !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-radius: 4px;
 }
 
 .att-code-N {
-  color: #1e3a8a !important;
-  font-weight: 800 !important;
+  color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-radius: 4px;
 }
 
 .att-code-OFF {
-  color: #c00000 !important;
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-radius: 4px;
   font-weight: 900 !important;
-  font-size: 11px !important;
 }
 
 .att-code-S {
-  color: #d97706 !important;
-  font-weight: 800 !important;
+  color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-radius: 4px;
 }
 
 .att-code-B {
-  color: #4b5563 !important;
-  font-weight: 800 !important;
+  color: #8b5cf6 !important;
+  background: rgba(139, 92, 246, 0.12) !important;
+  border-radius: 4px;
 }
 
-/* In-Row Action Buttons: Edit, Replace, Remove */
-.att-row-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 3px;
-  border-radius: 2px;
-  text-decoration: underline;
-}
-
-.att-row-btn-edit {
-  color: #0284c7;
-}
-
-.att-row-btn-replace {
-  color: #d97706;
-}
-
-.att-row-btn-remove {
-  color: #dc2626;
-}
-
-.att-row-btn:hover {
-  background: #f1f5f9;
-}
-
-/* Bottom Summary Rows */
-.att-tr-day-total, .att-tr-night-total, .att-tr-grand-total {
-  height: 20px;
-  font-size: 12px !important;
-  border: 1px solid var(--att-border) !important;
-}
-
-.att-tr-day-total, .att-tr-night-total, .att-tr-grand-total {
-  background-color: #f8fafc;
-  font-weight: bold;
-}
-
-.att-summary-label {
-  background-color: #ee9b00 !important;
-  color: #000000 !important;
-  text-align: center !important;
-  padding: 0 6px !important;
-  font-weight: bold;
-  font-size: 12px !important;
-  white-space: nowrap !important;
-}
-
-.att-tr-grand-total .att-summary-label {
-  background-color: #ca6702 !important;
-  color: #ffffff !important;
-}
-
-/* Deployment Status Colors for Attendance Daily Count Cells */
-.att-col-total-d, .att-col-total-n, .att-col-total-grand {
-  text-align: center !important;
-  vertical-align: middle !important;
-  font-weight: bold !important;
-  font-size: 12px !important;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.att-deploy-ok {
-  background-color: #16a34a !important;
-  color: #ffffff !important;
-}
-
-.att-deploy-less {
-  background-color: #dc2626 !important;
-  color: #ffffff !important;
-}
-
-.att-deploy-over {
-  background-color: #facc15 !important;
-  color: #000000 !important;
-}
-
-.att-deploy-neutral {
-  background-color: #f1f5f9 !important;
-  color: #475569 !important;
-}
-
-/* Action Icon Buttons: Smaller size per user request */
+/* In-Row Action Buttons */
 .att-row-btn-icon {
-  background: transparent;
-  border: 1px solid transparent;
+  background: var(--att-card-bg);
+  border: 1px solid var(--att-border);
   cursor: pointer;
-  font-size: 11px !important;
-  line-height: 1 !important;
-  padding: 1px 2px !important;
-  margin: 0 1px !important;
-  border-radius: 3px;
+  font-size: 12px !important;
+  border-radius: 5px;
+  padding: 3px 5px !important;
+  margin: 0 2px !important;
   transition: all 0.15s ease;
-  vertical-align: middle;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px !important;
-  height: 20px !important;
 }
 
 .att-row-btn-icon:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: var(--att-cell-hover);
+  border-color: #0ea5e9;
   transform: scale(1.15);
 }
 
-.att-row-btn-icon.att-btn-remove-staff:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
+.att-btn-remove-staff:hover {
+  background: var(--att-danger-bg) !important;
+  border-color: #ef4444 !important;
 }
 
-.att-row-btn-icon.att-btn-replace-staff:hover {
-  background: #fef3c7;
-  border-color: #fcd34d;
+.att-btn-replace-staff:hover {
+  background: var(--att-warning-bg) !important;
+  border-color: #f59e0b !important;
 }
 
-/* Modal Styling */
+/* ====================================================================
+ * 5. SUMMARY ROWS: DAY, NIGHT, AND TOTAL ON DUTY
+ * ==================================================================== */
+.att-tr-day-total, .att-tr-night-total, .att-tr-grand-total {
+  height: 26px;
+  font-size: 13px !important;
+  border-top: 2px solid var(--att-border-strong) !important;
+}
+
+.att-summary-label {
+  background: linear-gradient(135deg, #0e2a47 0%, #1e3a5f 100%) !important;
+  color: #ffffff !important;
+  text-align: center !important;
+  padding: 0 8px !important;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  box-shadow: 3px 0 6px rgba(0, 0, 0, 0.15);
+}
+
+.att-tr-day-total .att-summary-label {
+  color: #fbbf24 !important;
+}
+
+.att-tr-night-total .att-summary-label {
+  color: #38bdf8 !important;
+}
+
+.att-tr-grand-total .att-summary-label {
+  background: linear-gradient(135deg, #0b192c 0%, #0d3b66 100%) !important;
+  color: #4ade80 !important;
+  font-size: 13px !important;
+}
+
+/* Status Cells */
+.att-col-total-d, .att-col-total-n, .att-col-total-grand {
+  text-align: center !important;
+  vertical-align: middle !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+}
+
+.att-deploy-ok {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.att-deploy-less {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.att-deploy-over {
+  background-color: #f59e0b !important;
+  color: #0f172a !important;
+  font-weight: 900 !important;
+}
+
+.att-deploy-neutral {
+  background-color: var(--att-card-bg) !important;
+  color: var(--att-text-muted) !important;
+}
+
+/* ====================================================================
+ * 6. BOTTOM MONTH TOTAL RIBBON, LEGEND & SIGNATURES
+ * ==================================================================== */
+.att-month-total-ribbon {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.att-metric-chip {
+  background: var(--att-card-bg);
+  border: 1px solid var(--att-card-border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  box-shadow: var(--att-shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.att-chip-icon {
+  font-size: 22px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--att-info-bg);
+}
+
+.att-chip-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.att-chip-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--att-text-muted);
+}
+
+.att-chip-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--att-text);
+}
+
+/* Legend Box */
+.att-legend-pills {
+  background: var(--att-card-bg);
+  border: 1px solid var(--att-card-border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.att-legend-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.att-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+/* Executive Signatures */
+.att-signatures-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 18px;
+  padding-bottom: 24px;
+}
+
+.att-sig-card {
+  background: var(--att-card-bg);
+  border: 1px solid var(--att-card-border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: var(--att-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100px;
+}
+
+.att-sig-role {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--att-text-muted);
+  border-bottom: 1px dashed var(--att-border);
+  padding-bottom: 6px;
+  margin-bottom: 40px;
+}
+
+.att-sig-line-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--att-text-muted);
+  font-weight: 600;
+  border-top: 1px solid var(--att-border-strong);
+  padding-top: 6px;
+}
+
+/* ====================================================================
+ * 7. MODALS STYLING
+ * ==================================================================== */
 .att-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
+  inset: 0;
+  background: rgba(11, 19, 32, 0.7);
+  backdrop-filter: blur(4px);
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
 }
 
 .att-modal-overlay.att-open {
@@ -602,62 +903,62 @@ body.att-body {
 }
 
 .att-modal {
-  background: #ffffff;
-  border-radius: 6px;
+  background: var(--att-card-bg);
+  border: 1px solid var(--att-card-border);
+  border-radius: 14px;
   width: 580px;
   max-width: 95vw;
   max-height: 85vh;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  box-shadow: var(--att-shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  color: var(--att-text);
 }
 
 .att-modal-header {
-  background: var(--att-primary);
+  background: linear-gradient(135deg, #094857 0%, #005f73 100%);
   color: #ffffff;
-  padding: 12px 16px;
-  font-weight: bold;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 800;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .att-modal-body {
-  padding: 16px;
+  padding: 20px;
   overflow-y: auto;
   flex: 1;
 }
 
 .att-modal-footer {
-  padding: 12px 16px;
-  background: #f8fafc;
+  padding: 14px 20px;
+  background: var(--att-card-bg);
   border-top: 1px solid var(--att-border-light);
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 10px;
 }
 
 .att-form-group {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .att-form-group label {
   display: block;
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--att-text);
 }
 
-.att-form-group input, .att-form-group select, .att-form-group textarea {
-  width: 100%;
-}
-
-/* Staff Directory Search List */
 .att-staff-list-container {
   max-height: 280px;
   overflow-y: auto;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  border: 1px solid var(--att-border);
+  border-radius: 8px;
   margin-top: 10px;
 }
 
@@ -665,8 +966,8 @@ body.att-body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--att-border-light);
 }
 
 .att-staff-item:last-child {
@@ -674,83 +975,106 @@ body.att-body {
 }
 
 .att-staff-item:hover {
-  background: #f8fafc;
+  background: var(--att-cell-hover);
 }
 
-
-/* Wire USS Enterprise Design Tokens into Attendance & Payroll Module */
-:root, [data-theme="dark"], [data-theme="light"] {
-  --att-primary: var(--primary);
-  --att-primary-hover: var(--primary-hover);
-  --att-danger: var(--danger);
-  --att-warning: var(--warning);
-  --att-success: var(--success);
-  --att-bg: var(--bg);
-  --att-card-bg: var(--surface);
-  --att-text: var(--text);
-  --att-text-muted: var(--text-muted);
-  --att-border: var(--border-strong);
-  --att-font-condensed: var(--font-table);
-  --att-font-body: var(--font-sans);
-}
-
-body.att-body {
-  font-family: var(--font-sans) !important;
-  background-color: var(--bg) !important;
-  color: var(--text) !important;
-}
-
-/* Dense Attendance & Payroll Tables */
-.att-table {
-  font-family: var(--font-table) !important;
-  border-collapse: collapse !important;
-  width: 100% !important;
-}
-
-.att-table th, .att-table td {
-  border: 1px solid var(--border-strong) !important;
+/* ====================================================================
+ * 8. CONSOLIDATED PAYROLL VIEW SPECIFIC STYLES
+ * ==================================================================== */
+.att-payroll-header-banner {
+  background: linear-gradient(135deg, #094857 0%, #005f73 50%, #0a9396 100%) !important;
+  color: #ffffff !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.8px !important;
+  height: 48px !important;
+  line-height: 48px;
   text-align: center !important;
   vertical-align: middle !important;
+  border-bottom: 2px solid var(--att-accent) !important;
+  text-transform: uppercase;
 }
 
-.att-table thead tr:first-child {
-  height: var(--row-h-att-header) !important; /* 45px header */
+.att-th-teal-pay {
+  background-color: #0a9396 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 15px !important;
+  height: 28px !important;
+  vertical-align: middle !important;
+  text-align: center !important;
 }
 
-.att-table thead th {
-  font-family: var(--font-table) !important;
-  font-size: var(--fs-att-header) !important;
-  font-weight: 600 !important;
-  color: #FFFFFF !important;
-  background-color: var(--primary) !important;
+.att-th-teal-pay-sub {
+  background-color: #087f82 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  height: 26px !important;
+  vertical-align: middle !important;
+  text-align: center !important;
 }
 
-.att-table .att-weekday-hdr {
-  font-size: var(--fs-att-weekday) !important; /* 7px weekday */
-  font-weight: 600 !important;
-  background-color: var(--header-band) !important;
-  color: #FFFFFF !important;
+.att-off-cell {
+  color: #ef4444 !important;
+  font-weight: 900 !important;
+  background: rgba(239, 68, 68, 0.12) !important;
 }
 
-.att-table tbody tr {
-  height: var(--row-h-att-row) !important; /* 20px rows */
+.att-conflict-note {
+  color: #ef4444 !important;
+  font-weight: 800;
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgba(239, 68, 68, 0.15);
+  border-radius: 4px;
 }
 
-.att-table td {
-  font-size: var(--fs-att-cell) !important;
-  font-weight: 400 !important;
-  padding: 0 4px !important;
-  white-space: nowrap !important;
+.att-col-custom-th {
+  position: relative;
+  min-width: 80px;
 }
 
-.att-table .att-code-cell {
-  font-weight: 600 !important;
-  font-size: var(--fs-att-cell) !important;
+.att-col-actions {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 4px;
+  vertical-align: middle;
 }
 
-.att-table tfoot tr, .att-table .att-total-row {
-  height: var(--row-h-att-row) !important;
-  font-weight: 600 !important;
-  font-size: var(--fs-att-total) !important;
-  background-color: var(--surface-2) !important;
+.att-btn-col-action {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.75;
+  color: #ffffff;
+}
+
+.att-btn-col-action:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.att-btn-col-delete:hover {
+  color: #fca5a5 !important;
+}
+
+/* Print Overrides */
+@media print {
+  .no-print, .att-topbar, .att-controlbar, .att-actions, .att-row-btn-icon, .att-modal-overlay {
+    display: none !important;
+  }
+  .att-grid-wrapper {
+    max-height: none !important;
+    overflow: visible !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  body.att-body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
 }
