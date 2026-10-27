@@ -770,6 +770,25 @@ $totalStaffCount = count($staffList);
                         </tr>
                     <?php endforeach; ?>
 
+                    <!-- Separator Row Between Staff and Summary -->
+                    <tr class="att-row-spacer" style="height: 22px; background: #ffffff;">
+                        <td class="att-col-emp" style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <td class="att-col-name" style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <?php foreach ($datesList as $dInfo): ?>
+                            <td class="att-col-day" style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <?php endforeach; ?>
+                        <td style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <td style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <td style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <td style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <td style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <td style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <?php foreach ($customCols as $cc): ?>
+                            <td style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <?php endforeach; ?>
+                        <td style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                    </tr>
+
                     <!-- Bottom TOTAL Row -->
                     <tr style="height:28px;font-weight:normal;background:#f8fafc;color:#0f172a;border-top:2px solid #cbd5e1;">
                         <td colspan="2" class="att-summary-label" style="text-align:center;font-weight:normal;color:#0f172a;letter-spacing:0.8px;background:#f8fafc;">TOTAL CONSOLIDATED</td>
