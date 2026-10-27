@@ -516,6 +516,86 @@ class AttendanceSheet {
         }
     }
 
+    public static function saveAdditionalDeploymentRange($sheetId, $fromDate, $endDate, $addDay, $addNight, $notes = '', $actorName = 'Super Admin') {
+        $db = att_get_db();
+        $sheetId = (int)$sheetId;
+        $addDay = (int)$addDay;
+        $addNight = (int)$addNight;
+        $notes = trim($notes);
+
+        $stmtSheet = $db->prepare("SELECT site_id, year, month FROM att_sheets WHERE id = ? LIMIT 1");
+        $stmtSheet->execute([$sheetId]);
+        $sheet = $stmtSheet->fetch();
+        if (!$sheet) {
+            throw new InvalidArgumentException("Sheet not found.");
+        }
+
+        $siteId = (int)$sheet['site_id'];
+        $fromTime = !empty($fromDate) ? strtotime($fromDate) : null;
+        $endTime = !empty($endDate) ? strtotime($endDate) : null;
+        if (!$fromTime && !$endTime) {
+            return self::saveAdditionalDeployment($sheetId, 'all', $addDay, $addNight, $notes, $actorName);
+        }
+        if (!$fromTime) $fromTime = $endTime;
+        if (!$endTime) $endTime = $fromTime;
+        if ($fromTime > $endTime) {
+            $tmp = $fromTime;
+            $fromTime = $endTime;
+            $endTime = $tmp;
+        }
+
+        $inTx = $db->inTransaction();
+        if (!$inTx) $db->beginTransaction();
+
+        try {
+            $stmtUpsert = $db->prepare("
+                INSERT INTO att_additional_deployments (sheet_id, day_number, add_day, add_night, notes)
+                VALUES (?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE add_day = VALUES(add_day), add_night = VALUES(add_night), notes = VALUES(notes)
+            ");
+
+            $curr = $fromTime;
+            while ($curr <= $endTime) {
+                $y = (int)date('Y', $curr);
+                $m = (int)date('n', $curr);
+                $d = (int)date('j', $curr);
+
+                if ($y === (int)$sheet['year'] && $m === (int)$sheet['month']) {
+                    $targetSheetId = $sheetId;
+                } else {
+                    $targetSheet = self::getOrCreateSheet($siteId, $y, $m, $actorName);
+                    $targetSheetId = (int)$targetSheet['id'];
+                }
+
+                $stmtUpsert->execute([$targetSheetId, $d, $addDay, $addNight, $notes]);
+                $curr = strtotime('+1 day', $curr);
+            }
+
+            att_log_audit('SHEET_ADD_DEPLOYMENT_RANGE', 'att_additional_deployments', $sheetId, [
+                'from_date' => date('Y-m-d', $fromTime),
+                'end_date' => date('Y-m-d', $endTime),
+                'add_day' => $addDay,
+                'add_night' => $addNight,
+                'notes' => $notes
+            ], $actorName);
+
+            if (!$inTx) $db->commit();
+            return true;
+        } catch (Throwable $e) {
+            if (!$inTx && $db->inTransaction()) $db->rollBack();
+            throw $e;
+        }
+    }
+
+    public static function deleteAdditionalDeploymentById($deploymentId, $actorName = 'Super Admin') {
+        $db = att_get_db();
+        $deploymentId = (int)$deploymentId;
+        $stmt = $db->prepare("DELETE FROM att_additional_deployments WHERE id = ?");
+        $stmt->execute([$deploymentId]);
+        att_log_audit('SHEET_DEL_DEPLOYMENT_ID', 'att_additional_deployments', $deploymentId, [], $actorName);
+        return true;
+    }
+
     public static function deleteAdditionalDeployment($sheetId, $dayNumber, $actorName = 'Super Admin') {
         $db = att_get_db();
         $sheetId = (int)$sheetId;

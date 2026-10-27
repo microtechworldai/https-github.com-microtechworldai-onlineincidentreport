@@ -236,7 +236,26 @@ class Router {
 
         $newId = SiteDirectory::addSite($name, $code, $client, $reqDay, $reqNight, $contractStart, $contractEnd, $_SESSION['admin_name'] ?? 'Super Admin');
         
-        header("Location: index.php?action=sheet&site_id=" . $newId);
+        // Optional Additional / Temporary Deployment configured during site registration
+        $addFrom = trim($_POST['add_from_date'] ?? '');
+        $addEnd = trim($_POST['add_end_date'] ?? '');
+        $addDay = (int)($_POST['add_day'] ?? 0);
+        $addNight = (int)($_POST['add_night'] ?? 0);
+        $addNotes = trim($_POST['add_notes'] ?? $_POST['add_reason'] ?? '');
+
+        $targetYear = !empty($addFrom) ? (int)date('Y', strtotime($addFrom)) : (int)date('Y');
+        $targetMonth = !empty($addFrom) ? (int)date('n', strtotime($addFrom)) : (int)date('n');
+
+        // Create initial sheet for the site
+        $sheet = AttendanceSheet::getOrCreateSheet($newId, $targetYear, $targetMonth, $_SESSION['admin_name'] ?? 'Super Admin');
+
+        if (($addDay !== 0 || $addNight !== 0) && (!empty($addFrom) || !empty($addEnd))) {
+            if (empty($addEnd)) $addEnd = $addFrom;
+            if (empty($addFrom)) $addFrom = $addEnd;
+            AttendanceSheet::saveAdditionalDeploymentRange($sheet['id'], $addFrom, $addEnd, $addDay, $addNight, $addNotes, $_SESSION['admin_name'] ?? 'Super Admin');
+        }
+
+        header("Location: index.php?action=sheet&site_id=" . $newId . "&year=" . $targetYear . "&month=" . $targetMonth);
         exit;
     }
 
@@ -269,16 +288,25 @@ class Router {
 
     private function handleSaveAdditionalDeployment() {
         $sheetId = (int)($_POST['sheet_id'] ?? 0);
-        $dayNumber = $_POST['day_number'] ?? 'all';
+        $fromDate = trim($_POST['from_date'] ?? $_POST['add_from_date'] ?? '');
+        $endDate = trim($_POST['end_date'] ?? $_POST['add_end_date'] ?? '');
+        $dayNumber = $_POST['day_number'] ?? '';
         $addDay = (int)($_POST['add_day'] ?? 0);
         $addNight = (int)($_POST['add_night'] ?? 0);
-        $notes = trim($_POST['notes'] ?? '');
+        $notes = trim($_POST['notes'] ?? $_POST['add_notes'] ?? '');
 
         if (!$sheetId) {
             $this->jsonError('Sheet ID is required.');
         }
 
-        AttendanceSheet::saveAdditionalDeployment($sheetId, $dayNumber, $addDay, $addNight, $notes, $_SESSION['admin_name'] ?? 'Super Admin');
+        if (!empty($fromDate) || !empty($endDate)) {
+            if (empty($endDate)) $endDate = $fromDate;
+            if (empty($fromDate)) $fromDate = $endDate;
+            AttendanceSheet::saveAdditionalDeploymentRange($sheetId, $fromDate, $endDate, $addDay, $addNight, $notes, $_SESSION['admin_name'] ?? 'Super Admin');
+        } else {
+            if (empty($dayNumber)) $dayNumber = 'all';
+            AttendanceSheet::saveAdditionalDeployment($sheetId, $dayNumber, $addDay, $addNight, $notes, $_SESSION['admin_name'] ?? 'Super Admin');
+        }
         
         $siteId = (int)($_POST['site_id'] ?? 0);
         $month = (int)($_POST['month'] ?? 0);
@@ -293,13 +321,16 @@ class Router {
 
     private function handleDeleteAdditionalDeployment() {
         $sheetId = (int)($_POST['sheet_id'] ?? $_GET['sheet_id'] ?? 0);
+        $deployId = (int)($_POST['deploy_id'] ?? $_GET['deploy_id'] ?? 0);
         $dayNumber = $_POST['day_number'] ?? $_GET['day_number'] ?? 'all';
 
-        if (!$sheetId) {
-            $this->jsonError('Sheet ID is required.');
+        if ($deployId > 0) {
+            AttendanceSheet::deleteAdditionalDeploymentById($deployId, $_SESSION['admin_name'] ?? 'Super Admin');
+        } elseif ($sheetId > 0) {
+            AttendanceSheet::deleteAdditionalDeployment($sheetId, $dayNumber, $_SESSION['admin_name'] ?? 'Super Admin');
+        } else {
+            $this->jsonError('Sheet ID or Deployment ID is required.');
         }
-
-        AttendanceSheet::deleteAdditionalDeployment($sheetId, $dayNumber, $_SESSION['admin_name'] ?? 'Super Admin');
 
         $siteId = (int)($_POST['site_id'] ?? $_GET['site_id'] ?? 0);
         $month = (int)($_POST['month'] ?? $_GET['month'] ?? 0);
