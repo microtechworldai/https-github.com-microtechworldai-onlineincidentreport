@@ -480,6 +480,75 @@ $totalStaffCount = count($staffList);
 }
 </style>
 
+<!-- EXECUTIVE DECENT HEADER STYLING (Royal Navy & Gold Weekend Highlights) -->
+<style>
+/* 1. MAIN TITLE BANNER: Deep Executive Navy with Cyan Sheen */
+.att-th-banner-darkteal,
+.att-payroll-header-banner {
+  background: linear-gradient(135deg, #0f2744 0%, #16365c 50%, #1f4575 100%) !important;
+  color: #ffffff !important;
+  font-size: 17.5px !important;
+  font-weight: 800 !important;
+  height: 48px !important;
+  line-height: 48px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  border-bottom: 3px solid #38bdf8 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* 2. SUB-HEADERS: Emp No, Guard Name, Site Name, Days 1..31 */
+.att-th-top-row,
+.att-th-teal-pay {
+  background: linear-gradient(180deg, #1a365d 0%, #122844 100%) !important;
+  color: #f8fafc !important;
+  font-weight: 800 !important;
+  font-size: 13.5px !important;
+  letter-spacing: 0.3px !important;
+  height: 32px !important;
+  border: 1px solid #2d4a77 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Weekday Sub-Header (THU, FRI, SAT...) */
+.att-th-teal-sub,
+.att-th-teal-pay-sub {
+  background: #0d1e33 !important;
+  color: #cbd5e1 !important;
+  font-weight: 800 !important;
+  font-size: 11px !important;
+  letter-spacing: 0.3px !important;
+  height: 25px !important;
+  border: 1px solid #1c3554 !important;
+}
+
+/* Weekend Header (FRI, SUN) - Elegant Gold Standout */
+.att-th-teal-weekend {
+  background: #091726 !important;
+  color: #fbbf24 !important;
+  font-weight: 900 !important;
+  border: 1px solid #1c3554 !important;
+}
+
+/* Sticky Header Left Columns (Emp No, Guard Name, Site Name) */
+.att-th-top-row.att-col-emp,
+.att-th-top-row.att-col-name,
+.att-th-top-row.att-col-site {
+  background: linear-gradient(180deg, #1a365d 0%, #122844 100%) !important;
+  color: #ffffff !important;
+  text-align: center !important;
+  border: 1px solid #2d4a77 !important;
+}
+
+.att-col-day {
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+}
+</style>
+
 <div class="att-grid-wrapper">
         <table class="att-table" id="att-payroll-table">
             <thead>
