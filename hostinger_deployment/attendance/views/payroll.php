@@ -164,7 +164,304 @@ $totalStaffCount = count($staffList);
 </div>
 
 <main class="att-container">
-    <div class="att-grid-wrapper">
+    <!-- ULTRA-BOLD EXECUTIVE TABLE STYLING (Guaranteed Immediate Rendering) -->
+<style>
+.att-grid-wrapper {
+  border: 2px solid #1e3a5f !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15) !important;
+  background: #ffffff !important;
+}
+
+.att-roster-outer-table, .att-table {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Arial Narrow", Arial, sans-serif !important;
+  border-collapse: collapse !important;
+  width: 100% !important;
+}
+
+.att-roster-outer-table th, .att-roster-outer-table td,
+.att-table th, .att-table td {
+  border: 1px solid #cbd5e1 !important;
+  vertical-align: middle !important;
+  text-align: center !important;
+}
+
+/* 1. MAIN TITLE BANNER: Deep Executive Midnight Navy Gradient with Gold Accent */
+.att-th-banner-darkteal,
+.att-payroll-header-banner {
+  height: 54px !important;
+  line-height: 54px !important;
+  background: linear-gradient(135deg, #07162c 0%, #0d274c 45%, #183c66 100%) !important;
+  color: #ffffff !important;
+  font-size: 19px !important;
+  font-weight: 900 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  letter-spacing: 1.2px !important;
+  border-bottom: 3px solid #f59e0b !important;
+  text-transform: uppercase !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+}
+
+.att-payroll-header-banner {
+  border-bottom: 3px solid #0ea5e9 !important;
+}
+
+/* 2. SUB-HEADERS: Emp No, Guard Name, Site Name, Days 1..31 */
+.att-th-top-row,
+.att-th-teal-pay {
+  height: 32px !important;
+  background: linear-gradient(180deg, #163456 0%, #0d223a 100%) !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  font-size: 14px !important;
+  letter-spacing: 0.5px !important;
+  border: 1px solid #234164 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Weekday Sub-Header (THU, FRI, SAT...) */
+.att-th-teal-sub,
+.att-th-teal-pay-sub {
+  height: 26px !important;
+  background: #0b1a2c !important;
+  color: #94a3b8 !important;
+  font-weight: 900 !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.5px !important;
+  border: 1px solid #1a324e !important;
+}
+
+/* Weekend Header (FRI, SUN) - Gold Standout */
+.att-th-teal-weekend {
+  background: #081525 !important;
+  color: #facc15 !important;
+  font-weight: 900 !important;
+}
+
+/* Sticky Left Columns */
+.att-col-emp {
+  font-weight: 900 !important;
+  font-size: 13.5px !important;
+  letter-spacing: 0.5px !important;
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+
+.att-col-name {
+  font-weight: 900 !important;
+  font-size: 14px !important;
+  letter-spacing: 0.3px !important;
+  text-align: left !important;
+  padding-left: 10px !important;
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+
+.att-col-site {
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  text-align: left !important;
+  padding-left: 10px !important;
+  color: #0284c7 !important;
+  background-color: #ffffff !important;
+}
+
+.att-th-top-row.att-col-emp,
+.att-th-top-row.att-col-name,
+.att-th-top-row.att-col-site {
+  background: linear-gradient(180deg, #163456 0%, #0d223a 100%) !important;
+  color: #ffffff !important;
+  text-align: center !important;
+}
+
+.att-col-day {
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  font-weight: 900 !important;
+}
+
+/* 3. CELL INPUTS & SHIFT CODES (Ultra-Bold) */
+.att-cell-input {
+  width: 100% !important;
+  height: 26px !important;
+  border: none !important;
+  background: transparent !important;
+  text-align: center !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+}
+
+.att-code-D {
+  color: #047857 !important;
+  background: rgba(16, 185, 129, 0.18) !important;
+  font-weight: 900 !important;
+  border-radius: 4px !important;
+}
+
+.att-code-N {
+  color: #1d4ed8 !important;
+  background: rgba(59, 130, 246, 0.18) !important;
+  font-weight: 900 !important;
+  border-radius: 4px !important;
+}
+
+.att-code-OFF {
+  color: #be123c !important;
+  background: rgba(244, 63, 94, 0.22) !important;
+  font-weight: 900 !important;
+  border-radius: 4px !important;
+}
+
+.att-code-S {
+  color: #b45309 !important;
+  background: rgba(245, 158, 11, 0.22) !important;
+  font-weight: 900 !important;
+  border-radius: 4px !important;
+}
+
+.att-code-B {
+  color: #6d28d9 !important;
+  background: rgba(139, 92, 246, 0.2) !important;
+  font-weight: 900 !important;
+  border-radius: 4px !important;
+}
+
+/* 4. SUMMARY ROWS: DAY, NIGHT, AND TOTAL ON DUTY */
+.att-tr-day-total, .att-tr-night-total, .att-tr-grand-total {
+  height: 28px !important;
+  font-size: 14px !important;
+  border-top: 2px solid #1e3a5f !important;
+}
+
+.att-summary-label {
+  background: linear-gradient(135deg, #07162c 0%, #0d274c 100%) !important;
+  color: #ffffff !important;
+  text-align: center !important;
+  padding: 0 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.8px !important;
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 10 !important;
+  box-shadow: 3px 0 8px rgba(0, 0, 0, 0.25) !important;
+  font-size: 13.5px !important;
+}
+
+.att-tr-day-total .att-summary-label {
+  color: #fbbf24 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+}
+
+.att-tr-night-total .att-summary-label {
+  color: #38bdf8 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+}
+
+.att-tr-grand-total .att-summary-label {
+  background: linear-gradient(135deg, #05101f 0%, #091c36 100%) !important;
+  color: #4ade80 !important;
+  font-size: 14px !important;
+  letter-spacing: 1px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+}
+
+.att-col-total-d, .att-col-total-n, .att-col-total-grand {
+  text-align: center !important;
+  vertical-align: middle !important;
+  font-weight: 900 !important;
+  font-size: 14px !important;
+}
+
+/* ====================================================================
+ * VIBRANT COLOR EFFECT FOR DEPLOYMENT STATUSES:
+ * 🟢 OK (Met) | 🔴 Shortage (Less) | 🟡 Over Deployed
+ * ==================================================================== */
+.att-deploy-ok {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  font-size: 14px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 0 rgba(0, 0, 0, 0.2), 0 2px 5px rgba(16, 185, 129, 0.35) !important;
+  border: 1px solid #047857 !important;
+}
+
+.att-deploy-less {
+  background: linear-gradient(135deg, #f43f5e 0%, #dc2626 50%, #b91c1c 100%) !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  font-size: 14px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 0 rgba(0, 0, 0, 0.2), 0 2px 5px rgba(220, 38, 38, 0.35) !important;
+  border: 1px solid #991b1b !important;
+}
+
+.att-deploy-over {
+  background: linear-gradient(135deg, #fde047 0%, #eab308 50%, #ca8a04 100%) !important;
+  color: #1e1b4b !important;
+  font-weight: 900 !important;
+  font-size: 14px !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(0, 0, 0, 0.15), 0 2px 5px rgba(234, 179, 8, 0.35) !important;
+  border: 1px solid #a16207 !important;
+}
+
+.att-deploy-neutral {
+  background-color: #ffffff !important;
+  color: #64748b !important;
+  font-weight: 800 !important;
+}
+
+/* Legend Pills */
+.att-legend-pills .att-pill-badge {
+  padding: 5px 12px !important;
+  border-radius: 20px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  letter-spacing: 0.3px !important;
+}
+
+.att-legend-pills .att-pill-badge.att-deploy-ok {
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.45) !important;
+}
+
+.att-legend-pills .att-pill-badge.att-deploy-less {
+  box-shadow: 0 3px 10px rgba(244, 63, 94, 0.45) !important;
+}
+
+.att-legend-pills .att-pill-badge.att-deploy-over {
+  box-shadow: 0 3px 10px rgba(234, 179, 8, 0.45) !important;
+}
+
+/* 5. PAYROLL SPECIFIC COUNTS & BOTTOM ROW */
+.att-col-stat {
+  font-weight: 900 !important;
+  font-size: 14px !important;
+  width: 46px !important;
+  min-width: 46px !important;
+}
+
+.att-col-total {
+  font-weight: 900 !important;
+  font-size: 14.5px !important;
+  width: 80px !important;
+  min-width: 80px !important;
+}
+
+.att-payroll-row td {
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+}
+</style>
+
+<div class="att-grid-wrapper">
         <table class="att-table" id="att-payroll-table">
             <thead>
                 <!-- Executive Title Banner -->
