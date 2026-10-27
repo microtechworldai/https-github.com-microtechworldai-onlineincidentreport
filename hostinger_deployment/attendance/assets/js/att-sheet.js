@@ -18,6 +18,17 @@ document.addEventListener('DOMContentLoaded', () => {
         statusIndicator.textContent = msg;
     }
 
+    function showDuplicateWarning(msg) {
+        const modal = document.getElementById('att-modal-duplicate-warning');
+        const text = document.getElementById('att-dup-warning-msg');
+        if (modal && text) {
+            text.textContent = msg;
+            modal.classList.add('att-open');
+        } else {
+            alert(msg);
+        }
+    }
+
     // Process queued cell updates to server
     function flushSaveQueue() {
         if (saveQueue.length === 0) {
@@ -45,9 +56,43 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
+                const input = item.cellEl?.classList?.contains('att-cell-input') ? item.cellEl : item.cellEl?.querySelector?.('.att-cell-input');
+                if (input) {
+                    input.dataset.prevVal = item.val;
+                    input.classList.remove('att-cell-conflict');
+                }
                 recalculateColumn(item.day);
             } else {
                 setStatus('error', 'Error: ' + (data.error || 'Failed to save'));
+
+                if (data.is_duplicate) {
+                    // Revert the conflicting cell back to previous valid value
+                    const input = item.cellEl?.classList?.contains('att-cell-input') ? item.cellEl : item.cellEl?.querySelector?.('.att-cell-input');
+                    const prev = input?.dataset?.prevVal || '';
+                    if (input) {
+                        input.value = prev;
+                        applyCellColor(input, prev);
+                        input.classList.add('att-cell-conflict');
+                    }
+
+                    // Highlight the conflicting employee row
+                    const row = item.rowEl || input?.closest('tr');
+                    if (row) {
+                        row.classList.add('att-row-conflict');
+                        row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        setTimeout(() => {
+                            row.classList.remove('att-row-conflict');
+                            input?.classList.remove('att-cell-conflict');
+                        }, 6000);
+                    }
+
+                    // Display clear warning modal with exact duplicate details
+                    showDuplicateWarning(data.error);
+
+                    recalculateColumn(item.day);
+                } else {
+                    alert(data.error || 'Failed to save');
+                }
             }
         })
         .catch(err => {
@@ -137,7 +182,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (table && !isLocked) {
         table.querySelectorAll('.att-cell-input').forEach(inp => {
+            inp.dataset.prevVal = inp.value.trim().toUpperCase();
             applyCellColor(inp, inp.value.trim().toUpperCase());
+        });
+
+        table.addEventListener('focusin', (e) => {
+            if (e.target.classList.contains('att-cell-input')) {
+                e.target.dataset.prevVal = e.target.value.trim().toUpperCase();
+            }
         });
 
         table.addEventListener('input', (e) => {

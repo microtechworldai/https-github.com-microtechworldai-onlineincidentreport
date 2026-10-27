@@ -6,6 +6,17 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../core/Audit.php';
 
+class AttendanceDuplicateException extends RuntimeException {
+    protected $conflictData;
+    public function __construct($message, array $conflictData = [], $code = 0, Throwable $previous = null) {
+        parent::__construct($message, $code, $previous);
+        $this->conflictData = $conflictData;
+    }
+    public function getConflictData() {
+        return $this->conflictData;
+    }
+}
+
 class AttendanceSheet {
     public static function getOrCreateSheet($siteId, $year, $month, $actorName = 'Super Admin') {
         $db = att_get_db();
@@ -233,17 +244,196 @@ class AttendanceSheet {
         return (int)$db->lastInsertId();
     }
 
+    public static function ensureCentralAttendanceTableExists() {
+        $db = att_get_db();
+        $sql = "
+            CREATE TABLE IF NOT EXISTS `att_central_attendance` (
+                `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `emp_no` VARCHAR(60) NOT NULL,
+                `attendance_date` DATE NOT NULL,
+                `site_id` INT UNSIGNED NOT NULL,
+                `sheet_id` INT UNSIGNED NOT NULL,
+                `row_id` INT UNSIGNED NOT NULL,
+                `cell_id` INT UNSIGNED NOT NULL,
+                `code` VARCHAR(5) NOT NULL,
+                `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY `uk_central_emp_date` (`emp_no`, `attendance_date`),
+                INDEX `idx_central_cell` (`cell_id`),
+                INDEX `idx_central_site_date` (`site_id`, `attendance_date`),
+                INDEX `idx_central_sheet` (`sheet_id`),
+                INDEX `idx_central_row` (`row_id`),
+                CONSTRAINT `fk_central_cell` FOREIGN KEY (`cell_id`) REFERENCES `att_cells` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `fk_central_site` FOREIGN KEY (`site_id`) REFERENCES `att_sites` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ";
+        $db->exec($sql);
+
+        // Populate central attendance table with existing records if table is currently empty
+        try {
+            $stmtCount = $db->query("SELECT COUNT(*) FROM att_central_attendance");
+            if ($stmtCount && (int)$stmtCount->fetchColumn() === 0) {
+                $db->exec("
+                    INSERT IGNORE INTO att_central_attendance (emp_no, attendance_date, site_id, sheet_id, row_id, cell_id, code)
+                    SELECT r.emp_no, 
+                           STR_TO_DATE(CONCAT(s.year, '-', LPAD(s.month, 2, '00'), '-', LPAD(c.day_number, 2, '00')), '%Y-%m-%d') as attendance_date,
+                           s.site_id, s.id as sheet_id, r.id as row_id, c.id as cell_id, c.code
+                    FROM att_cells c
+                    JOIN att_rows r ON r.id = c.row_id AND r.is_deleted = 0
+                    JOIN att_sheets s ON s.id = r.sheet_id
+                    WHERE c.code != '' AND c.code IS NOT NULL
+                ");
+            }
+        } catch (Throwable $ignore) {}
+    }
+
+    public static function checkAttendanceConflict($empNo, $year, $month, $dayNumber, $excludeRowId = 0, $excludeCellId = 0) {
+        $db = att_get_db();
+        $empNo = strtoupper(trim($empNo));
+        $year = (int)$year;
+        $month = (int)$month;
+        $dayNumber = (int)$dayNumber;
+        $excludeRowId = (int)$excludeRowId;
+        $excludeCellId = (int)$excludeCellId;
+
+        $attendanceDate = sprintf('%04d-%02d-%02d', $year, $month, $dayNumber);
+        $formattedDate = date('j F Y', strtotime($attendanceDate));
+
+        // 1. Check in active sheets, rows, and cells
+        $sql = "
+            SELECT c.id as cell_id, c.code, r.id as row_id, r.emp_no, r.emp_name_snapshot,
+                   s.id as sheet_id, s.site_id, st.site_name, st.site_code
+            FROM att_cells c
+            JOIN att_rows r ON r.id = c.row_id AND r.is_deleted = 0
+            JOIN att_sheets s ON s.id = r.sheet_id
+            JOIN att_sites st ON st.id = s.site_id
+            WHERE r.emp_no = ?
+              AND s.year = ?
+              AND s.month = ?
+              AND c.day_number = ?
+              AND c.code != ''
+              AND c.code IS NOT NULL
+        ";
+        $params = [$empNo, $year, $month, $dayNumber];
+
+        if ($excludeCellId > 0) {
+            $sql .= " AND c.id != ?";
+            $params[] = $excludeCellId;
+        }
+        if ($excludeRowId > 0) {
+            $sql .= " AND r.id != ?";
+            $params[] = $excludeRowId;
+        }
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        $conflicts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 2. Also check central attendance registry if available
+        try {
+            $sqlCa = "
+                SELECT ca.cell_id, ca.code, ca.row_id, ca.emp_no, ca.site_id,
+                       st.site_name, st.site_code
+                FROM att_central_attendance ca
+                JOIN att_sites st ON st.id = ca.site_id
+                WHERE ca.emp_no = ?
+                  AND ca.attendance_date = ?
+            ";
+            $paramsCa = [$empNo, $attendanceDate];
+            if ($excludeCellId > 0) {
+                $sqlCa .= " AND ca.cell_id != ?";
+                $paramsCa[] = $excludeCellId;
+            }
+            if ($excludeRowId > 0) {
+                $sqlCa .= " AND ca.row_id != ?";
+                $paramsCa[] = $excludeRowId;
+            }
+            $stmtCa = $db->prepare($sqlCa);
+            $stmtCa->execute($paramsCa);
+            $caRows = $stmtCa->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($caRows as $ca) {
+                $found = false;
+                foreach ($conflicts as $cf) {
+                    if ((int)$cf['cell_id'] === (int)$ca['cell_id']) { $found = true; break; }
+                }
+                if (!$found) {
+                    $conflicts[] = $ca;
+                }
+            }
+        } catch (Throwable $ignore) {}
+
+        if (empty($conflicts)) {
+            return null;
+        }
+
+        // Determine employee name
+        $empName = !empty($conflicts[0]['emp_name_snapshot']) ? $conflicts[0]['emp_name_snapshot'] : '';
+        if (empty($empName)) {
+            $stmtName = $db->prepare("SELECT emp_name FROM att_staff WHERE emp_no = ? LIMIT 1");
+            $stmtName->execute([$empNo]);
+            $empName = $stmtName->fetchColumn() ?: $empNo;
+        }
+
+        // Distinct conflicting site names
+        $siteNames = [];
+        foreach ($conflicts as $c) {
+            $name = !empty($c['site_name']) ? $c['site_name'] : ('Site #' . ($c['site_id'] ?? ''));
+            if (!in_array($name, $siteNames, true)) {
+                $siteNames[] = $name;
+            }
+        }
+
+        if (count($siteNames) > 1) {
+            $siteList = implode(', ', $siteNames);
+            $warning = "Attendance already exists for {$empName} at {$siteList} on {$formattedDate}. This employee cannot be assigned attendance at another site on the same date. Please resolve the duplicates.";
+        } else {
+            $siteList = $siteNames[0] ?? 'another site';
+            $warning = "Attendance already exists for {$empName} at {$siteList} on {$formattedDate}. This employee cannot be assigned attendance at another site on the same date.";
+        }
+
+        return [
+            'has_conflict'   => true,
+            'emp_no'         => $empNo,
+            'emp_name'       => $empName,
+            'date'           => $attendanceDate,
+            'formatted_date' => $formattedDate,
+            'existing_sites' => $siteList,
+            'conflicts'      => $conflicts,
+            'message'        => $warning
+        ];
+    }
+
     public static function setCellCodeIfEmpty($rowId, $dayNumber, $code) {
         $db = att_get_db();
         $code = strtoupper(trim($code));
-        if (!in_array($code, ATT_VALID_CODES)) return false;
+        if (!in_array($code, ATT_VALID_CODES) || empty($code)) return false;
 
-        $stmtCheck = $db->prepare("SELECT code FROM att_cells WHERE row_id = ? AND day_number = ? LIMIT 1");
+        $stmtCheck = $db->prepare("SELECT id, code FROM att_cells WHERE row_id = ? AND day_number = ? LIMIT 1");
         $stmtCheck->execute([(int)$rowId, (int)$dayNumber]);
-        $row = $stmtCheck->fetch();
-        if ($row && !empty($row['code'])) {
+        $rowCell = $stmtCheck->fetch();
+        if ($rowCell && !empty($rowCell['code'])) {
             return false; // Already has code, preserve existing
         }
+
+        // Fetch row and sheet metadata
+        $stmtMeta = $db->prepare("
+            SELECT r.emp_no, s.id as sheet_id, s.site_id, s.year, s.month 
+            FROM att_rows r 
+            JOIN att_sheets s ON s.id = r.sheet_id 
+            WHERE r.id = ? 
+            LIMIT 1
+        ");
+        $stmtMeta->execute([(int)$rowId]);
+        $meta = $stmtMeta->fetch();
+        if (!$meta) return false;
+
+        // Check company-wide conflict
+        $conflict = self::checkAttendanceConflict($meta['emp_no'], $meta['year'], $meta['month'], $dayNumber, (int)$rowId);
+        if ($conflict && !empty($conflict['has_conflict'])) {
+            return false; // Disallow duplicate attendance
+        }
+
+        self::ensureCentralAttendanceTableExists();
 
         $stmt = $db->prepare("
             INSERT INTO att_cells (row_id, day_number, code)
@@ -251,6 +441,23 @@ class AttendanceSheet {
             ON DUPLICATE KEY UPDATE code = IF(code = '' OR code IS NULL, VALUES(code), code)
         ");
         $stmt->execute([(int)$rowId, (int)$dayNumber, $code]);
+        $cellId = (int)$db->lastInsertId();
+        if (!$cellId && $rowCell) {
+            $cellId = (int)$rowCell['id'];
+        }
+
+        if ($cellId > 0) {
+            $attDate = sprintf('%04d-%02d-%02d', $meta['year'], $meta['month'], $dayNumber);
+            try {
+                $stmtCa = $db->prepare("
+                    INSERT INTO att_central_attendance (emp_no, attendance_date, site_id, sheet_id, row_id, cell_id, code)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE site_id = VALUES(site_id), sheet_id = VALUES(sheet_id), row_id = VALUES(row_id), cell_id = VALUES(cell_id), code = VALUES(code)
+                ");
+                $stmtCa->execute([$meta['emp_no'], $attDate, (int)$meta['site_id'], (int)$meta['sheet_id'], (int)$rowId, $cellId, $code]);
+            } catch (Throwable $e) {}
+        }
+
         return true;
     }
 
@@ -262,12 +469,14 @@ class AttendanceSheet {
             throw new InvalidArgumentException("Invalid attendance code: {$code}. Valid: D, N, OFF, S, B");
         }
 
+        self::ensureCentralAttendanceTableExists();
+
         $inTx = $db->inTransaction();
         if (!$inTx) $db->beginTransaction();
 
         try {
             // Check lock & version concurrency
-            $stmtSheet = $db->prepare("SELECT id, status, version FROM att_sheets WHERE id = ? LIMIT 1 FOR UPDATE");
+            $stmtSheet = $db->prepare("SELECT id, site_id, year, month, status, version FROM att_sheets WHERE id = ? LIMIT 1 FOR UPDATE");
             $stmtSheet->execute([(int)$sheetId]);
             $sheet = $stmtSheet->fetch();
             if (!$sheet) {
@@ -277,15 +486,83 @@ class AttendanceSheet {
                 throw new RuntimeException("This attendance sheet is Locked and cannot be modified.");
             }
 
-            // Update cell
-            $stmtCell = $db->prepare("
-                INSERT INTO att_cells (row_id, day_number, code)
-                VALUES (?, ?, ?)
-                ON DUPLICATE KEY UPDATE code = VALUES(code)
-            ");
-            $stmtCell->execute([(int)$rowId, (int)$dayNumber, $code]);
+            // Fetch row info with row lock
+            $stmtRow = $db->prepare("SELECT id, emp_no, emp_name_snapshot FROM att_rows WHERE id = ? AND sheet_id = ? LIMIT 1 FOR UPDATE");
+            $stmtRow->execute([(int)$rowId, (int)$sheetId]);
+            $row = $stmtRow->fetch();
+            if (!$row) {
+                throw new RuntimeException("Roster row not found.");
+            }
+            $empNo = strtoupper(trim($row['emp_no']));
+            $empName = trim($row['emp_name_snapshot']);
+            $siteId = (int)$sheet['site_id'];
+            $year = (int)$sheet['year'];
+            $month = (int)$sheet['month'];
+            $dayNumber = (int)$dayNumber;
+            $attendanceDate = sprintf('%04d-%02d-%02d', $year, $month, $dayNumber);
 
-            // Increment version
+            // Fetch existing cell for this row & day
+            $stmtExistCell = $db->prepare("SELECT id, code FROM att_cells WHERE row_id = ? AND day_number = ? LIMIT 1 FOR UPDATE");
+            $stmtExistCell->execute([(int)$rowId, $dayNumber]);
+            $existingCell = $stmtExistCell->fetch();
+            $existingCellId = $existingCell ? (int)$existingCell['id'] : 0;
+
+            if (empty($code)) {
+                // User is clearing attendance for this day
+                if ($existingCellId > 0) {
+                    $stmtDelCell = $db->prepare("DELETE FROM att_cells WHERE id = ?");
+                    $stmtDelCell->execute([$existingCellId]);
+
+                    $stmtDelCentral = $db->prepare("DELETE FROM att_central_attendance WHERE cell_id = ?");
+                    $stmtDelCentral->execute([$existingCellId]);
+                }
+            } else {
+                // User is recording an attendance code (D, N, B, S, OFF)
+                // Check if employee already has attendance on this calendar date across ANY other row or site
+                $conflict = self::checkAttendanceConflict($empNo, $year, $month, $dayNumber, (int)$rowId, $existingCellId);
+                if ($conflict && !empty($conflict['has_conflict'])) {
+                    if (!$inTx && $db->inTransaction()) $db->rollBack();
+                    throw new AttendanceDuplicateException($conflict['message'], $conflict);
+                }
+
+                // Insert or update cell in att_cells
+                $stmtCell = $db->prepare("
+                    INSERT INTO att_cells (row_id, day_number, code)
+                    VALUES (?, ?, ?)
+                    ON DUPLICATE KEY UPDATE code = VALUES(code)
+                ");
+                $stmtCell->execute([(int)$rowId, $dayNumber, $code]);
+
+                if (!$existingCellId) {
+                    $existingCellId = (int)$db->lastInsertId();
+                }
+
+                // Register into att_central_attendance table
+                // Database-level UNIQUE constraint uk_central_emp_date will guarantee no race conditions
+                try {
+                    $stmtCentral = $db->prepare("
+                        INSERT INTO att_central_attendance (emp_no, attendance_date, site_id, sheet_id, row_id, cell_id, code)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE 
+                            site_id = VALUES(site_id),
+                            sheet_id = VALUES(sheet_id),
+                            row_id = VALUES(row_id),
+                            cell_id = VALUES(cell_id),
+                            code = VALUES(code)
+                    ");
+                    $stmtCentral->execute([$empNo, $attendanceDate, $siteId, (int)$sheetId, (int)$rowId, $existingCellId, $code]);
+                } catch (PDOException $pe) {
+                    if ($pe->getCode() == 23000 || strpos($pe->getMessage(), '1062') !== false || strpos($pe->getMessage(), 'uk_central_emp_date') !== false) {
+                        if (!$inTx && $db->inTransaction()) $db->rollBack();
+                        $conflictRecheck = self::checkAttendanceConflict($empNo, $year, $month, $dayNumber, (int)$rowId, $existingCellId);
+                        $msg = $conflictRecheck['message'] ?? "Attendance already exists for {$empName} on {$attendanceDate}. This employee cannot be assigned attendance at another site on the same date.";
+                        throw new AttendanceDuplicateException($msg, $conflictRecheck ?: ['emp_no' => $empNo, 'date' => $attendanceDate]);
+                    }
+                    throw $pe;
+                }
+            }
+
+            // Increment sheet version
             $stmtVer = $db->prepare("UPDATE att_sheets SET version = version + 1 WHERE id = ?");
             $stmtVer->execute([(int)$sheetId]);
 
@@ -319,6 +596,11 @@ class AttendanceSheet {
             $stmt = $db->prepare("UPDATE att_rows SET is_deleted = 1 WHERE id = ? AND sheet_id = ?");
             $stmt->execute([$rowId, $sheetId]);
 
+            // Release central attendance slots for soft-deleted row
+            try {
+                $db->prepare("DELETE FROM att_central_attendance WHERE row_id = ?")->execute([$rowId]);
+            } catch (Throwable $e) {}
+
             att_log_audit('SHEET_ROW_REMOVE', 'att_rows', $rowId, ['sheet_id' => $sheetId], $actorName);
 
             if (!$inTx) $db->commit();
@@ -336,14 +618,35 @@ class AttendanceSheet {
         $newEmpNo = strtoupper(trim($newEmpNo));
         $newEmpName = trim($newEmpName);
 
+        self::ensureCentralAttendanceTableExists();
+
         $inTx = $db->inTransaction();
         if (!$inTx) $db->beginTransaction();
 
         try {
-            $stmtSheet = $db->prepare("SELECT status FROM att_sheets WHERE id = ? LIMIT 1 FOR UPDATE");
+            $stmtSheet = $db->prepare("SELECT id, site_id, year, month, status FROM att_sheets WHERE id = ? LIMIT 1 FOR UPDATE");
             $stmtSheet->execute([$sheetId]);
-            if ($stmtSheet->fetchColumn() === 'Locked') {
+            $sheet = $stmtSheet->fetch();
+            if (!$sheet) {
+                throw new RuntimeException("Sheet not found.");
+            }
+            if ($sheet['status'] === 'Locked') {
                 throw new RuntimeException("Cannot alter locked sheet.");
+            }
+
+            // If not clearing codes, verify that new staff has no conflicts on any of the active days in this row
+            if (!$clearCodes) {
+                $stmtCells = $db->prepare("SELECT id, day_number, code FROM att_cells WHERE row_id = ? AND code != '' AND code IS NOT NULL");
+                $stmtCells->execute([$rowId]);
+                $existingCells = $stmtCells->fetchAll();
+
+                foreach ($existingCells as $ec) {
+                    $conflict = self::checkAttendanceConflict($newEmpNo, $sheet['year'], $sheet['month'], $ec['day_number'], $rowId, (int)$ec['id']);
+                    if ($conflict && !empty($conflict['has_conflict'])) {
+                        if (!$inTx && $db->inTransaction()) $db->rollBack();
+                        throw new AttendanceDuplicateException($conflict['message'], $conflict);
+                    }
+                }
             }
 
             // Update row
@@ -353,6 +656,9 @@ class AttendanceSheet {
             if ($clearCodes) {
                 $stmtClr = $db->prepare("DELETE FROM att_cells WHERE row_id = ?");
                 $stmtClr->execute([$rowId]);
+                $db->prepare("DELETE FROM att_central_attendance WHERE row_id = ?")->execute([$rowId]);
+            } else {
+                $db->prepare("UPDATE att_central_attendance SET emp_no = ? WHERE row_id = ?")->execute([$newEmpNo, $rowId]);
             }
 
             att_log_audit('SHEET_ROW_REPLACE', 'att_rows', $rowId, [

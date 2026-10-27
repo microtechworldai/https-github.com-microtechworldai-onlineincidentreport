@@ -20,6 +20,8 @@ class BackupEngine {
         'att_sheets',
         'att_rows',
         'att_cells',
+        'att_central_attendance',
+        'att_additional_deployments',
         'att_site_assignments',
         'att_payroll_columns',
         'att_payroll_values',
