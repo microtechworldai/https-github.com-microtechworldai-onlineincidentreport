@@ -1279,3 +1279,28 @@ tr.att-row-staff:hover td {
   text-align: center !important;
   border: 1px solid #2d4a77 !important;
 }
+
+/* Black Text Without Bold for Data and Summary Rows */
+.att-row-staff td,
+.att-payroll-row td,
+.att-col-emp,
+.att-col-name,
+.att-col-site,
+.att-col-stat,
+.att-col-total,
+.att-cell-input,
+.att-tr-day-total td,
+.att-tr-night-total td,
+.att-tr-grand-total td,
+.att-summary-label,
+.att-col-total-d,
+.att-col-total-n,
+.att-col-total-grand,
+.att-deploy-ok,
+.att-deploy-less,
+.att-deploy-over,
+.att-deploy-neutral,
+.att-payroll-total-row td {
+  color: #000000 !important;
+  font-weight: normal !important;
+}

@@ -551,6 +551,93 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
 }
 </style>
 
+
+<!-- BLACK TEXT WITHOUT BOLD FOR ATTENDANCE & PAYROLL DATA ROWS -->
+<style>
+/* Staff Data Columns: Black Text, Without Bold */
+.att-row-staff td,
+.att-payroll-row td,
+.att-col-emp,
+.att-col-name,
+.att-col-site,
+.att-col-stat,
+.att-col-total {
+  color: #000000 !important;
+  font-weight: normal !important;
+  font-size: 13px !important;
+}
+
+.att-col-name {
+  text-align: left !important;
+  padding-left: 10px !important;
+}
+
+.att-col-site {
+  text-align: left !important;
+  padding-left: 10px !important;
+  color: #000000 !important;
+}
+
+/* Interactive Input inside table: Black Text, Without Bold */
+.att-cell-input {
+  color: #000000 !important;
+  font-weight: normal !important;
+  font-size: 13px !important;
+}
+
+/* Shift tags: keep subtle background, black text without bold */
+.att-code-D, .att-code-N, .att-code-OFF, .att-code-S, .att-code-B {
+  font-weight: normal !important;
+}
+
+/* Summary Rows: Black Text, Without Bold, Pure White */
+.att-tr-day-total td,
+.att-tr-night-total td,
+.att-tr-grand-total td,
+.att-tr-day-total .att-summary-label,
+.att-tr-night-total .att-summary-label,
+.att-tr-grand-total .att-summary-label,
+.att-summary-label {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-weight: normal !important;
+  font-size: 13px !important;
+  letter-spacing: normal !important;
+  text-align: center !important;
+  border: 1px solid #cbd5e1 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.att-col-total-d,
+.att-col-total-n,
+.att-col-total-grand,
+.att-deploy-ok,
+.att-deploy-less,
+.att-deploy-over,
+.att-deploy-neutral {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-weight: normal !important;
+  font-size: 13px !important;
+  text-align: center !important;
+  border: 1px solid #cbd5e1 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* Payroll Total Row */
+.att-payroll-total-row td,
+.att-payroll-total-row .att-summary-label {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: normal !important;
+  font-size: 13px !important;
+}
+</style>
+
 <div class="att-grid-wrapper">
             <table class="att-roster-outer-table" id="att-roster-table" data-sheet-id="<?= $sheet['id'] ?>" data-locked="<?= $isLocked ? '1' : '0' ?>">
                 <thead>
@@ -647,7 +734,7 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
 
                     <!-- Bottom Summary Row 1: Day Shift (D) -->
                     <tr class="att-tr-day-total" style="background:#ffffff !important;background-color:#ffffff !important;">
-                        <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;">DAY SHIFT (D):</td>
+                        <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:normal !important;">DAY SHIFT (D):</td>
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): 
                             $stD = $dayDeployStatuses[$d] ?? 'neutral';
                             $clsD = 'att-deploy-' . $stD;
@@ -655,14 +742,14 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                             $cntD = $dayShiftCounts[$d] ?: '0';
                             $tipD = "Day {$d} Day Shift: Deployed {$cntD} / Required {$reqD}";
                         ?>
-                            <td class="att-col-total-d <?= $clsD ?>" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;" data-day="<?= $d ?>" data-req-d="<?= $reqD ?>" title="<?= htmlspecialchars($tipD) ?>"><?= $cntD ?></td>
+                            <td class="att-col-total-d <?= $clsD ?>" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:normal !important;" data-day="<?= $d ?>" data-req-d="<?= $reqD ?>" title="<?= htmlspecialchars($tipD) ?>"><?= $cntD ?></td>
                         <?php endfor; ?>
                         <td class="att-col-action no-print"></td>
                     </tr>
 
                     <!-- Bottom Summary Row 2: Night Shift (N) -->
                     <tr class="att-tr-night-total" style="background:#ffffff !important;background-color:#ffffff !important;">
-                        <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;">NIGHT SHIFT (N):</td>
+                        <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:normal !important;">NIGHT SHIFT (N):</td>
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): 
                             $stN = $nightDeployStatuses[$d] ?? 'neutral';
                             $clsN = 'att-deploy-' . $stN;
@@ -670,14 +757,14 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                             $cntN = $nightShiftCounts[$d] ?: '0';
                             $tipN = "Day {$d} Night Shift: Deployed {$cntN} / Required {$reqN}";
                         ?>
-                            <td class="att-col-total-n <?= $clsN ?>" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;" data-day="<?= $d ?>" data-req-n="<?= $reqN ?>" title="<?= htmlspecialchars($tipN) ?>"><?= $cntN ?></td>
+                            <td class="att-col-total-n <?= $clsN ?>" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:normal !important;" data-day="<?= $d ?>" data-req-n="<?= $reqN ?>" title="<?= htmlspecialchars($tipN) ?>"><?= $cntN ?></td>
                         <?php endfor; ?>
                         <td class="att-col-action no-print"></td>
                     </tr>
 
                     <!-- Bottom Summary Row 3: Total on Duty (D + N) -->
                     <tr class="att-tr-grand-total" style="background:#ffffff !important;background-color:#ffffff !important;">
-                        <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;">TOTAL ON DUTY (D + N):</td>
+                        <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:normal !important;">TOTAL ON DUTY (D + N):</td>
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): 
                             $stTot = $totalDeployStatuses[$d] ?? 'neutral';
                             $clsTot = 'att-deploy-' . $stTot;
@@ -685,7 +772,7 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                             $cntTot = $totalDutyCounts[$d] ?: '0';
                             $tipTot = "Day {$d} Total Duty: Deployed {$cntTot} / Required {$reqTot}";
                         ?>
-                            <td class="att-col-total-grand <?= $clsTot ?>" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;" data-day="<?= $d ?>" data-req-total="<?= $reqTot ?>" title="<?= htmlspecialchars($tipTot) ?>"><?= $cntTot ?></td>
+                            <td class="att-col-total-grand <?= $clsTot ?>" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:normal !important;" data-day="<?= $d ?>" data-req-total="<?= $reqTot ?>" title="<?= htmlspecialchars($tipTot) ?>"><?= $cntTot ?></td>
                         <?php endfor; ?>
                         <td class="att-col-action no-print"></td>
                     </tr>
