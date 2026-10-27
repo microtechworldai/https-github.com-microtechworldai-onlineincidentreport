@@ -232,7 +232,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // 5. Audit Log Entry
+                        // 4b. Process Management Sign-Off uploaded from mobile
+            $supName = trim($_POST['site_supervisor_name'] ?? '');
+            $supId = trim($_POST['site_supervisor_id'] ?? '');
+            $supDate = !empty($_POST['site_supervisor_date']) ? $_POST['site_supervisor_date'] : null;
+            $supRec = trim($_POST['recommendation_action_taken'] ?? '');
+
+            $opsName = trim($_POST['operations_manager_name'] ?? '');
+            $opsId = trim($_POST['operations_manager_id'] ?? '');
+            $opsDate = !empty($_POST['operations_manager_date']) ? $_POST['operations_manager_date'] : null;
+
+            $clientName = trim($_POST['client_manager_name'] ?? '');
+            $clientId = trim($_POST['client_manager_id'] ?? '');
+            $clientAction = trim($_POST['client_manager_action_taken'] ?? '');
+            $clientDate = !empty($_POST['client_manager_date']) ? $_POST['client_manager_date'] : null;
+
+            $sigDir = ROOT_PATH . '/uploads/signatures';
+            if (!is_dir($sigDir)) {
+                @mkdir($sigDir, 0777, true);
+            }
+
+            $supSig = null;
+            if (!empty($_FILES['site_supervisor_sig_file']['tmp_name']) && is_uploaded_file($_FILES['site_supervisor_sig_file']['tmp_name'])) {
+                $ext = strtolower(pathinfo($_FILES['site_supervisor_sig_file']['name'], PATHINFO_EXTENSION)) ?: 'png';
+                $fname = 'sup_sig_' . $incidentId . '_' . time() . '.' . $ext;
+                if (move_uploaded_file($_FILES['site_supervisor_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
+                    $supSig = 'uploads/signatures/' . $fname;
+                }
+            }
+
+            $opsSig = null;
+            if (!empty($_FILES['operations_manager_sig_file']['tmp_name']) && is_uploaded_file($_FILES['operations_manager_sig_file']['tmp_name'])) {
+                $ext = strtolower(pathinfo($_FILES['operations_manager_sig_file']['name'], PATHINFO_EXTENSION)) ?: 'png';
+                $fname = 'ops_sig_' . $incidentId . '_' . time() . '.' . $ext;
+                if (move_uploaded_file($_FILES['operations_manager_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
+                    $opsSig = 'uploads/signatures/' . $fname;
+                }
+            }
+
+            $clientSig = null;
+            if (!empty($_FILES['client_manager_sig_file']['tmp_name']) && is_uploaded_file($_FILES['client_manager_sig_file']['tmp_name'])) {
+                $ext = strtolower(pathinfo($_FILES['client_manager_sig_file']['name'], PATHINFO_EXTENSION)) ?: 'png';
+                $fname = 'client_sig_' . $incidentId . '_' . time() . '.' . $ext;
+                if (move_uploaded_file($_FILES['client_manager_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
+                    $clientSig = 'uploads/signatures/' . $fname;
+                }
+            }
+
+            if ($supName || $supId || $supSig || $supDate || $supRec || $opsName || $opsId || $opsSig || $opsDate || $clientName || $clientId || $clientAction || $clientSig || $clientDate) {
+                $stmtSignoff = $db->prepare("
+                    UPDATE incidents SET
+                        site_supervisor_name = ?,
+                        site_supervisor_id = ?,
+                        site_supervisor_signature = COALESCE(?, site_supervisor_signature),
+                        site_supervisor_date = ?,
+                        recommendation_action_taken = ?,
+                        operations_manager_name = ?,
+                        operations_manager_id = ?,
+                        operations_manager_signature = COALESCE(?, operations_manager_signature),
+                        operations_manager_date = ?,
+                        client_manager_name = ?,
+                        client_manager_id = ?,
+                        client_manager_action_taken = ?,
+                        client_manager_signature = COALESCE(?, client_manager_signature),
+                        client_manager_date = ?
+                    WHERE id = ?
+                ");
+                $stmtSignoff->execute([
+                    $supName ?: null,
+                    $supId ?: null,
+                    $supSig,
+                    $supDate,
+                    $supRec ?: null,
+                    $opsName ?: null,
+                    $opsId ?: null,
+                    $opsSig,
+                    $opsDate,
+                    $clientName ?: null,
+                    $clientId ?: null,
+                    $clientAction ?: null,
+                    $clientSig,
+                    $clientDate,
+                    $incidentId
+                ]);
+            }
+
+// 5. Audit Log Entry
             try {
                 log_audit('GUARD_SUBMIT_INCIDENT', 'INCIDENT', $incidentId, [
                     'ref_number' => $refNumber,
@@ -531,7 +616,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- 5. INCIDENT CLASSIFICATION (NAVY FRAME) -->
         <div class="navy-section-frame">
             <div class="navy-frame-header">
-                <div class="navy-frame-title">Incident Classification</div>
+                <div class="navy-frame-title" style="color: #ffffff !important; font-weight: 800 !important;">Classification &amp; Triggers</div>
                 <div class="navy-frame-sub">Official Incident Options</div>
             </div>
             <div class="navy-frame-body">
@@ -552,9 +637,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- 6. NAVY ACTION FRAME FOR SUMMARY LINE (EXACT MATCH FOR IMAGE 4) -->
         <div class="navy-section-frame">
             <div class="navy-frame-header" style="justify-content: center; text-align: center;">
-                <div class="navy-frame-title" style="font-size: 14.5px; font-weight: 900; text-transform: none; text-align: center;">
-                    (Explain What, Where, When, Who, Why and How Action Taken)
-                </div>
+                <div class="navy-frame-title" style="color: #ffffff !important; font-weight: 800 !important;">Executive Summary</div>
             </div>
             <div class="navy-frame-body">
                 <input type="text" id="summaryLine" name="summary_line" class="guard-input" placeholder="Write concise summary line (e.g., Water leakage in B1 park..." value="<?= htmlspecialchars($prefillSummary) ?>" required style="margin-bottom: 0; font-weight: 700; font-size: 15.5px;">
@@ -589,7 +672,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- 8. DESCRIPTION OF INCIDENT (NAVY FRAME WITH RICH FORMATTING TOOLBAR) -->
         <div class="navy-section-frame">
             <div class="navy-frame-header">
-                <div class="navy-frame-title">Description Of Incident</div>
+                <div class="navy-frame-title" style="color: #ffffff !important; font-weight: 800 !important;">Patrol Officer Narrative (Detailed Occurrence)</div>
                 <div class="navy-frame-sub">Detailed Statement Of Occurrence</div>
             </div>
             <div class="navy-frame-body">
@@ -661,7 +744,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- 9. ATTACHED PHOTOGRAPHS & EVIDENCE (NAVY FRAME & GALLERY UPLOADER) -->
         <div class="navy-section-frame">
             <div class="navy-frame-header">
-                <div class="navy-frame-title">Attached Photographs &amp; Evidence</div>
+                <div class="navy-frame-title" style="color: #ffffff !important; font-weight: 800 !important;">Attached Photographic Evidence (1 / 12)</div>
                 <div class="navy-frame-sub">Up To 12 Photos</div>
             </div>
             <div class="navy-frame-body">
@@ -693,7 +776,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Mobile Photo Cards (Zero Overlap) -->
                 <div id="photoPreviewsList"></div>
             </div>
+        </div>        <!-- 10. OFFICIAL MANAGEMENT SIGN-OFF (MOBILE PHONE & DASHBOARD COMPATIBLE) -->
+        <div class="navy-section-frame" id="managementSignoffFrame" style="margin-bottom: 24px;">
+            <div class="navy-frame-header">
+                <div class="navy-frame-title" style="color: #ffffff !important; font-weight: 800 !important;">Official Management Sign-Off</div>
+                <div class="navy-frame-sub" style="color: rgba(255,255,255,0.75);">Supervisor, Operations &amp; Client Authorizations</div>
+            </div>
+            <div class="navy-frame-body" style="padding: 18px 16px;">
+                <!-- 1. Site Supervisor Sign-Off -->
+                <div style="margin-bottom: 22px;">
+                    <div style="font-size: 13px; font-weight: 800; color: #38bdf8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                        <span>👮</span> 1. Site Supervisor Sign-Off
+                    </div>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Supervisor Name &amp; ID</label>
+                            <input type="text" name="site_supervisor_name" placeholder="Supervisor Name" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 700; font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Staff ID</label>
+                            <input type="text" name="site_supervisor_id" placeholder="Staff ID" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 700; font-size: 14px;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Sign-Off Date (dd/mm/yyyy)</label>
+                        <input type="date" name="site_supervisor_date" value="<?= date('Y-m-d') ?>" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 700; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Supervisor Signature Image</label>
+                        <input type="file" name="site_supervisor_sig_file" accept="image/*" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-size: 12px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Recommendation / Action Taken</label>
+                        <textarea name="recommendation_action_taken" rows="2" placeholder="Corrective actions initiated at post..." style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 600; font-size: 13.5px;"></textarea>
+                    </div>
+                </div>
+
+                <!-- 2. Operations Manager Sign-Off -->
+                <div style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 18px; margin-bottom: 22px;">
+                    <div style="font-size: 13px; font-weight: 800; color: #38bdf8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                        <span>🏢</span> 2. Operations Manager Sign-Off
+                    </div>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Operations Manager Name</label>
+                            <input type="text" name="operations_manager_name" placeholder="Operations Manager Name" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 700; font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Staff ID</label>
+                            <input type="text" name="operations_manager_id" placeholder="Staff ID (e.g. OPS-01)" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 700; font-size: 14px;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Ops Sign-off Date (dd/mm/yyyy)</label>
+                        <input type="date" name="operations_manager_date" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 700; font-size: 14px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Operations Manager Signature Image</label>
+                        <input type="file" name="operations_manager_sig_file" accept="image/*" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-size: 12px;">
+                    </div>
+                </div>
+
+                <!-- 3. Client Representative Sign-Off -->
+                <div style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 18px;">
+                    <div style="font-size: 13px; font-weight: 800; color: #38bdf8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                        <span>🤝</span> 3. Client Representative Sign-Off
+                    </div>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Client Representative Name</label>
+                            <input type="text" name="client_manager_name" placeholder="Client Representative Name" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 700; font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Client ID / Staff ID</label>
+                            <input type="text" name="client_manager_id" placeholder="Client Badge / ID" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 700; font-size: 14px;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Client Action Taken</label>
+                        <textarea name="client_manager_action_taken" rows="2" placeholder="Client acknowledgement or notes..." style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 600; font-size: 13.5px;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Client Date (dd/mm/yyyy)</label>
+                        <input type="date" name="client_manager_date" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 700; font-size: 14px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Client Signature Image</label>
+                        <input type="file" name="client_manager_sig_file" accept="image/*" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-size: 12px;">
+                    </div>
+                </div>
+            </div>
         </div>
+
+
 
         <!-- Sticky Submit Bar -->
         <div class="sticky-submit-bar">

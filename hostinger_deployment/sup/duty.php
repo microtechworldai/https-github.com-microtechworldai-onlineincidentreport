@@ -46,7 +46,7 @@ $openVisit = null;
 if ($activeDuty) {
     $vStmt = $db->prepare("
         SELECT v.*, s.name AS site_name, s.code AS site_code,
-               s.supervisor_qr_token, s.supervisor_qr_token_encrypted
+               s.supervisor_qr_token, s.active_qr_token
         FROM supervisor_visits v
         JOIN sites s ON s.id = v.site_id
         WHERE v.duty_id = ? AND v.status = 'In Progress'
@@ -100,7 +100,7 @@ $todayDate = date('Y-m-d');
 
 $schedStmt = $db->prepare("
     SELECT sc.*, s.name AS site_name, s.code AS site_code,
-           s.supervisor_qr_token, s.supervisor_qr_token_encrypted
+           s.supervisor_qr_token, s.active_qr_token
     FROM supervisor_schedules sc
     JOIN sites s ON s.id = sc.site_id
     WHERE sc.supervisor_id = ? 
@@ -405,7 +405,11 @@ $msg = $_GET['msg'] ?? '';
                     Wait for Super Admin review. Do not start another site visit until this request is resolved.
                 </div>
                 <?php else: ?>
-                    <?php $openVisitToken = get_stored_qr_token($openVisit, 'supervisor_qr_token_encrypted', 'supervisor_qr_token'); ?>
+                    <?php 
+$openVisitToken = !empty($openVisit['supervisor_qr_token']) 
+    ? $openVisit['supervisor_qr_token'] 
+    : (!empty($openVisit['active_qr_token']) ? $openVisit['active_qr_token'] : $openVisit['site_code']); 
+?>
                     <?php if ($openVisitToken !== ''): ?>
                     <a href="<?= APP_URL ?>/sup/index.php?token=<?= urlencode($openVisitToken) ?>" class="btn btn-primary" style="width: 100%; text-align: center; padding: 14px; font-size: 15px; font-weight: 800; background: var(--accent-amber); color: #000;">
                         ⏱️ Clock Out & Write Site Remarks

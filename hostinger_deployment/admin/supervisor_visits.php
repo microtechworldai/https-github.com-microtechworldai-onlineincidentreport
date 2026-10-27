@@ -30,7 +30,7 @@ $whereSql = "WHERE " . implode(" AND ", $where);
 // Fetch visits
 $query = "
     SELECT v.*, 
-           s.name AS site_name, s.code AS site_code,
+           s.name AS site_name, s.code AS site_code, s.client_name, s.address AS site_address,
            g.full_name AS supervisor_name, g.staff_id AS supervisor_staff_id,
            d.duty_ref, d.shift_type, d.camp_out_time, d.camp_in_time,
            c.camp_name
@@ -236,8 +236,32 @@ if (!empty($visitIds)) {
                                     <span style="color: var(--text-dim); font-size: 12px; display: block; margin-bottom: 4px;">No remarks logged yet</span>
                                 <?php endif; ?>
 
+                                <!-- Client Rep & Checklist Pills -->
+                                <?php if (!empty($v['client_rep_name'])): ?>
+                                    <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px;">
+                                        👤 Client Rep: <strong style="color: var(--text-main);"><?= htmlspecialchars($v['client_rep_name']) ?></strong>
+                                    </div>
+                                <?php endif; ?>
+
                                 <!-- Checklist Pills -->
                                 <div style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 10.5px;">
+                                    <?php if (!empty($v['checklist_summary'])): ?>
+                                        <span class="badge" style="background: rgba(14, 165, 233, 0.15); color: #0284c7; font-weight: 800;">
+                                            📋 <?= htmlspecialchars($v['checklist_summary']) ?>
+                                        </span>
+                                    <?php endif; ?>
+
+                                    <?php if ((int)$v['checklist_no_count'] > 0): ?>
+                                        <span class="badge" style="background: #fee2e2; color: #dc2626; font-weight: 800; border: 1px solid #fca5a5;">
+                                            ⚠️ <?= (int)$v['checklist_no_count'] ?> Deficiencies
+                                        </span>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($v['corrective_action_status'])): ?>
+                                        <span class="badge" style="background: <?= $v['corrective_action_status'] === 'Resolved' ? '#dcfce7' : '#fef3c7' ?>; color: <?= $v['corrective_action_status'] === 'Resolved' ? '#166534' : '#92400e' ?>; font-weight: 700;">
+                                            🔧 Action: <?= htmlspecialchars($v['corrective_action_status']) ?>
+                                        </span>
+                                    <?php endif; ?>
                                     <?php if (!empty($v['purpose_of_visit'])): ?>
                                         <span class="badge" style="background: rgba(59, 130, 246, 0.12); color: #2563eb; font-weight: 700;">
                                             🎯 <?= htmlspecialchars($v['purpose_of_visit']) ?>
@@ -298,12 +322,12 @@ if (!empty($visitIds)) {
 </div>
 
 <!-- Visit Details Modal -->
-<div id="visitDetailModal" class="modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-    <div class="modal-dialog" style="background: var(--bg-card); width: 100%; max-width: 650px; border-radius: 12px; border: 1px solid var(--border-subtle); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); overflow: hidden;">
+<div id="visitDetailModal" class="modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div class="modal-dialog" style="background: var(--bg-card); width: 100%; max-width: 840px; border-radius: 12px; border: 1px solid var(--border-subtle); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.4); overflow: hidden; max-height: 92vh; display: flex; flex-direction: column;">
         
-        <div style="padding: 16px 22px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.02);">
+        <div style="padding: 16px 22px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.03);">
             <div>
-                <h3 style="margin: 0; font-size: 16px; font-weight: 800;" id="vdModalTitle">
+                <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: var(--text-main);" id="vdModalTitle">
                     Site Visit Report Details
                 </h3>
                 <div style="font-size: 11.5px; color: var(--text-dim); margin-top: 2px;" id="vdModalSubtitle"></div>
@@ -311,21 +335,72 @@ if (!empty($visitIds)) {
             <button type="button" onclick="closeVisitDetailModal()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-dim);">&times;</button>
         </div>
 
-        <div style="padding: 22px; max-height: 78vh; overflow-y: auto;">
+        <div style="padding: 22px; overflow-y: auto; flex: 1;">
             
-            <!-- Quick Summary Strip -->
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: rgba(0,0,0,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; margin-bottom: 18px; text-align: center;">
-                <div>
-                    <div style="font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Time In</div>
-                    <div id="vdTimeIn" style="font-size: 14px; font-weight: 800; color: #10b981; margin-top: 2px;"></div>
+            <!-- 1. Site Visit & Attendance Details Card -->
+            <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
+                <div style="font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">
+                    1. Site Visit &amp; Attendance Details
                 </div>
-                <div>
-                    <div style="font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Time Out</div>
-                    <div id="vdTimeOut" style="font-size: 14px; font-weight: 800; margin-top: 2px;"></div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 16px; font-size: 12.5px;">
+                    <div>
+                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Site Name &amp; Code:</span>
+                        <strong id="vdSiteNameCode" style="color: var(--text-main);"></strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Client &amp; Location:</span>
+                        <strong id="vdClientLoc" style="color: var(--text-main);"></strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Supervisor Name &amp; ID:</span>
+                        <strong id="vdSupNameId" style="color: var(--text-main);"></strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Date &amp; Shift:</span>
+                        <strong id="vdDateShift" style="color: var(--text-main);"></strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Arrival (QR Check-in):</span>
+                        <strong id="vdTimeIn" style="color: #10b981; font-family: monospace;"></strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Departure (QR Check-out):</span>
+                        <strong id="vdTimeOut" style="font-family: monospace;"></strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Total Time Spent at Site:</span>
+                        <strong id="vdTimeSpent" style="color: #0284c7; font-weight: 850;"></strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Client Representative:</span>
+                        <strong id="vdClientRep" style="color: var(--text-main);"></strong>
+                    </div>
                 </div>
-                <div>
-                    <div style="font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Time Spent</div>
-                    <div id="vdTimeSpent" style="font-size: 14px; font-weight: 900; color: var(--primary); margin-top: 2px;"></div>
+            </div>
+
+            <!-- 2. Field Supervisor – Site Inspection Checklist (22 Items) -->
+            <div style="margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">
+                        2. Field Supervisor – Site Inspection Checklist (22 Items)
+                    </div>
+                    <span id="vdChecklistSummaryBadge" class="badge" style="background: rgba(2, 132, 199, 0.15); color: #0284c7; font-weight: 800; font-size: 11px;">
+                        Loading summary...
+                    </span>
+                </div>
+                
+                <div id="vdChecklistTableContainer" style="border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden; max-height: 240px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background: rgba(0,0,0,0.04); text-align: left;">
+                                <th style="padding: 7px 10px; width: 35px; border-bottom: 1px solid var(--border-subtle);">#</th>
+                                <th style="padding: 7px 10px; border-bottom: 1px solid var(--border-subtle);">Inspection Item</th>
+                                <th style="padding: 7px 10px; width: 90px; text-align: center; border-bottom: 1px solid var(--border-subtle);">Answer</th>
+                                <th style="padding: 7px 10px; border-bottom: 1px solid var(--border-subtle);">Deficiency Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vdChecklistTbody"></tbody>
+                    </table>
                 </div>
             </div>
 
@@ -334,62 +409,42 @@ if (!empty($visitIds)) {
                 <label style="font-size: 12px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 6px;">
                     Mandatory Supervisor Remarks
                 </label>
-                <div id="vdRemarks" style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.5; color: var(--text-main); font-weight: 600; white-space: pre-wrap;"></div>
+                <div id="vdRemarks" style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; line-height: 1.5; color: var(--text-main); font-weight: 600; white-space: pre-wrap;"></div>
             </div>
 
-            <!-- Checklist & Audit Grid -->
-            <div style="margin-bottom: 18px;">
-                <label style="font-size: 12px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 8px;">
-                    Site Visit Checklist & Ratings
-                </label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div style="border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; background: rgba(0,0,0,0.01);">
-                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Purpose of Visit</span>
-                        <strong id="vdPurpose" style="font-size: 13px; color: var(--text-main);"></strong>
+            <!-- 4. Corrective-Action Tracking -->
+            <div id="vdCorrectiveActionSection" style="margin-bottom: 18px;">
+                <div style="font-size: 12px; font-weight: 800; color: #dc2626; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">
+                    4. Corrective-Action Tracking
+                </div>
+                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 14px;">
+                    <div style="margin-bottom: 8px;">
+                        <span style="font-size: 11px; color: #991b1b; font-weight: 700; text-transform: uppercase; display: block;">Issues Found &amp; Action Taken:</span>
+                        <div id="vdIssuesAction" style="font-size: 12.5px; color: #7f1d1d; font-weight: 600; white-space: pre-wrap; margin-top: 2px;"></div>
                     </div>
-
-                    <div style="border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; background: rgba(0,0,0,0.01);">
-                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Guards On Duty</span>
-                        <strong id="vdGuards" style="font-size: 13px; color: var(--text-main);"></strong>
-                        <div id="vdGuardNames" style="font-size: 11px; color: var(--text-dim); margin-top: 2px;"></div>
-                    </div>
-
-                    <div style="border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; background: rgba(0,0,0,0.01);">
-                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Turnout & Grooming</span>
-                        <span id="vdRatingTurnout"></span>
-                    </div>
-
-                    <div style="border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; background: rgba(0,0,0,0.01);">
-                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Post & Logbook Records</span>
-                        <span id="vdRatingRecords"></span>
-                    </div>
-
-                    <div style="border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; background: rgba(0,0,0,0.01);">
-                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Site Condition & Safety</span>
-                        <span id="vdRatingCondition"></span>
-                    </div>
-
-                    <div style="border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; background: rgba(0,0,0,0.01);">
-                        <span style="font-size: 11px; color: var(--text-dim); display: block;">Equipment & Radios</span>
-                        <span id="vdRatingEquipment"></span>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 12px; border-top: 1px solid #fee2e2; padding-top: 8px;">
+                        <div>
+                            <span style="font-size: 10.5px; color: #991b1b; display: block;">Responsible Person:</span>
+                            <strong id="vdActionAssignee" style="color: #7f1d1d;"></strong>
+                        </div>
+                        <div>
+                            <span style="font-size: 10.5px; color: #991b1b; display: block;">Due Date:</span>
+                            <strong id="vdActionDueDate" style="color: #7f1d1d;"></strong>
+                        </div>
+                        <div>
+                            <span style="font-size: 10.5px; color: #991b1b; display: block;">Status:</span>
+                            <span id="vdActionStatusBadge"></span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Issues Found Section -->
-            <div id="vdIssuesSection" style="margin-bottom: 18px; display: none;">
-                <label style="font-size: 12px; font-weight: 800; color: #dc2626; text-transform: uppercase; display: block; margin-bottom: 6px;">
-                    ⚠️ Issues Found & Action Taken
-                </label>
-                <div id="vdIssuesAction" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 14px; font-size: 12.5px; line-height: 1.5; color: #991b1b; font-weight: 600; white-space: pre-wrap;"></div>
-            </div>
-
-            <!-- Photos Gallery -->
+            <!-- 5. Photos Gallery with Captions -->
             <div id="vdPhotosSection" style="margin-bottom: 10px; display: none;">
                 <label style="font-size: 12px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 8px;">
-                    Site Photos (<span id="vdPhotoCount">0</span>)
+                    5. Photographic Evidence (<span id="vdPhotoCount">0</span> Photos)
                 </label>
-                <div id="vdPhotosGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;"></div>
+                <div id="vdPhotosGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px;"></div>
             </div>
 
         </div>
@@ -405,41 +460,115 @@ if (!empty($visitIds)) {
 function renderBadgeRating(rating) {
     if (!rating) return '<span style="color:var(--text-dim);">N/A</span>';
     var bg = '#f1f5f9', color = '#64748b';
-    if (rating === 'OK') { bg = '#d1fae5'; color = '#065f46'; }
-    else if (rating === 'Issue') { bg = '#fee2e2'; color = '#991b1b'; }
-    return '<span class="badge" style="background:' + bg + '; color:' + color + '; font-weight:800; font-size:11px;">' + rating + '</span>';
+    if (rating === 'OK' || rating === 'Yes') { bg = '#d1fae5'; color = '#065f46'; }
+    else if (rating === 'Issue' || rating === 'No') { bg = '#fee2e2'; color = '#991b1b'; }
+    else if (rating === 'Unanswered') { bg = '#fef3c7'; color = '#92400e'; }
+    return '<span class="badge" style="background:' + bg + '; color:' + color + '; font-weight:800; font-size:11px; padding:2px 7px; border-radius:4px;">' + rating + '</span>';
 }
 
 function openVisitDetailModal(v) {
     document.getElementById('vdModalTitle').innerText = (v.visit_ref || ('VIS-' + v.id)) + ' - ' + v.site_name;
     document.getElementById('vdModalSubtitle').innerText = 'Supervisor: ' + v.supervisor_name + ' (' + v.supervisor_staff_id + ') | Camp: ' + (v.camp_name || 'Camp');
     
+    // 1. Site Visit & Attendance
+    document.getElementById('vdSiteNameCode').innerText = v.site_name + ' (' + v.site_code + ')';
+    document.getElementById('vdClientLoc').innerText = (v.client_name || 'Danube Properties') + ' • ' + (v.site_address || 'Dubai, UAE');
+    document.getElementById('vdSupNameId').innerText = v.supervisor_name + ' (' + v.supervisor_staff_id + ')';
+    document.getElementById('vdDateShift').innerText = (v.time_in ? v.time_in.substring(0, 10) : '--') + ' • ' + (v.shift_type || 'Day') + ' Shift';
+    
     document.getElementById('vdTimeIn').innerText = v.time_in ? v.time_in.substring(11, 16) : '--';
     document.getElementById('vdTimeOut').innerText = v.time_out ? v.time_out.substring(11, 16) : 'In Progress';
     document.getElementById('vdTimeSpent').innerText = v.status === 'Completed' ? (v.minutes_spent + ' mins') : 'Ticking...';
+    document.getElementById('vdClientRep').innerText = v.client_rep_name || '(None listed)';
 
+    // Remarks
     document.getElementById('vdRemarks').innerText = v.remarks || '(No remarks entered)';
-    document.getElementById('vdPurpose').innerText = v.purpose_of_visit || 'Routine';
-    
-    var guardsTxt = (v.guards_count !== null ? v.guards_count : 0) + ' (' + (v.guards_attendance || 'All Present') + ')';
-    document.getElementById('vdGuards').innerText = guardsTxt;
-    document.getElementById('vdGuardNames').innerText = v.guards_names ? ('Names: ' + v.guards_names) : '';
 
-    document.getElementById('vdRatingTurnout').innerHTML = renderBadgeRating(v.rating_turnout);
-    document.getElementById('vdRatingRecords').innerHTML = renderBadgeRating(v.rating_records);
-    document.getElementById('vdRatingCondition').innerHTML = renderBadgeRating(v.rating_condition);
-    document.getElementById('vdRatingEquipment').innerHTML = renderBadgeRating(v.rating_equipment);
+    // 2. 22-Item Checklist Table
+    var summaryBadge = document.getElementById('vdChecklistSummaryBadge');
+    var tbody = document.getElementById('vdChecklistTbody');
+    tbody.innerHTML = '';
 
-    // Issues
-    var issuesBox = document.getElementById('vdIssuesSection');
-    if (v.has_issues == 1 && v.issues_action_taken) {
-        document.getElementById('vdIssuesAction').innerText = v.issues_action_taken;
-        issuesBox.style.display = 'block';
+    if (v.checklist_summary) {
+        summaryBadge.innerText = v.checklist_summary;
     } else {
-        issuesBox.style.display = 'none';
+        summaryBadge.innerText = 'Yes: ' + (v.checklist_yes_count || 0) + '; No: ' + (v.checklist_no_count || 0) + '; N/A: ' + (v.checklist_na_count || 0) + '; Unanswered: ' + (v.checklist_unanswered_count || 22);
     }
 
-    // Photos
+    var answers = null;
+    try {
+        if (v.checklist_answers) {
+            answers = typeof v.checklist_answers === 'string' ? JSON.parse(v.checklist_answers) : v.checklist_answers;
+        }
+    } catch(e) {
+        console.warn('Checklist parse error', e);
+    }
+
+    if (answers && Object.keys(answers).length > 0) {
+        for (var qId in answers) {
+            var item = answers[qId];
+            var tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--border-subtle)';
+            if (item.answer === 'No') {
+                tr.style.background = 'rgba(239, 68, 68, 0.05)';
+            }
+
+            var tdId = document.createElement('td');
+            tdId.style.padding = '6px 10px';
+            tdId.style.fontWeight = '700';
+            tdId.innerText = item.id;
+
+            var tdQ = document.createElement('td');
+            tdQ.style.padding = '6px 10px';
+            tdQ.innerText = item.question;
+
+            var tdAns = document.createElement('td');
+            tdAns.style.padding = '6px 10px';
+            tdAns.style.textAlign = 'center';
+            tdAns.innerHTML = renderBadgeRating(item.answer);
+
+            var tdRem = document.createElement('td');
+            tdRem.style.padding = '6px 10px';
+            if (item.remarks) {
+                tdRem.innerHTML = '<span style="color:#b91c1c; font-weight:600;">' + item.remarks + '</span>';
+            } else {
+                tdRem.innerHTML = '<span style="color:var(--text-dim); font-size:11px;">--</span>';
+            }
+
+            tr.appendChild(tdId);
+            tr.appendChild(tdQ);
+            tr.appendChild(tdAns);
+            tr.appendChild(tdRem);
+            tbody.appendChild(tr);
+        }
+    } else {
+        var tr = document.createElement('tr');
+        var td = document.createElement('td');
+        td.colSpan = 4;
+        td.style.padding = '14px';
+        td.style.textAlign = 'center';
+        td.style.color = 'var(--text-dim)';
+        td.innerText = 'Legacy visit record: Detailed 22-item checklist not recorded for this historical visit.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+    }
+
+    // 4. Corrective Action Section
+    var caSection = document.getElementById('vdCorrectiveActionSection');
+    if (v.has_issues == 1 || v.issues_action_taken || (v.checklist_no_count > 0)) {
+        document.getElementById('vdIssuesAction').innerText = v.issues_action_taken || '(No specific action note entered)';
+        document.getElementById('vdActionAssignee').innerText = v.corrective_action_assignee || 'Not specified';
+        document.getElementById('vdActionDueDate').innerText = v.corrective_action_due_date || 'Immediate';
+        var st = v.corrective_action_status || 'Pending';
+        var stBg = st === 'Resolved' ? '#dcfce7' : '#fef3c7';
+        var stColor = st === 'Resolved' ? '#166534' : '#92400e';
+        document.getElementById('vdActionStatusBadge').innerHTML = '<span class="badge" style="background:' + stBg + '; color:' + stColor + '; font-weight:800;">' + st + '</span>';
+        caSection.style.display = 'block';
+    } else {
+        caSection.style.display = 'none';
+    }
+
+    // 5. Photos Gallery with Captions
     var photosBox = document.getElementById('vdPhotosSection');
     var photosGrid = document.getElementById('vdPhotosGrid');
     photosGrid.innerHTML = '';
@@ -447,16 +576,20 @@ function openVisitDetailModal(v) {
     document.getElementById('vdPhotoCount').innerText = photos.length;
     
     if (photos.length > 0) {
-        photos.forEach(function(p) {
+        photos.forEach(function(p, pI) {
             var photoSrc = p.file_path || p.photo_url || '';
+            var card = document.createElement('div');
+            card.style.border = '1px solid var(--border-subtle)';
+            card.style.borderRadius = '8px';
+            card.style.overflow = 'hidden';
+            card.style.background = 'rgba(0,0,0,0.02)';
+
             var a = document.createElement('a');
             a.href = '<?= APP_URL ?>/' + photoSrc;
             a.target = '_blank';
             a.style.display = 'block';
-            a.style.borderRadius = '6px';
+            a.style.aspectRatio = '4 / 3';
             a.style.overflow = 'hidden';
-            a.style.border = '1px solid var(--border-subtle)';
-            a.style.aspectRatio = '1 / 1';
             
             var img = document.createElement('img');
             img.src = '<?= APP_URL ?>/' + photoSrc;
@@ -464,9 +597,18 @@ function openVisitDetailModal(v) {
             img.style.height = '100%';
             img.style.objectFit = 'cover';
             img.style.display = 'block';
-            
             a.appendChild(img);
-            photosGrid.appendChild(a);
+
+            var captionDiv = document.createElement('div');
+            captionDiv.style.padding = '6px 8px';
+            captionDiv.style.fontSize = '11px';
+            captionDiv.style.color = 'var(--text-main)';
+            captionDiv.style.fontWeight = '600';
+            captionDiv.innerText = p.caption ? p.caption : ('Evidence #' + (pI + 1));
+
+            card.appendChild(a);
+            card.appendChild(captionDiv);
+            photosGrid.appendChild(card);
         });
         photosBox.style.display = 'block';
     } else {

@@ -921,7 +921,7 @@ body.guard-body {
 }
 
 .navy-frame-title {
-  color: #fbbf24 !important;
+  color: #FFFFFF !important;
   font-weight: 900;
   font-size: 15px;
   text-transform: capitalize;
@@ -1501,4 +1501,10 @@ body.guard-body, .guard-body {
 .doc-subtitle, .section-heading {
   font-size: var(--fs-mobile-h2) !important;
   font-weight: 600 !important;
+}
+
+/* User requested white and bold text for section titles */
+.navy-frame-title, .section-header-banner {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
 }

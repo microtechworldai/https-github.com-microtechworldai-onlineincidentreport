@@ -175,32 +175,32 @@ function get_stored_qr_token(array $record, $encryptedField, $legacyField) {
 }
 
 function find_camp_by_qr_token(PDO $db, $token) {
-    $tokenHash = hash_qr_token($token);
+    $t = trim($token);
     $stmt = $db->prepare("
         SELECT * FROM camps
-        WHERE (qr_token_hash = ? OR qr_token = ?) AND is_active = 1
+        WHERE qr_token = ? AND is_active = 1
         LIMIT 1
     ");
-    $stmt->execute([$tokenHash, trim($token)]);
+    $stmt->execute([$t]);
     return $stmt->fetch();
 }
 
 function find_site_by_qr_token(PDO $db, $token, $supervisorOnly = false) {
-    $tokenHash = hash_qr_token($token);
+    $t = trim($token);
     if ($supervisorOnly) {
         $stmt = $db->prepare("
             SELECT * FROM sites
-            WHERE (supervisor_qr_token_hash = ? OR supervisor_qr_token = ?) AND is_active = 1
+            WHERE (supervisor_qr_token = ? OR active_qr_token = ? OR code = ?) AND is_active = 1
             LIMIT 1
         ");
-        $stmt->execute([$tokenHash, trim($token)]);
+        $stmt->execute([$t, $t, $t]);
     } else {
         $stmt = $db->prepare("
             SELECT * FROM sites
-            WHERE (active_qr_token_hash = ? OR active_qr_token = ? OR code = ?) AND is_active = 1
+            WHERE (active_qr_token = ? OR supervisor_qr_token = ? OR code = ?) AND is_active = 1
             LIMIT 1
         ");
-        $stmt->execute([$tokenHash, trim($token), trim($token)]);
+        $stmt->execute([$t, $t, $t]);
     }
     return $stmt->fetch();
 }

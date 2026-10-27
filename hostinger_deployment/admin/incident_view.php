@@ -20,7 +20,7 @@ $msg = '';
 $msgType = 'success';
 
 // Handle Management Sign-Off & Status Update (with Signature Image Uploads)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_management'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_management']) || isset($_POST['save_signoff']))) {
     $newStatus = trim($_POST['status'] ?? 'Submitted');
     $supervisorName = trim($_POST['site_supervisor_name'] ?? '');
     $supervisorId = trim($_POST['site_supervisor_id'] ?? '');
@@ -34,9 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_management']))
     $clientManagerAction = trim($_POST['client_manager_action_taken'] ?? '');
     $clientManagerDate = !empty($_POST['client_manager_date']) ? $_POST['client_manager_date'] : null;
 
-    $supSig = $incident['site_supervisor_signature'] ?? null;
-    $opsSig = $incident['operations_manager_signature'] ?? null;
-    $clientSig = $incident['client_manager_signature'] ?? null;
+    $supSig = !empty($_POST['remove_supervisor_sig']) ? null : ($incident['site_supervisor_signature'] ?? null);
+    $opsSig = !empty($_POST['remove_ops_sig']) ? null : ($incident['operations_manager_signature'] ?? null);
+    $clientSig = !empty($_POST['remove_client_sig']) ? null : ($incident['client_manager_signature'] ?? null);
 
     $sigDir = ROOT_PATH . '/uploads/signatures';
     if (!is_dir($sigDir)) {
@@ -74,9 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_management']))
             site_supervisor_date = ?,
             recommendation_action_taken = ?,
             operations_manager_name = ?,
+            operations_manager_id = ?,
             operations_manager_signature = ?,
             operations_manager_date = ?,
             client_manager_name = ?,
+            client_manager_id = ?,
             client_manager_action_taken = ?,
             client_manager_signature = ?,
             client_manager_date = ?,
@@ -91,9 +93,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_management']))
         $supervisorDate,
         $recommendationAction,
         $opsManagerName,
+        $opsManagerId,
         $opsSig,
         $opsManagerDate,
         $clientManagerName,
+        $clientManagerId,
         $clientManagerAction,
         $clientSig,
         $clientManagerDate,
@@ -277,7 +281,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Category Classifications -->
             <div style="margin-bottom: 24px;">
-                <h4 class="section-header-banner">Classification &amp; Triggers</h4>
+                <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Classification &amp; Triggers</h4>
                 
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <div>
@@ -321,12 +325,12 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Summary & Detailed Description -->
             <div style="margin-bottom: 24px;">
-                <h4 class="section-header-banner">Executive Summary</h4>
+                <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Executive Summary</h4>
                 <div style="background: var(--bg-card-hover); border: 1px solid var(--border-subtle); padding: 14px 18px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; margin-bottom: 18px;">
                     <?= htmlspecialchars($incident['summary_line']) ?>
                 </div>
 
-                <h4 class="section-header-banner">Patrol Officer Narrative (Detailed Occurrence)</h4>
+                <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Patrol Officer Narrative (Detailed Occurrence)</h4>
                 <div style="background: var(--bg-card-hover); border: 1px solid var(--border-subtle); padding: 18px; border-radius: var(--radius-sm); font-size: 14.5px; line-height: 1.7;">
 <?= render_rich_description($incident['description']) ?>
                 </div>
@@ -334,7 +338,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Attached Photographic Evidence Gallery -->
             <div>
-                <h4 class="section-header-banner">Attached Photographic Evidence (<?= count($photos) ?> / <?= MAX_PHOTOS_PER_INCIDENT ?>)</h4>
+                <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Attached Photographic Evidence (<?= count($photos) ?> / <?= MAX_PHOTOS_PER_INCIDENT ?>)</h4>
 
                 <?php if (empty($photos)): ?>
                     <p style="font-size: 13px; color: var(--text-dim); font-style: italic;">No photographic evidence was attached to this report.</p>
@@ -408,54 +412,80 @@ require_once __DIR__ . '/../includes/header.php';
     <div>
         <!-- Management Sign-Off Box -->
         <div class="card" style="margin-bottom: 24px;">
-            <h3 class="section-header-banner">✍️ Official Management Sign-Off</h3>
+            <h3 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Official Management Sign-Off</h3>
 
             <form method="POST" action="" enctype="multipart/form-data">
                 <input type="hidden" name="update_management" value="1">
+                <input type="hidden" name="save_signoff" value="1">
 
-                <div class="form-group">
-                    <label class="form-label" style="font-weight: 800; color: #000;">Investigation / Lifecycle Status</label>
-                    <select name="status" class="form-control" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
-                        <option value="Submitted" <?= $incident['status'] === 'Submitted' ? 'selected' : '' ?>>Submitted</option>
-                        <option value="Under Review" <?= $incident['status'] === 'Under Review' ? 'selected' : '' ?>>Under Review</option>
-                        <option value="Follow-up Required" <?= $incident['status'] === 'Follow-up Required' ? 'selected' : '' ?>>Follow-up Required</option>
-                        <option value="Resolved" <?= $incident['status'] === 'Resolved' ? 'selected' : '' ?>>Resolved</option>
-                        <option value="Submitted to Client" <?= $incident['status'] === 'Submitted to Client' ? 'selected' : '' ?>>Submitted to Client</option>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 800; color: #000000 !important;">Status Transition</label>
+                    <select name="status" class="form-control" style="font-weight: 700; width: 100%; box-sizing: border-box;">
+                        <?php
+                        $allowedStatuses = ['Submitted', 'Under Review', 'Follow-up Required', 'Resolved', 'Submitted to Client'];
+                        foreach ($allowedStatuses as $st):
+                        ?>
+                            <option value="<?= $st ?>" <?= $incident['status'] === $st ? 'selected' : '' ?>>
+                                <?= $st ?>
+                            </option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
 
                 <!-- 1. Site Supervisor Sign-Off -->
-                <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-top: 14px;">
+                <div style="margin-bottom: 16px;">
                     <div style="font-size: 12px; font-weight: 800; color: var(--accent-cyan); margin-bottom: 10px; text-transform: uppercase;">
                         1. Site Supervisor Sign-Off
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 800; color: #000;">Supervisor Name &amp; ID</label>
+                        <label class="form-label" style="font-weight: 800; color: #000000 !important;">Supervisor Name &amp; ID</label>
                         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
-                            <input type="text" name="site_supervisor_name" class="form-control" placeholder="Supervisor Name" value="<?= htmlspecialchars($incident['site_supervisor_name'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
-                            <input type="text" name="site_supervisor_id" class="form-control" placeholder="Staff ID" value="<?= htmlspecialchars($incident['site_supervisor_id'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
+                            <input type="text" name="site_supervisor_name" class="form-control" placeholder="Supervisor Name" value="<?= htmlspecialchars($incident['site_supervisor_name'] ?? '') ?>" style="font-weight: 700; width: 100%; box-sizing: border-box;">
+                            <input type="text" name="site_supervisor_id" class="form-control" placeholder="Staff ID" value="<?= htmlspecialchars($incident['site_supervisor_id'] ?? '') ?>" style="font-weight: 700; width: 100%; box-sizing: border-box;">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 800; color: #000;">Sign-Off Date (dd/mm/yyyy)</label>
-                        <input type="date" name="site_supervisor_date" class="form-control" value="<?= htmlspecialchars($incident['site_supervisor_date'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
+                        <label class="form-label" style="font-weight: 800; color: #000000 !important;">Sign-Off Date (dd/mm/yyyy)</label>
+                        <input type="date" name="site_supervisor_date" class="form-control" value="<?= htmlspecialchars($incident['site_supervisor_date'] ?? '') ?>" style="font-weight: 700; width: 100%; box-sizing: border-box;">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 800; color: #000;">Supervisor Signature Image</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" style="font-weight: 800; color: #000000 !important; margin-bottom: 0;">Supervisor Signature Image</label>
+                            <?php if (!empty($incident['site_supervisor_signature'])): ?>
+                                <button type="button" onclick="toggleRemoveExistingSig('sup')" id="btn_rem_existing_sup" title="Remove currently saved signature image" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                    🗑️ <span id="txt_rem_existing_sup">Remove Attached Image</span>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                        <input type="hidden" name="remove_supervisor_sig" id="input_remove_sup" value="0">
                         <?php if (!empty($incident['site_supervisor_signature'])): ?>
-                            <div style="margin-bottom: 6px; padding: 4px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; display: inline-block;">
-                                <img src="<?= APP_URL ?>/<?= htmlspecialchars($incident['site_supervisor_signature']) ?>" alt="Supervisor Signature" style="max-height: 32px; display: block;">
+                            <div id="preview_existing_sup" style="margin-bottom: 8px; display: inline-flex; align-items: center; gap: 8px; padding: 4px 8px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                <img src="<?= APP_URL ?>/<?= htmlspecialchars($incident['site_supervisor_signature']) ?>" alt="Supervisor Signature" style="max-height: 34px; display: block;">
+                                <span style="font-size: 11px; color: #64748b; font-weight: 600;">(Current Attached Signature)</span>
+                            </div>
+                            <div id="msg_removed_sup" style="display: none; margin-bottom: 8px; padding: 4px 10px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 6px; color: #991b1b; font-size: 11.5px; font-weight: 700;">
+                                ⚠️ Image marked for removal (Save to finalize or click "Undo")
                             </div>
                         <?php endif; ?>
-                        <input type="file" name="site_supervisor_sig_file" accept="image/*" class="form-control" style="font-size: 11.5px; padding: 5px 8px; font-weight: 600; width: 100%; box-sizing: border-box;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <input type="file" id="site_supervisor_sig_file" name="site_supervisor_sig_file" accept="image/*" class="form-control" onchange="onSigFileSelected(this, 'sup')" style="font-size: 11.5px; padding: 5px 8px; font-weight: 600; flex: 1;">
+                            <button type="button" title="Remove / Clear chosen file" onclick="clearSelectedSigFile('site_supervisor_sig_file', 'sup')" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 10px; cursor: pointer; color: #dc2626; font-weight: 700; font-size: 12px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f8fafc'">
+                                🗑️ Remove
+                            </button>
+                        </div>
+                        <div id="new_preview_sup" style="display: none; margin-top: 6px; align-items: center; gap: 8px; padding: 4px 8px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
+                            <img id="new_img_sup" src="" alt="New Preview" style="max-height: 30px; display: block; border-radius: 4px;">
+                            <span id="new_filename_sup" style="font-size: 11.5px; color: #166534; font-weight: 600; flex: 1;"></span>
+                            <button type="button" onclick="clearSelectedSigFile('site_supervisor_sig_file', 'sup')" style="background: none; border: none; color: #dc2626; font-weight: 800; font-size: 14px; cursor: pointer;" title="Remove this file">✕</button>
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 800; color: #000;">Recommendation / Action Taken</label>
-                        <textarea name="recommendation_action_taken" class="form-control" rows="2" placeholder="Corrective actions initiated at post..." style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;"><?= htmlspecialchars($incident['recommendation_action_taken'] ?? '') ?></textarea>
+                        <label class="form-label" style="font-weight: 800; color: #000000 !important;">Recommendation / Action Taken</label>
+                        <textarea name="recommendation_action_taken" class="form-control" rows="2" placeholder="Corrective actions initiated at post..." style="font-weight: 700; width: 100%; box-sizing: border-box;"><?= htmlspecialchars($incident['recommendation_action_taken'] ?? '') ?></textarea>
                     </div>
                 </div>
 
@@ -466,23 +496,48 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 800; color: #000;">Operations Manager Name</label>
-                        <input type="text" name="operations_manager_name" class="form-control" placeholder="e.g. Tariq Mansoor" value="<?= htmlspecialchars($incident['operations_manager_name'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
+                        <label class="form-label" style="font-weight: 800; color: #000000 !important;">Operations Manager Name &amp; Staff ID</label>
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
+                            <input type="text" name="operations_manager_name" class="form-control" placeholder="e.g. Tariq Mansoor" value="<?= htmlspecialchars($incident['operations_manager_name'] ?? '') ?>" style="font-weight: 700; width: 100%; box-sizing: border-box;">
+                            <input type="text" name="operations_manager_id" class="form-control" placeholder="Staff ID (e.g. OPS-01)" value="<?= htmlspecialchars($incident['operations_manager_id'] ?? '') ?>" style="font-weight: 700; width: 100%; box-sizing: border-box;">
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 800; color: #000;">Ops Sign-off Date (dd/mm/yyyy)</label>
-                        <input type="date" name="operations_manager_date" class="form-control" value="<?= htmlspecialchars($incident['operations_manager_date'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
+                        <label class="form-label" style="font-weight: 800; color: #000000 !important;">Ops Sign-off Date (dd/mm/yyyy)</label>
+                        <input type="date" name="operations_manager_date" class="form-control" value="<?= htmlspecialchars($incident['operations_manager_date'] ?? '') ?>" style="font-weight: 700; width: 100%; box-sizing: border-box;">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 800; color: #000;">Operations Manager Signature Image</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" style="font-weight: 800; color: #000000 !important; margin-bottom: 0;">Operations Manager Signature Image</label>
+                            <?php if (!empty($incident['operations_manager_signature'])): ?>
+                                <button type="button" onclick="toggleRemoveExistingSig('ops')" id="btn_rem_existing_ops" title="Remove currently saved signature image" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                    🗑️ <span id="txt_rem_existing_ops">Remove Attached Image</span>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                        <input type="hidden" name="remove_ops_sig" id="input_remove_ops" value="0">
                         <?php if (!empty($incident['operations_manager_signature'])): ?>
-                            <div style="margin-bottom: 6px; padding: 4px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; display: inline-block;">
-                                <img src="<?= APP_URL ?>/<?= htmlspecialchars($incident['operations_manager_signature']) ?>" alt="Ops Signature" style="max-height: 32px; display: block;">
+                            <div id="preview_existing_ops" style="margin-bottom: 8px; display: inline-flex; align-items: center; gap: 8px; padding: 4px 8px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                <img src="<?= APP_URL ?>/<?= htmlspecialchars($incident['operations_manager_signature']) ?>" alt="Ops Signature" style="max-height: 34px; display: block;">
+                                <span style="font-size: 11px; color: #64748b; font-weight: 600;">(Current Attached Signature)</span>
+                            </div>
+                            <div id="msg_removed_ops" style="display: none; margin-bottom: 8px; padding: 4px 10px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 6px; color: #991b1b; font-size: 11.5px; font-weight: 700;">
+                                ⚠️ Image marked for removal (Save to finalize or click "Undo")
                             </div>
                         <?php endif; ?>
-                        <input type="file" name="operations_manager_sig_file" accept="image/*" class="form-control" style="font-size: 11.5px; padding: 5px 8px; font-weight: 600; width: 100%; box-sizing: border-box;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <input type="file" id="operations_manager_sig_file" name="operations_manager_sig_file" accept="image/*" class="form-control" onchange="onSigFileSelected(this, 'ops')" style="font-size: 11.5px; padding: 5px 8px; font-weight: 600; flex: 1;">
+                            <button type="button" title="Remove / Clear chosen file" onclick="clearSelectedSigFile('operations_manager_sig_file', 'ops')" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 10px; cursor: pointer; color: #dc2626; font-weight: 700; font-size: 12px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f8fafc'">
+                                🗑️ Remove
+                            </button>
+                        </div>
+                        <div id="new_preview_ops" style="display: none; margin-top: 6px; align-items: center; gap: 8px; padding: 4px 8px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
+                            <img id="new_img_ops" src="" alt="New Preview" style="max-height: 30px; display: block; border-radius: 4px;">
+                            <span id="new_filename_ops" style="font-size: 11.5px; color: #166534; font-weight: 600; flex: 1;"></span>
+                            <button type="button" onclick="clearSelectedSigFile('operations_manager_sig_file', 'ops')" style="background: none; border: none; color: #dc2626; font-weight: 800; font-size: 14px; cursor: pointer;" title="Remove this file">✕</button>
+                        </div>
                     </div>
                 </div>
 
@@ -493,28 +548,53 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 800; color: #000;">Client Representative Name</label>
-                        <input type="text" name="client_manager_name" class="form-control" placeholder="Client Manager Name" value="<?= htmlspecialchars($incident['client_manager_name'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
+                        <label class="form-label" style="font-weight: 800; color: #000000 !important;">Client Representative Name &amp; ID</label>
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
+                            <input type="text" name="client_manager_name" class="form-control" placeholder="Client Manager Name" value="<?= htmlspecialchars($incident['client_manager_name'] ?? '') ?>" style="font-weight: 700; width: 100%; box-sizing: border-box;">
+                            <input type="text" name="client_manager_id" class="form-control" placeholder="Client ID / Badge" value="<?= htmlspecialchars($incident['client_manager_id'] ?? '') ?>" style="font-weight: 700; width: 100%; box-sizing: border-box;">
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 800; color: #000;">Client Action Taken</label>
-                        <textarea name="client_manager_action_taken" class="form-control" rows="2" placeholder="Client acknowledgement or notes..." style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;"><?= htmlspecialchars($incident['client_manager_action_taken'] ?? '') ?></textarea>
+                        <label class="form-label" style="font-weight: 800; color: #000000 !important;">Client Action Taken</label>
+                        <textarea name="client_manager_action_taken" class="form-control" rows="2" placeholder="Client acknowledgement or notes..." style="font-weight: 700; width: 100%; box-sizing: border-box;"><?= htmlspecialchars($incident['client_manager_action_taken'] ?? '') ?></textarea>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 800; color: #000;">Client Date (dd/mm/yyyy)</label>
-                        <input type="date" name="client_manager_date" class="form-control" value="<?= htmlspecialchars($incident['client_manager_date'] ?? '') ?>" style="font-weight: 700; color: #000; width: 100%; box-sizing: border-box;">
+                        <label class="form-label" style="font-weight: 800; color: #000000 !important;">Client Date (dd/mm/yyyy)</label>
+                        <input type="date" name="client_manager_date" class="form-control" value="<?= htmlspecialchars($incident['client_manager_date'] ?? '') ?>" style="font-weight: 700; width: 100%; box-sizing: border-box;">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 800; color: #000;">Client Signature Image</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" style="font-weight: 800; color: #000000 !important; margin-bottom: 0;">Client Signature Image</label>
+                            <?php if (!empty($incident['client_manager_signature'])): ?>
+                                <button type="button" onclick="toggleRemoveExistingSig('client')" id="btn_rem_existing_client" title="Remove currently saved signature image" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                    🗑️ <span id="txt_rem_existing_client">Remove Attached Image</span>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                        <input type="hidden" name="remove_client_sig" id="input_remove_client" value="0">
                         <?php if (!empty($incident['client_manager_signature'])): ?>
-                            <div style="margin-bottom: 6px; padding: 4px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; display: inline-block;">
-                                <img src="<?= APP_URL ?>/<?= htmlspecialchars($incident['client_manager_signature']) ?>" alt="Client Signature" style="max-height: 32px; display: block;">
+                            <div id="preview_existing_client" style="margin-bottom: 8px; display: inline-flex; align-items: center; gap: 8px; padding: 4px 8px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                <img src="<?= APP_URL ?>/<?= htmlspecialchars($incident['client_manager_signature']) ?>" alt="Client Signature" style="max-height: 34px; display: block;">
+                                <span style="font-size: 11px; color: #64748b; font-weight: 600;">(Current Attached Signature)</span>
+                            </div>
+                            <div id="msg_removed_client" style="display: none; margin-bottom: 8px; padding: 4px 10px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 6px; color: #991b1b; font-size: 11.5px; font-weight: 700;">
+                                ⚠️ Image marked for removal (Save to finalize or click "Undo")
                             </div>
                         <?php endif; ?>
-                        <input type="file" name="client_manager_sig_file" accept="image/*" class="form-control" style="font-size: 11.5px; padding: 5px 8px; font-weight: 600; width: 100%; box-sizing: border-box;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <input type="file" id="client_manager_sig_file" name="client_manager_sig_file" accept="image/*" class="form-control" onchange="onSigFileSelected(this, 'client')" style="font-size: 11.5px; padding: 5px 8px; font-weight: 600; flex: 1;">
+                            <button type="button" title="Remove / Clear chosen file" onclick="clearSelectedSigFile('client_manager_sig_file', 'client')" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 10px; cursor: pointer; color: #dc2626; font-weight: 700; font-size: 12px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f8fafc'">
+                                🗑️ Remove
+                            </button>
+                        </div>
+                        <div id="new_preview_client" style="display: none; margin-top: 6px; align-items: center; gap: 8px; padding: 4px 8px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
+                            <img id="new_img_client" src="" alt="New Preview" style="max-height: 30px; display: block; border-radius: 4px;">
+                            <span id="new_filename_client" style="font-size: 11.5px; color: #166534; font-weight: 600; flex: 1;"></span>
+                            <button type="button" onclick="clearSelectedSigFile('client_manager_sig_file', 'client')" style="background: none; border: none; color: #dc2626; font-weight: 800; font-size: 14px; cursor: pointer;" title="Remove this file">✕</button>
+                        </div>
                     </div>
                 </div>
 
@@ -526,7 +606,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <!-- Internal Notes Box -->
         <div class="card">
-            <h3 class="section-header-banner">💬 Internal Audit Notes</h3>
+            <h3 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Internal Audit Notes</h3>
 
             <form method="POST" action="" style="margin-bottom: 18px;">
                 <input type="hidden" name="add_note" value="1">
@@ -559,5 +639,85 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
 </div>
+
+
+<script>
+function clearSelectedSigFile(inputId, role) {
+    var input = document.getElementById(inputId);
+    if (input) {
+        input.value = "";
+    }
+    var newPrev = document.getElementById("new_preview_" + role);
+    if (newPrev) {
+        newPrev.style.display = "none";
+    }
+    var newImg = document.getElementById("new_img_" + role);
+    if (newImg) {
+        newImg.src = "";
+    }
+    var newName = document.getElementById("new_filename_" + role);
+    if (newName) {
+        newName.innerText = "";
+    }
+}
+
+function onSigFileSelected(input, role) {
+    var newPrev = document.getElementById("new_preview_" + role);
+    var newImg = document.getElementById("new_img_" + role);
+    var newName = document.getElementById("new_filename_" + role);
+    
+    if (input.files && input.files[0]) {
+        var file = input.files[0];
+        if (newName) newName.innerText = file.name + " (" + Math.round(file.size / 1024) + " KB)";
+        if (newImg) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                newImg.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        if (newPrev) newPrev.style.display = "inline-flex";
+        
+        var inputRem = document.getElementById("input_remove_" + role);
+        if (inputRem && inputRem.value === "1") {
+            toggleRemoveExistingSig(role);
+        }
+    } else {
+        if (newPrev) newPrev.style.display = "none";
+    }
+}
+
+function toggleRemoveExistingSig(role) {
+    var inputRem = document.getElementById("input_remove_" + role);
+    var prev = document.getElementById("preview_existing_" + role);
+    var msg = document.getElementById("msg_removed_" + role);
+    var btn = document.getElementById("btn_rem_existing_" + role);
+    var txt = document.getElementById("txt_rem_existing_" + role);
+
+    if (!inputRem) return;
+
+    if (inputRem.value === "0") {
+        inputRem.value = "1";
+        if (prev) prev.style.opacity = "0.35";
+        if (msg) msg.style.display = "block";
+        if (btn) {
+            btn.style.background = "#ecfdf5";
+            btn.style.borderColor = "#a7f3d0";
+            btn.style.color = "#059669";
+        }
+        if (txt) txt.innerText = "↩ Undo Remove";
+    } else {
+        inputRem.value = "0";
+        if (prev) prev.style.opacity = "1";
+        if (msg) msg.style.display = "none";
+        if (btn) {
+            btn.style.background = "#fef2f2";
+            btn.style.borderColor = "#fecaca";
+            btn.style.color = "#dc2626";
+        }
+        if (txt) txt.innerText = "Remove Attached Image";
+    }
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

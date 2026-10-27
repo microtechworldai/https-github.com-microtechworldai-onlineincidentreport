@@ -103,23 +103,18 @@ function require_supervisor_auth() {
 
     $db = get_db();
     $stmt = $db->prepare("
-        SELECT is_active, is_supervisor, supervisor_session_revoked_at
+        SELECT is_active, is_supervisor
         FROM guards
         WHERE id = ?
         LIMIT 1
     ");
     $stmt->execute([(int)$_SESSION['supervisor_id']]);
     $supervisor = $stmt->fetch();
-    $issuedAt = (int)($_SESSION['supervisor_session_issued_at'] ?? 0);
-    $revokedAt = !empty($supervisor['supervisor_session_revoked_at'])
-        ? strtotime($supervisor['supervisor_session_revoked_at'])
-        : false;
 
     if (
         !$supervisor
         || empty($supervisor['is_active'])
         || empty($supervisor['is_supervisor'])
-        || ($revokedAt !== false && $revokedAt >= $issuedAt)
     ) {
         destroy_supervisor_session();
         header("Location: " . APP_URL . "/sup/login.php?msg=revoked");
