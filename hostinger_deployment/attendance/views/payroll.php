@@ -549,6 +549,93 @@ $totalStaffCount = count($staffList);
 }
 </style>
 
+
+<!-- BLACK TEXT WITHOUT BOLD FOR ATTENDANCE & PAYROLL DATA ROWS -->
+<style>
+/* Staff Data Columns: Black Text, Without Bold */
+.att-row-staff td,
+.att-payroll-row td,
+.att-col-emp,
+.att-col-name,
+.att-col-site,
+.att-col-stat,
+.att-col-total {
+  color: #000000 !important;
+  font-weight: normal !important;
+  font-size: 13px !important;
+}
+
+.att-col-name {
+  text-align: left !important;
+  padding-left: 10px !important;
+}
+
+.att-col-site {
+  text-align: left !important;
+  padding-left: 10px !important;
+  color: #000000 !important;
+}
+
+/* Interactive Input inside table: Black Text, Without Bold */
+.att-cell-input {
+  color: #000000 !important;
+  font-weight: normal !important;
+  font-size: 13px !important;
+}
+
+/* Shift tags: keep subtle background, black text without bold */
+.att-code-D, .att-code-N, .att-code-OFF, .att-code-S, .att-code-B {
+  font-weight: normal !important;
+}
+
+/* Summary Rows: Black Text, Without Bold, Pure White */
+.att-tr-day-total td,
+.att-tr-night-total td,
+.att-tr-grand-total td,
+.att-tr-day-total .att-summary-label,
+.att-tr-night-total .att-summary-label,
+.att-tr-grand-total .att-summary-label,
+.att-summary-label {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-weight: normal !important;
+  font-size: 13px !important;
+  letter-spacing: normal !important;
+  text-align: center !important;
+  border: 1px solid #cbd5e1 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.att-col-total-d,
+.att-col-total-n,
+.att-col-total-grand,
+.att-deploy-ok,
+.att-deploy-less,
+.att-deploy-over,
+.att-deploy-neutral {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-weight: normal !important;
+  font-size: 13px !important;
+  text-align: center !important;
+  border: 1px solid #cbd5e1 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* Payroll Total Row */
+.att-payroll-total-row td,
+.att-payroll-total-row .att-summary-label {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: normal !important;
+  font-size: 13px !important;
+}
+</style>
+
 <div class="att-grid-wrapper">
         <table class="att-table" id="att-payroll-table">
             <thead>
@@ -638,12 +725,12 @@ $totalStaffCount = count($staffList);
                             <?php endforeach; ?>
 
                             <!-- Counts: Day, Night, Basic, Sick, Off, Total No. of Days -->
-                            <td class="att-col-stat" style="color:#059669;font-weight:800;"><?= $st['day_shifts'] ?: '0' ?></td>
-                            <td class="att-col-stat" style="color:#3b82f6;font-weight:800;"><?= $st['night_shifts'] ?: '0' ?></td>
-                            <td class="att-col-stat" style="color:#8b5cf6;font-weight:800;"><?= $st['basic_shifts'] ?: '0' ?></td>
-                            <td class="att-col-stat" style="color:#f59e0b;font-weight:800;"><?= $st['sick_leaves'] ?: '0' ?></td>
-                            <td class="att-col-stat" style="color:#ef4444;font-weight:800;"><?= $st['off_days'] ?: '0' ?></td>
-                            <td class="att-col-total" style="font-weight:900;background:rgba(14,165,233,0.15);color:#0284c7;"><?= $st['total_working_days'] ?></td>
+                            <td class="att-col-stat" style="color:#059669;font-weight:normal;"><?= $st['day_shifts'] ?: '0' ?></td>
+                            <td class="att-col-stat" style="color:#3b82f6;font-weight:normal;"><?= $st['night_shifts'] ?: '0' ?></td>
+                            <td class="att-col-stat" style="color:#8b5cf6;font-weight:normal;"><?= $st['basic_shifts'] ?: '0' ?></td>
+                            <td class="att-col-stat" style="color:#f59e0b;font-weight:normal;"><?= $st['sick_leaves'] ?: '0' ?></td>
+                            <td class="att-col-stat" style="color:#ef4444;font-weight:normal;"><?= $st['off_days'] ?: '0' ?></td>
+                            <td class="att-col-total" style="font-weight:normal;background:rgba(14,165,233,0.15);color:#000000;"><?= $st['total_working_days'] ?></td>
 
                             <!-- Custom Column Values -->
                             <?php foreach ($customCols as $cc): 
@@ -684,22 +771,22 @@ $totalStaffCount = count($staffList);
                     <?php endforeach; ?>
 
                     <!-- Bottom TOTAL Row -->
-                    <tr style="height:28px;font-weight:800;background:#f8fafc;color:#0f172a;border-top:2px solid #cbd5e1;">
-                        <td colspan="2" class="att-summary-label" style="text-align:center;font-weight:900;color:#0f172a;letter-spacing:0.8px;background:#f8fafc;">TOTAL CONSOLIDATED</td>
+                    <tr style="height:28px;font-weight:normal;background:#f8fafc;color:#0f172a;border-top:2px solid #cbd5e1;">
+                        <td colspan="2" class="att-summary-label" style="text-align:center;font-weight:normal;color:#0f172a;letter-spacing:0.8px;background:#f8fafc;">TOTAL CONSOLIDATED</td>
                         <?php foreach ($datesList as $dInfo): ?>
                             <td></td>
                         <?php endforeach; ?>
-                        <td style="font-weight:900;text-align:center;color:#4ade80;"><?= $sumDay ?></td>
-                        <td style="font-weight:900;text-align:center;color:#60a5fa;"><?= $sumNight ?></td>
-                        <td style="font-weight:900;text-align:center;color:#c084fc;"><?= $sumBasic ?></td>
-                        <td style="font-weight:900;text-align:center;color:#fde047;"><?= $sumSick ?></td>
-                        <td style="font-weight:900;color:#f87171;text-align:center;"><?= $sumOff ?></td>
-                        <td style="font-weight:900;background:#e0f2fe;color:#0369a1;text-align:center;font-size:14px;border:1px solid #bae6fd;"><?= $sumTotalDays ?></td>
+                        <td style="font-weight:normal;text-align:center;color:#4ade80;"><?= $sumDay ?></td>
+                        <td style="font-weight:normal;text-align:center;color:#60a5fa;"><?= $sumNight ?></td>
+                        <td style="font-weight:normal;text-align:center;color:#c084fc;"><?= $sumBasic ?></td>
+                        <td style="font-weight:normal;text-align:center;color:#fde047;"><?= $sumSick ?></td>
+                        <td style="font-weight:normal;color:#f87171;text-align:center;"><?= $sumOff ?></td>
+                        <td style="font-weight:normal;background:#ffffff;color:#000000;text-align:center;font-size:14px;border:1px solid #bae6fd;"><?= $sumTotalDays ?></td>
 
                         <!-- Totals for Custom Columns -->
                         <?php foreach ($customCols as $cc): ?>
                             <?php if ($cc['col_type'] === 'number'): ?>
-                                <td style="font-weight:900;color:#fde047;" class="att-custom-total-cell" data-col-id="<?= $cc['id'] ?>">
+                                <td style="font-weight:normal;color:#fde047;" class="att-custom-total-cell" data-col-id="<?= $cc['id'] ?>">
                                     <?= $customSums[$cc['id']] ?? 0 ?>
                                 </td>
                             <?php else: ?>
