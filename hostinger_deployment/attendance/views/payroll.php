@@ -192,7 +192,7 @@ $totalStaffCount = count($staffList);
                     <th rowspan="2" class="att-th-teal-pay att-col-stat">Basic</th>
                     <th rowspan="2" class="att-th-teal-pay att-col-stat">Sick</th>
                     <th rowspan="2" class="att-th-teal-pay att-col-stat">Off</th>
-                    <th rowspan="2" class="att-th-teal-pay att-col-total" style="background:#0e4e5e !important;color:#ffffff !important;">Total Days</th>
+                    <th rowspan="2" class="att-th-teal-pay att-col-total" style="background:linear-gradient(180deg, #0284c7 0%, #0369a1 100%) !important;color:#ffffff !important;font-weight:900 !important;">Total Days</th>
 
                     <!-- Custom Extra Columns -->
                     <?php foreach ($customCols as $cc): ?>
@@ -299,7 +299,7 @@ $totalStaffCount = count($staffList);
                     <?php endforeach; ?>
 
                     <!-- Bottom TOTAL Row -->
-                    <tr style="height:28px;font-weight:800;background:linear-gradient(135deg, #0e2a47 0%, #1e3a5f 100%);color:#ffffff;border-top:2px solid var(--att-border-strong);">
+                    <tr style="height:28px;font-weight:800;background:linear-gradient(135deg, #07162c 0%, #0d274c 100%);color:#ffffff;border-top:2px solid #1e3a5f;">
                         <td colspan="2" class="att-summary-label" style="text-align:center;font-weight:900;color:#fde047;letter-spacing:0.8px;">TOTAL CONSOLIDATED</td>
                         <?php foreach ($datesList as $dInfo): ?>
                             <td></td>
@@ -309,7 +309,7 @@ $totalStaffCount = count($staffList);
                         <td style="font-weight:900;text-align:center;color:#c084fc;"><?= $sumBasic ?></td>
                         <td style="font-weight:900;text-align:center;color:#fde047;"><?= $sumSick ?></td>
                         <td style="font-weight:900;color:#f87171;text-align:center;"><?= $sumOff ?></td>
-                        <td style="font-weight:900;background:#0284c7;color:#ffffff;text-align:center;font-size:14px;"><?= $sumTotalDays ?></td>
+                        <td style="font-weight:900;background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%);color:#ffffff;text-align:center;font-size:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.35);"><?= $sumTotalDays ?></td>
 
                         <!-- Totals for Custom Columns -->
                         <?php foreach ($customCols as $cc): ?>
