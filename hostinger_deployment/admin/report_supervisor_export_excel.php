@@ -283,9 +283,15 @@ echo '<?mso-application progid="Excel.Sheet"?>' . "\n";
    <Column ss:Width="75"/>
    <Column ss:Width="200"/>
    <Column ss:Width="180"/>
+   <Column ss:Width="120"/>
+   <Column ss:Width="150"/>
+   <Column ss:Width="65"/>
+   <Column ss:Width="120"/>
+   <Column ss:Width="80"/>
+   <Column ss:Width="80"/>
 
    <Row ss:Height="30">
-    <Cell ss:MergeAcross="20" ss:StyleID="HeaderTitle">
+    <Cell ss:MergeAcross="26" ss:StyleID="HeaderTitle">
      <Data ss:Type="String"> <?= xmlEscape($settings['company_name']) ?> - Daily Supervisor Patrol &amp; Inspection Visits (<?= $fromDate ?> to <?= $toDate ?>)</Data>
     </Cell>
    </Row>
@@ -312,6 +318,12 @@ echo '<?mso-application progid="Excel.Sheet"?>' . "\n";
     <Cell ss:StyleID="ColHeader"><Data ss:Type="String">Attendance</Data></Cell>
     <Cell ss:StyleID="ColHeader"><Data ss:Type="String">Remarks</Data></Cell>
     <Cell ss:StyleID="ColHeader"><Data ss:Type="String">Issues / Action Taken</Data></Cell>
+    <Cell ss:StyleID="ColHeader"><Data ss:Type="String">Client Rep</Data></Cell>
+    <Cell ss:StyleID="ColHeader"><Data ss:Type="String">Checklist Summary</Data></Cell>
+    <Cell ss:StyleID="ColHeader"><Data ss:Type="String">Deficiencies</Data></Cell>
+    <Cell ss:StyleID="ColHeader"><Data ss:Type="String">Action Assignee</Data></Cell>
+    <Cell ss:StyleID="ColHeader"><Data ss:Type="String">Due Date</Data></Cell>
+    <Cell ss:StyleID="ColHeader"><Data ss:Type="String">Action Status</Data></Cell>
    </Row>
 
    <?php foreach ($visits as $v): 
@@ -342,6 +354,12 @@ echo '<?mso-application progid="Excel.Sheet"?>' . "\n";
     <Cell ss:StyleID="RowCenter"><Data ss:Type="String"><?= xmlEscape($v['guards_attendance']) ?></Data></Cell>
     <Cell ss:StyleID="RowRegular"><Data ss:Type="String"><?= xmlEscape($v['remarks']) ?></Data></Cell>
     <Cell ss:StyleID="RowRegular"><Data ss:Type="String"><?= xmlEscape($v['issues_action_taken']) ?></Data></Cell>
+    <Cell ss:StyleID="RowRegular"><Data ss:Type="String"><?= xmlEscape($v['client_rep_name'] ?? '') ?></Data></Cell>
+    <Cell ss:StyleID="RowCenter"><Data ss:Type="String"><?= xmlEscape($v['checklist_summary'] ?? '') ?></Data></Cell>
+    <Cell ss:StyleID="RowNumber"><Data ss:Type="Number"><?= (int)($v['checklist_no_count'] ?? 0) ?></Data></Cell>
+    <Cell ss:StyleID="RowRegular"><Data ss:Type="String"><?= xmlEscape($v['corrective_action_assignee'] ?? '') ?></Data></Cell>
+    <Cell ss:StyleID="RowCenter"><Data ss:Type="String"><?= xmlEscape($v['corrective_action_due_date'] ?? '') ?></Data></Cell>
+    <Cell ss:StyleID="RowCenter"><Data ss:Type="String"><?= xmlEscape($v['corrective_action_status'] ?? '') ?></Data></Cell>
    </Row>
    <?php endforeach; ?>
   </Table>

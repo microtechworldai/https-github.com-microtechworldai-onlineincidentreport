@@ -82,6 +82,83 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     $results[] = "✅ Table `guard_site_assignments` verified & active.";
 
+    // Ensure supervisor_duties table exists
+    $db->exec("CREATE TABLE IF NOT EXISTS `supervisor_duties` (
+      `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+      `duty_ref` varchar(100) NOT NULL,
+      `supervisor_id` int(10) unsigned NOT NULL,
+      `camp_id` int(10) unsigned NOT NULL,
+      `duty_date` date NOT NULL,
+      `shift_type` enum('Day','Night') NOT NULL DEFAULT 'Day',
+      `camp_out_time` datetime NOT NULL,
+      `camp_in_time` datetime DEFAULT NULL,
+      `status` enum('Active','Completed') NOT NULL DEFAULT 'Active',
+      `total_sites` int(11) NOT NULL DEFAULT 0,
+      `total_minutes` int(11) NOT NULL DEFAULT 0,
+      `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+      `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+      PRIMARY KEY (`id`),
+      UNIQUE KEY `duty_ref` (`duty_ref`),
+      KEY `idx_duty_sup_date` (`supervisor_id`,`duty_date`),
+      KEY `idx_duty_status` (`status`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $results[] = "✅ Table `supervisor_duties` verified & active.";
+
+    // Ensure supervisor_visits table exists
+    $db->exec("CREATE TABLE IF NOT EXISTS `supervisor_visits` (
+      `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+      `visit_ref` varchar(100) DEFAULT NULL,
+      `duty_id` int(10) unsigned NOT NULL,
+      `supervisor_id` int(10) unsigned NOT NULL,
+      `site_id` int(10) unsigned NOT NULL,
+      `time_in` datetime NOT NULL,
+      `time_out` datetime DEFAULT NULL,
+      `minutes_spent` int(11) NOT NULL DEFAULT 0,
+      `travel_minutes_from_previous` int(11) NOT NULL DEFAULT 0,
+      `remarks` text DEFAULT NULL,
+      `purpose_of_visit` varchar(50) NOT NULL DEFAULT 'Routine',
+      `guards_count` int(11) NOT NULL DEFAULT 0,
+      `guards_attendance` varchar(50) NOT NULL DEFAULT 'All present',
+      `guards_names` text DEFAULT NULL,
+      `rating_turnout` varchar(20) NOT NULL DEFAULT 'OK',
+      `rating_records` varchar(20) NOT NULL DEFAULT 'OK',
+      `rating_condition` varchar(20) NOT NULL DEFAULT 'OK',
+      `rating_equipment` varchar(20) NOT NULL DEFAULT 'OK',
+      `has_issues` tinyint(1) NOT NULL DEFAULT 0,
+      `issues_action_taken` text DEFAULT NULL,
+      `manual_timeout_requested` tinyint(1) NOT NULL DEFAULT 0,
+      `manual_timeout_time` datetime DEFAULT NULL,
+      `manual_timeout_reason` text DEFAULT NULL,
+      `manual_timeout_status` enum('None','Pending','Approved','Rejected') NOT NULL DEFAULT 'None',
+      `corrected_by_admin_id` int(10) unsigned DEFAULT NULL,
+      `correction_notes` text DEFAULT NULL,
+      `site_report` text DEFAULT NULL,
+      `status` enum('In Progress','Completed') NOT NULL DEFAULT 'In Progress',
+      `is_draft` tinyint(1) NOT NULL DEFAULT 0,
+      `is_offline_sync` tinyint(1) NOT NULL DEFAULT 0,
+      `client_scan_time` datetime DEFAULT NULL,
+      `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+      `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+      PRIMARY KEY (`id`),
+      UNIQUE KEY `visit_ref` (`visit_ref`),
+      KEY `idx_visit_duty` (`duty_id`),
+      KEY `idx_visit_sup` (`supervisor_id`,`time_in`),
+      KEY `idx_visit_site` (`site_id`,`time_in`),
+      KEY `idx_visit_status` (`status`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $results[] = "✅ Table `supervisor_visits` verified & active.";
+
+    // Ensure incidents table has operations_manager_id and client_manager_id
+    $incCols = $db->query("DESCRIBE incidents")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('operations_manager_id', $incCols)) {
+        $db->exec("ALTER TABLE incidents ADD COLUMN operations_manager_id VARCHAR(100) NULL AFTER operations_manager_name");
+        $results[] = "✅ Added missing column `operations_manager_id` to `incidents`.";
+    }
+    if (!in_array('client_manager_id', $incCols)) {
+        $db->exec("ALTER TABLE incidents ADD COLUMN client_manager_id VARCHAR(100) NULL AFTER client_manager_name");
+        $results[] = "✅ Added missing column `client_manager_id` to `incidents`.";
+    }
+
     // Ensure sites table has required columns
     $cols = $db->query("DESCRIBE sites")->fetchAll(PDO::FETCH_COLUMN);
     if (!in_array('supervisor_qr_token', $cols)) {

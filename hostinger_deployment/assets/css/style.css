@@ -2287,7 +2287,7 @@ aside.app-sidebar {
 
 .kpi-grid {
   display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
   gap: 20px !important;
   margin-bottom: 24px !important;
 }
@@ -2873,4 +2873,10 @@ aside.app-sidebar {
 
 [data-theme="dark"] .admin-meta .role {
   color: var(--sidebar-item-text) !important;
+}
+
+/* User requested white and bold text for section titles */
+.section-header-banner, .navy-frame-title {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
 }

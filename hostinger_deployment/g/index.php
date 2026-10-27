@@ -14,6 +14,12 @@ $db = get_db();
 $error = '';
 $site = null;
 
+// Handle unauthorized redirection message
+if (isset($_GET['msg']) && $_GET['msg'] === 'unauthorized_site') {
+    $error = "ACCESS DENIED: You are not authorized for that site location. You are strictly restricted to locations created and assigned by the Super Admin.";
+}
+
+
 // Retrieve QR token from URL parameter (?token=... or ?qr=...)
 $token = trim($_GET['token'] ?? $_GET['qr'] ?? '');
 
@@ -44,21 +50,40 @@ if (!empty($_SESSION['uss_supervisor_logged_in']) && !empty($_SESSION['superviso
 // Guard Instant Connect: If guard is already logged in on this phone and scans a QR poster
 if (!empty($_SESSION['uss_guard_logged_in']) && !empty($_SESSION['guard_id'])) {
     if ($site) {
-        try {
-            $stmtAuth = $db->prepare("SELECT id FROM guard_site_assignments WHERE guard_id = ? AND site_id = ? LIMIT 1");
-            $stmtAuth->execute([$_SESSION['guard_id'], $site['id']]);
-            if (!$stmtAuth->fetch()) {
-                $db->prepare("INSERT INTO guard_site_assignments (guard_id, site_id) VALUES (?, ?)")->execute([$_SESSION['guard_id'], $site['id']]);
-            }
-        } catch (Exception $e) {}
-        $_SESSION['current_site_id'] = $site['id'];
-        $_SESSION['current_site_code'] = $site['code'];
-        $_SESSION['current_site_name'] = $site['name'];
-        $_SESSION['current_site_lat'] = $site['latitude'] ?? '';
-        $_SESSION['current_site_lng'] = $site['longitude'] ?? '';
-        $_SESSION['guard_last_activity'] = time();
-        header("Location: " . APP_URL . "/g/submit.php");
-        exit;
+        // Enforce strict site authorization check:
+        // A security guard is ONLY allowed to access sites assigned by Super Admin!
+        $stmtAuth = $db->prepare("SELECT id FROM guard_site_assignments WHERE guard_id = ? AND site_id = ? LIMIT 1");
+        $stmtAuth->execute([$_SESSION['guard_id'], $site['id']]);
+        $isAssigned = (bool)$stmtAuth->fetch();
+
+        if (!$isAssigned) {
+            // Retrieve guard's authorized sites for high-clarity error feedback
+            $stmtMySites = $db->prepare("
+                SELECT s.name 
+                FROM sites s 
+                JOIN guard_site_assignments gsa ON gsa.site_id = s.id 
+                WHERE gsa.guard_id = ? AND s.is_active = 1
+            ");
+            $stmtMySites->execute([$_SESSION['guard_id']]);
+            $mySites = $stmtMySites->fetchAll(PDO::FETCH_COLUMN);
+            $mySitesStr = !empty($mySites) ? implode(', ', $mySites) : 'None assigned';
+
+            $error = "ACCESS DENIED: You are assigned to [" . htmlspecialchars($mySitesStr) . "]. "
+                   . "You are NOT authorized to enter or scan checkpoints for '" . htmlspecialchars($site['name']) . "'. "
+                   . "Security Officers are strictly restricted to locations created and assigned by the Super Admin.";
+            log_audit('GUARD_UNAUTHORIZED_QR_SCAN_BLOCKED', 'SITE', (string)$site['id'], 
+                "Guard " . ($_SESSION['guard_name'] ?? 'Guard') . " (ID {$_SESSION['guard_id']}) blocked from scanning unassigned site '{$site['name']}'", 
+                'GUARD', $_SESSION['guard_id'], $_SESSION['guard_name'] ?? 'Guard');
+        } else {
+            $_SESSION['current_site_id'] = $site['id'];
+            $_SESSION['current_site_code'] = $site['code'];
+            $_SESSION['current_site_name'] = $site['name'];
+            $_SESSION['current_site_lat'] = $site['latitude'] ?? '';
+            $_SESSION['current_site_lng'] = $site['longitude'] ?? '';
+            $_SESSION['guard_last_activity'] = time();
+            header("Location: " . APP_URL . "/g/submit.php");
+            exit;
+        }
     } else {
         header("Location: " . APP_URL . "/g/submit.php");
         exit;
@@ -103,46 +128,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            // Guard / Supervisor authenticated successfully!
-            // Retrieve assigned post(s) configured by Admin
+            // Guard authenticated successfully!
+            // Retrieve ALL assigned posts configured by Super Admin
+            $stmtSites = $db->prepare("
+                SELECT s.* 
+                FROM sites s 
+                INNER JOIN guard_site_assignments gsa ON gsa.site_id = s.id 
+                WHERE gsa.guard_id = ? AND s.is_active = 1 
+                ORDER BY gsa.id ASC
+            ");
+            $stmtSites->execute([$guard['id']]);
+            $assignedSites = $stmtSites->fetchAll();
+            $assignedIds = array_column($assignedSites, 'id');
+            $assignedNames = array_column($assignedSites, 'name');
+            $assignedStr = !empty($assignedNames) ? implode(', ', $assignedNames) : 'No sites assigned by Super Admin';
+
             $currentSite = null;
 
             if ($site) {
-                // If scanned a checkpoint QR poster, grant instant checkpoint access and record assignment
-                try {
-                    $stmtAuth = $db->prepare("SELECT id FROM guard_site_assignments WHERE guard_id = ? AND site_id = ? LIMIT 1");
-                    $stmtAuth->execute([$guard['id'], $site['id']]);
-                    if (!$stmtAuth->fetch()) {
-                        $db->prepare("INSERT INTO guard_site_assignments (guard_id, site_id) VALUES (?, ?)")->execute([$guard['id'], $site['id']]);
-                    }
-                } catch (Exception $e) {}
-                $currentSite = $site;
-            } else {
-                // Look up assigned post from admin configuration
-                $stmtSites = $db->prepare("
-                    SELECT s.* 
-                    FROM sites s 
-                    INNER JOIN guard_site_assignments gsa ON gsa.site_id = s.id 
-                    WHERE gsa.guard_id = ? AND s.is_active = 1 
-                    ORDER BY gsa.id ASC
-                ");
-                $stmtSites->execute([$guard['id']]);
-                $assignedSites = $stmtSites->fetchAll();
-
-                if (empty($assignedSites)) {
-                    // Auto-assign to first active site if no post assigned yet
-                    $fallbackSite = $db->query("SELECT * FROM sites WHERE is_active = 1 ORDER BY id ASC LIMIT 1")->fetch();
-                    if ($fallbackSite) {
-                        try {
-                            $db->prepare("INSERT INTO guard_site_assignments (guard_id, site_id) VALUES (?, ?)")->execute([$guard['id'], $fallbackSite['id']]);
-                        } catch (Exception $e) {}
-                        $currentSite = $fallbackSite;
-                    } else {
-                        $error = "Access Denied: Officer {$guard['full_name']} has no assigned post. Please create a patrol site first in Admin.";
-                        log_audit('GUARD_NO_ASSIGNED_SITE', 'GUARD', $guard['id'], 'No assigned site found in admin', 'GUARD', $guard['id'], $guard['full_name']);
-                    }
+                // If scanned a checkpoint QR poster, strictly verify authorization
+                if (!in_array((int)$site['id'], array_map('intval', $assignedIds), true)) {
+                    $error = "ACCESS DENIED: Officer {$guard['full_name']} ({$guard['staff_id']}) is authorized ONLY for [" . htmlspecialchars($assignedStr) . "]. "
+                           . "You are NOT allowed to enter or access '" . htmlspecialchars($site['name']) . "'. "
+                           . "You are authorized to use Super Admin assigned locations only.";
+                    log_audit('GUARD_UNAUTHORIZED_SITE_LOGIN_BLOCKED', 'SITE', (string)$site['id'], 
+                        "Guard {$guard['username']} attempted login at unassigned site '{$site['name']}'", 
+                        'GUARD', $guard['id'], $guard['full_name']);
                 } else {
-                    // Automatically take the assigned post configured by Admin
+                    $currentSite = $site;
+                }
+            } else {
+                // Guard accessed portal without scanning a specific QR code
+                if (empty($assignedSites)) {
+                    $error = "ACCESS DENIED: Officer {$guard['full_name']} has no assigned post. "
+                           . "You must be assigned to an active site created by the Super Admin before accessing the patrol portal.";
+                    log_audit('GUARD_NO_ASSIGNED_SITE', 'GUARD', (string)$guard['id'], 'Login blocked: no site assigned by Super Admin', 'GUARD', $guard['id'], $guard['full_name']);
+                } else {
                     $currentSite = $assignedSites[0];
                 }
             }

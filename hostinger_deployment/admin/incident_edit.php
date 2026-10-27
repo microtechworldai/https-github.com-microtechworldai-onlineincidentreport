@@ -52,6 +52,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $incOther = trim($_POST['incident_other_text'] ?? '');
     $notifiedOther = trim($_POST['notified_other_text'] ?? '');
 
+    $supName = trim($_POST['site_supervisor_name'] ?? '');
+    $supId = trim($_POST['site_supervisor_id'] ?? '');
+    $supDate = !empty($_POST['site_supervisor_date']) ? $_POST['site_supervisor_date'] : null;
+    $supRec = trim($_POST['recommendation_action_taken'] ?? '');
+
+    $opsName = trim($_POST['operations_manager_name'] ?? '');
+    $opsId = trim($_POST['operations_manager_id'] ?? '');
+    $opsDate = !empty($_POST['operations_manager_date']) ? $_POST['operations_manager_date'] : null;
+
+    $clientName = trim($_POST['client_manager_name'] ?? '');
+    $clientId = trim($_POST['client_manager_id'] ?? '');
+    $clientAction = trim($_POST['client_manager_action_taken'] ?? '');
+    $clientDate = !empty($_POST['client_manager_date']) ? $_POST['client_manager_date'] : null;
+
     if (empty($summary) || empty($description) || empty($incidentDate) || empty($incidentTime)) {
         $error = 'Please fill all required fields (Summary, Description, Date, Time).';
     } else {
@@ -229,7 +243,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="card incident-edit-card">
         <form method="POST" action="">
                         <!-- Section Heading 1: Incident Timeline & Priority -->
-            <h4 class="section-header-banner">Incident Timeline &amp; Priority</h4>
+            <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Incident Timeline &amp; Priority</h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
                 <div class="form-group">
                     <label class="form-label">Incident Date (dd/mm/yyyy)</label>
@@ -273,7 +287,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
                         <!-- Section Heading 2: Classification & Triggers -->
-            <h4 class="section-header-banner">Classification &amp; Triggers</h4>
+            <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Classification &amp; Triggers</h4>
             <!-- Main Causes -->
             <div class="form-group">
                 <label class="form-label">Main Causes</label>
@@ -329,7 +343,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
                         <!-- Section Heading 3: Executive Summary & Narrative -->
-            <h4 class="section-header-banner">Executive Summary &amp; Narrative Description</h4>
+            <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Executive Summary</h4>
             <!-- Summary -->
             <div class="form-group">
                 <label class="form-label">Executive Summary Line</label>
@@ -403,7 +417,81 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
+            
+            <!-- Section Heading 4: Official Management Sign-Off -->
+            <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important; margin-top: 28px;">Official Management Sign-Off</h4>
+            
+            <!-- 1. Supervisor Sign-off -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                <div style="font-size: 13px; font-weight: 800; color: #38bdf8; margin-bottom: 12px; text-transform: uppercase;">
+                    1. Site Supervisor Sign-Off
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Supervisor Name &amp; ID</label>
+                        <input type="text" name="site_supervisor_name" class="form-control" placeholder="Supervisor Name" value="<?= htmlspecialchars($incident['site_supervisor_name'] ?? '') ?>">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Staff ID</label>
+                        <input type="text" name="site_supervisor_id" class="form-control" placeholder="Staff ID" value="<?= htmlspecialchars($incident['site_supervisor_id'] ?? '') ?>">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Sign-Off Date (dd/mm/yyyy)</label>
+                    <input type="date" name="site_supervisor_date" class="form-control" value="<?= htmlspecialchars($incident['site_supervisor_date'] ?? '') ?>">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Recommendation / Action Taken</label>
+                    <textarea name="recommendation_action_taken" class="form-control" rows="2" placeholder="Corrective actions initiated..."><?= htmlspecialchars($incident['recommendation_action_taken'] ?? '') ?></textarea>
+                </div>
+            </div>
+
+            <!-- 2. Operations Manager Sign-off -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                <div style="font-size: 13px; font-weight: 800; color: #38bdf8; margin-bottom: 12px; text-transform: uppercase;">
+                    2. Operations Manager Sign-Off
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Operations Manager Name &amp; Staff ID</label>
+                        <input type="text" name="operations_manager_name" class="form-control" placeholder="e.g. Tariq Mansoor" value="<?= htmlspecialchars($incident['operations_manager_name'] ?? '') ?>">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Staff ID</label>
+                        <input type="text" name="operations_manager_id" class="form-control" placeholder="Staff ID (e.g. OPS-01)" value="<?= htmlspecialchars($incident['operations_manager_id'] ?? '') ?>">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Ops Sign-off Date (dd/mm/yyyy)</label>
+                    <input type="date" name="operations_manager_date" class="form-control" value="<?= htmlspecialchars($incident['operations_manager_date'] ?? '') ?>">
+                </div>
+            </div>
+
+            <!-- 3. Client Representative Sign-off -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                <div style="font-size: 13px; font-weight: 800; color: #38bdf8; margin-bottom: 12px; text-transform: uppercase;">
+                    3. Client Representative Sign-Off
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Client Representative Name &amp; ID</label>
+                        <input type="text" name="client_manager_name" class="form-control" placeholder="Client Manager Name" value="<?= htmlspecialchars($incident['client_manager_name'] ?? '') ?>">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Client Staff ID / Rep ID</label>
+                        <input type="text" name="client_manager_id" class="form-control" placeholder="Client ID / Badge" value="<?= htmlspecialchars($incident['client_manager_id'] ?? '') ?>">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Client Action Taken</label>
+                    <textarea name="client_manager_action_taken" class="form-control" rows="2" placeholder="Client action or notes..."><?= htmlspecialchars($incident['client_manager_action_taken'] ?? '') ?></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Client Date (dd/mm/yyyy)</label>
+                    <input type="date" name="client_manager_date" class="form-control" value="<?= htmlspecialchars($incident['client_manager_date'] ?? '') ?>">
+                </div>
+            </div>
+<div style="display: flex; gap: 12px; margin-top: 24px;">
                 <button type="submit" class="btn btn-primary">Save Changes</button>
                 <a href="<?= APP_URL ?>/admin/incident_view.php?id=<?= $id ?>" class="btn btn-secondary">Cancel</a>
             </div>

@@ -66,7 +66,18 @@ if (!$camp && !$site) {
             $action = 'Camp In';
         }
     } elseif (!$duty) {
-        $error = 'No open duty. Scan your Camp QR and start duty before visiting a site.';
+        // Automatically start field supervisor duty from central camp so they can immediately begin site inspection
+        $defaultCamp = $db->query("SELECT id FROM camps WHERE is_active = 1 ORDER BY id ASC LIMIT 1")->fetch();
+        $campId = $defaultCamp ? (int)$defaultCamp['id'] : 1;
+        $dutyRef = 'DUTY-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4)));
+        $insDuty = $db->prepare("
+            INSERT INTO supervisor_duties
+                (duty_ref, supervisor_id, camp_id, duty_date, shift_type, camp_out_time, status, total_sites, total_minutes, created_at)
+            VALUES (?, ?, ?, CURDATE(), 'Day', NOW(), 'Active', 0, 0, NOW())
+        ");
+        $insDuty->execute([$dutyRef, $supervisorId, $campId]);
+        list($duty, $openVisit) = get_supervisor_duty_state($db, $supervisorId);
+        $action = 'Time In';
     } elseif ($openVisit && $openVisit['manual_timeout_status'] === 'Pending') {
         $error = 'A manual Time Out request is pending Super Admin review. Do not start another site visit until it is resolved.';
     } elseif ($openVisit && (int)$openVisit['site_id'] !== (int)$site['id']) {
@@ -212,6 +223,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_action']) && 
                 }
 
                 if ($action === 'Time Out') {
+                    // Process 22-item checklist
+                    $checklistResult = process_supervisor_checklist_input($_POST);
+                    if (!empty($checklistResult['errors'])) {
+                        throw new DomainException(implode(' ', $checklistResult['errors']));
+                    }
+
+                    // Auto-populate legacy ratings if not explicitly set
+                    if (empty($_POST['rating_turnout'])) {
+                        $_POST['rating_turnout'] = in_array('No', [$_POST['chk_q_1']??'', $_POST['chk_q_2']??'', $_POST['chk_q_3']??'', $_POST['chk_q_5']??'', $_POST['chk_q_18']??'', $_POST['chk_q_19']??''], true) ? 'Issue' : 'OK';
+                    }
+                    if (empty($_POST['rating_records'])) {
+                        $_POST['rating_records'] = in_array('No', [$_POST['chk_q_4']??'', $_POST['chk_q_6']??'', $_POST['chk_q_7']??'', $_POST['chk_q_10']??'', $_POST['chk_q_11']??'', $_POST['chk_q_16']??'', $_POST['chk_q_17']??'', $_POST['chk_q_20']??'', $_POST['chk_q_21']??'', $_POST['chk_q_22']??''], true) ? 'Issue' : 'OK';
+                    }
+                    if (empty($_POST['rating_condition'])) {
+                        $_POST['rating_condition'] = in_array('No', [$_POST['chk_q_8']??'', $_POST['chk_q_9']??'', $_POST['chk_q_13']??'', $_POST['chk_q_14']??'', $_POST['chk_q_15']??''], true) ? 'Issue' : 'OK';
+                    }
+                    if (empty($_POST['rating_equipment'])) {
+                        $_POST['rating_equipment'] = (($_POST['chk_q_12'] ?? '') === 'No') ? 'Issue' : 'OK';
+                    }
+                    if (empty($_POST['purpose_of_visit'])) {
+                        $_POST['purpose_of_visit'] = 'Routine';
+                    }
+                    if (empty($_POST['guards_attendance'])) {
+                        $_POST['guards_attendance'] = 'All present';
+                    }
+
                     $validationError = validate_supervisor_visit_report($_POST, $minimumRemarksLength);
                     if ($validationError !== null) {
                         throw new DomainException($validationError);
@@ -223,9 +260,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_action']) && 
                         $_POST['rating_turnout'], $_POST['rating_records'],
                         $_POST['rating_condition'], $_POST['rating_equipment']
                     ];
-                    $hasIssue = in_array('Issue', $ratings, true);
+                    $hasIssue = in_array('Issue', $ratings, true) || ($checklistResult['no'] > 0);
                     $issueAction = trim((string)($_POST['issues_action_taken'] ?? ''));
+                    $assignee = trim((string)($_POST['corrective_action_assignee'] ?? ''));
+                    $dueDate = !empty($_POST['corrective_action_due_date']) ? $_POST['corrective_action_due_date'] : null;
+                    $actionStatus = in_array($_POST['corrective_action_status'] ?? '', ['Pending', 'In Progress', 'Resolved'], true) ? $_POST['corrective_action_status'] : 'Pending';
+                    $clientRepName = trim((string)($_POST['client_rep_name'] ?? ''));
+
                     $photoFiles = $_FILES['photos'] ?? null;
+                    $photoCaptions = $_POST['photo_captions'] ?? $_POST['photo_comments'] ?? [];
                     $photoCount = is_array($photoFiles['name'] ?? null)
                         ? count(array_filter($photoFiles['name']))
                         : 0;
@@ -236,7 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_action']) && 
                     if ($photoCount > 5 || ($hasIssue && $photosRequiredOnIssue && $photoTotal === 0)) {
                         throw new DomainException($photoCount > 5
                             ? 'A maximum of 5 photos may be attached to one visit.'
-                            : 'Attach at least one photo when an inspection issue is reported.');
+                            : 'Attach at least one photo when an inspection deficiency or issue is reported.');
                     }
 
                     $siteReport = [
@@ -248,7 +291,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_action']) && 
                         'rating_records' => $_POST['rating_records'],
                         'rating_condition' => $_POST['rating_condition'],
                         'rating_equipment' => $_POST['rating_equipment'],
-                        'issues_action_taken' => $issueAction
+                        'issues_action_taken' => $issueAction,
+                        'client_rep_name' => $clientRepName,
+                        'checklist_summary' => $checklistResult['summary'],
+                        'corrective_action_assignee' => $assignee,
+                        'corrective_action_due_date' => $dueDate,
+                        'corrective_action_status' => $actionStatus
                     ];
                     $update = $db->prepare("
                         UPDATE supervisor_visits
@@ -256,7 +304,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_action']) && 
                             remarks = ?, purpose_of_visit = ?, guards_count = ?, guards_attendance = ?, guards_names = ?,
                             rating_turnout = ?, rating_records = ?, rating_condition = ?, rating_equipment = ?,
                             has_issues = ?, issues_action_taken = ?, site_report = ?, is_draft = 0,
-                            is_offline_sync = 0, status = 'Completed', updated_at = NOW()
+                            is_offline_sync = 0, status = 'Completed', updated_at = NOW(),
+                            client_rep_name = ?,
+                            checklist_answers = ?,
+                            checklist_yes_count = ?,
+                            checklist_no_count = ?,
+                            checklist_na_count = ?,
+                            checklist_unanswered_count = ?,
+                            checklist_summary = ?,
+                            corrective_action_assignee = ?,
+                            corrective_action_due_date = ?,
+                            corrective_action_status = ?
                         WHERE id = ? AND status = 'In Progress'
                     ");
                     $update->execute([
@@ -272,6 +330,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_action']) && 
                         $hasIssue ? 1 : 0,
                         $issueAction,
                         json_encode($siteReport, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                        $clientRepName,
+                        json_encode($checklistResult['answers'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                        $checklistResult['yes'],
+                        $checklistResult['no'],
+                        $checklistResult['na'],
+                        $checklistResult['unanswered'],
+                        $checklistResult['summary'],
+                        $assignee,
+                        $dueDate,
+                        $actionStatus,
                         $openVisit['id']
                     ]);
                     if ($update->rowCount() !== 1) {
@@ -291,18 +359,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_action']) && 
                                 throw new RuntimeException('A visit photo was rejected. Use a supported image under the upload limit.');
                             }
                             $uploaded[] = $result['relative_path'];
+                            $caption = trim((string)($photoCaptions[$i] ?? ''));
                             $photoInsert = $db->prepare("
                                 INSERT INTO supervisor_visit_photos
-                                    (visit_id, file_path, original_filename, file_size, created_at)
-                                VALUES (?, ?, ?, ?, NOW())
+                                    (visit_id, file_path, original_filename, file_size, caption, created_at)
+                                VALUES (?, ?, ?, ?, ?, NOW())
                             ");
                             $photoInsert->execute([
                                 $openVisit['id'],
                                 $result['relative_path'],
                                 basename($photoFiles['name'][$i]),
-                                $result['size']
+                                $result['size'],
+                                $caption
                             ]);
                         }
+                    }
+
+                    // Alerts to Operations Manager for critical findings
+                    if ($checklistResult['no'] > 0 || $hasIssue) {
+                        $deficiencies = [];
+                        foreach ($checklistResult['answers'] as $ans) {
+                            if ($ans['answer'] === 'No') {
+                                $deficiencies[] = "#{$ans['id']} {$ans['question']}" . ($ans['remarks'] ? ": {$ans['remarks']}" : '');
+                            }
+                        }
+                        $supLabel = ($_SESSION['supervisor_name'] ?? 'Supervisor') . " (" . ($_SESSION['supervisor_staff_id'] ?? 'SUP') . ")";
+                        $alertDetails = "Critical deficiency logged during site inspection at {$site['name']} by {$supLabel}:
+"
+                            . implode("
+", $deficiencies)
+                            . ($issueAction ? "
+Corrective Action: {$issueAction}" : "")
+                            . ($assignee ? "
+Assignee: {$assignee} (Due: " . ($dueDate ?: 'Immediate') . ")" : "");
+
+                        $alertStmt = $db->prepare("
+                            INSERT INTO supervisor_alerts
+                                (supervisor_id, duty_id, visit_id, site_id, alert_type, severity, details, is_acknowledged, created_at)
+                            VALUES (?, ?, ?, ?, 'CHECKLIST_DEFICIENCY', 'Critical', ?, 0, NOW())
+                        ");
+                        $alertStmt->execute([
+                            $supervisorId,
+                            $duty['id'],
+                            $openVisit['id'],
+                            $site['id'],
+                            $alertDetails
+                        ]);
                     }
 
                     $duration = $db->prepare('SELECT minutes_spent FROM supervisor_visits WHERE id = ?');
@@ -314,7 +416,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_action']) && 
                         WHERE id = ?
                     ")->execute([$minutesSpent, $duty['id']]);
                     supervisor_visit_write_scan_event($db, $idempotencyKey, $supervisorId, $duty['id'], $openVisit['id'], $token, $action, $clientTime, $deviceHash);
-                    log_audit('SITE_TIME_OUT', 'SUPERVISOR_VISIT', (string)$openVisit['id'], ['minutes' => $minutesSpent, 'site' => $site['code']], 'SUPERVISOR', $supervisorId, $_SESSION['supervisor_name'] ?? null);
+                    log_audit('SITE_TIME_OUT', 'SUPERVISOR_VISIT', (string)$openVisit['id'], [
+                        'minutes' => $minutesSpent,
+                        'site' => $site['code'],
+                        'checklist' => $checklistResult['summary'],
+                        'client_rep' => $clientRepName
+                    ], 'SUPERVISOR', $supervisorId, $_SESSION['supervisor_name'] ?? null);
                     $db->commit();
                     header('Location: ' . APP_URL . '/sup/index.php?confirmed=' . (int)$openVisit['id']);
                     exit;
@@ -356,6 +463,161 @@ if ($openVisit) {
     <title>Confirm Supervisor Scan</title>
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css">
     <style>
+        .site-card {
+            background: linear-gradient(135deg, #0b192c 0%, #1e3a5f 100%);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+        }
+        .site-card h3 { margin: 0 0 10px 0; font-size: 16px; color: #38bdf8; font-weight: 800; }
+        .site-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px 18px;
+            font-size: 13px;
+        }
+        .site-grid div strong { color: #94a3b8; font-size: 11px; text-transform: uppercase; display: block; }
+        .site-grid div span { color: #f8fafc; font-weight: 700; font-size: 13.5px; }
+        .badge-verified {
+            display: inline-block;
+            background: #059669;
+            color: #ffffff;
+            font-size: 10.5px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin-left: 4px;
+        }
+        .sticky-summary {
+            position: sticky;
+            top: 10px;
+            z-index: 99;
+            background: #0b192c;
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .chk-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .chk-card.has-error {
+            border-color: #ef4444;
+            background: #fff5f5;
+        }
+        .chk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .chk-title {
+            font-size: 13.5px;
+            font-weight: 750;
+            color: #0f172a;
+            line-height: 1.35;
+        }
+        .chk-pill {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+        .pill-unanswered { background: #f1f5f9; color: #64748b; }
+        .pill-yes-active { background: #dcfce7; color: #166534; }
+        .pill-no-active { background: #fee2e2; color: #991b1b; }
+        .pill-na-active { background: #f1f5f9; color: #334155; }
+        .opt-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .opt-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 9px 8px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+            text-align: center;
+            color: #334155;
+            background: #f8fafc;
+        }
+        .opt-label input[type="radio"] { display: none; }
+        .opt-label.active-yes {
+            background: #10b981;
+            border-color: #059669;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(16,185,129,0.3);
+        }
+        .opt-label.active-no {
+            background: #ef4444;
+            border-color: #dc2626;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(239,68,68,0.3);
+        }
+        .opt-label.active-na {
+            background: #64748b;
+            border-color: #475569;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(100,116,139,0.3);
+        }
+        .section-header-box {
+            background: #0b192c;
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin: 22px 0 14px 0;
+            font-size: 13.5px;
+            letter-spacing: 0.4px;
+        }
+        .btn-submit-inspection {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 24px;
+            box-shadow: 0 4px 14px rgba(2,132,199,0.35);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-submit-inspection:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(2,132,199,0.45);
+        }
+        .photo-slot {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+        }
+
         body { margin: 0; padding: 18px; background: #f1f5f9; color: #0f172a; font: 16px/1.45 system-ui, sans-serif; }
         main { max-width: 620px; margin: 0 auto; background: #fff; border-radius: 14px; padding: 22px; box-shadow: 0 8px 32px #0f172a1c; }
         label { display: block; margin: 14px 0 6px; font-weight: 650; }
@@ -409,35 +671,330 @@ if ($openVisit) {
                 <button name="confirm_action" value="Time In">Confirm Time In</button>
             </form>
         <?php endif; ?>
-    <?php elseif ($action === 'Time Out' && $openVisit): ?>
-        <h2><?= htmlspecialchars($site['name']) ?></h2>
-        <p>Time In: <?= htmlspecialchars($openVisit['time_in']) ?>. Enter the required visit report before confirming Time Out.</p>
-        <form method="post" enctype="multipart/form-data">
+    <?php elseif ($action === 'Time Out' && $openVisit): 
+        $questions = get_supervisor_checklist_questions();
+        $siteClient = $site['client_name'] ?? 'Danube Properties';
+        $siteLoc = $site['address'] ?? 'Dubai, UAE';
+        $supName = $_SESSION['supervisor_name'] ?? 'Rashid Al Nuaimi';
+        $supStaffId = $_SESSION['supervisor_staff_id'] ?? 'SUP-401';
+        $shiftType = $duty['shift_type'] ?? 'Day';
+        $dutyDate = $duty['duty_date'] ?? date('Y-m-d');
+    ?>
+        <div style="text-align: center; margin-bottom: 18px;">
+            <div style="font-size: 12px; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 1px;">Ultimate Security Services</div>
+            <h2 style="margin: 4px 0 0 0; font-size: 20px; font-weight: 850; color: #0f172a;">Field Supervisor – Site Inspection Checklist</h2>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Official UAE Site Patrol &amp; Compliance Audit Record</div>
+        </div>
+
+        <!-- 1. Site Visit & Attendance Details Card -->
+        <div class="site-card">
+            <h3 style="color: #ffffff; font-weight: 800;">1. Site Visit &amp; Attendance Details</h3>
+            <div class="site-grid">
+                <div>
+                    <strong>Site Name &amp; Code</strong>
+                    <span><?= htmlspecialchars($site['name']) ?> (<?= htmlspecialchars($site['code']) ?>)</span>
+                </div>
+                <div>
+                    <strong>Client Name &amp; Location</strong>
+                    <span><?= htmlspecialchars($siteClient) ?> &bull; <?= htmlspecialchars($siteLoc) ?></span>
+                </div>
+                <div>
+                    <strong>Supervisor Name &amp; ID</strong>
+                    <span><?= htmlspecialchars($supName) ?> (<?= htmlspecialchars($supStaffId) ?>)</span>
+                </div>
+                <div>
+                    <strong>Date &amp; Shift</strong>
+                    <span><?= date('d/m/Y', strtotime($dutyDate)) ?> &bull; <?= htmlspecialchars($shiftType) ?> Shift</span>
+                </div>
+                <div>
+                    <strong>Site QR Scan — Check-in</strong>
+                    <span><?= date('h:i A', strtotime($openVisit['time_in'])) ?> <span class="badge-verified">✓ Arrival Verified</span></span>
+                </div>
+                <div>
+                    <strong>Site QR Scan — Check-out</strong>
+                    <span><span id="liveDepClock"><?= date('h:i A') ?></span> <span class="badge-verified">✓ Departure Verified</span></span>
+                </div>
+                <div>
+                    <strong>Total Time Spent at Site</strong>
+                    <span id="liveMinutesSpent" style="color: #38bdf8; font-weight: 800;">Calculating...</span>
+                </div>
+                <div>
+                    <strong>Client Representative</strong>
+                    <span id="clientRepDisplay" style="color: #cbd5e1; font-style: italic;">Optional on site</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" id="inspectionForm" onsubmit="return validateInspectionForm(event)">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
             <input type="hidden" name="idempotency_key" value="<?= htmlspecialchars($idempotencyKey) ?>">
             <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
             <input type="hidden" name="client_time" value="<?= htmlspecialchars($serverTime) ?>">
             <input type="hidden" name="device_hash" value="">
-            <label>Remarks (minimum <?= (int)$minimumRemarksLength ?> characters)</label>
-            <textarea name="remarks" minlength="<?= (int)$minimumRemarksLength ?>" required><?= htmlspecialchars($openVisit['remarks'] ?? '') ?></textarea>
-            <label>Purpose of visit</label>
-            <select name="purpose_of_visit"><?php foreach (['Routine','Surprise','Follow-up','Complaint','Client meeting','Other'] as $option): ?><option><?= htmlspecialchars($option) ?></option><?php endforeach; ?></select>
-            <label>Guards found on duty</label>
-            <input type="number" name="guards_count" min="0" value="<?= (int)($openVisit['guards_count'] ?? 0) ?>">
-            <label>Attendance</label>
-            <select name="guards_attendance"><?php foreach (['All present','Absent','Late'] as $option): ?><option><?= htmlspecialchars($option) ?></option><?php endforeach; ?></select>
-            <label>Guard names (optional)</label>
-            <textarea name="guards_names"><?= htmlspecialchars($openVisit['guards_names'] ?? '') ?></textarea>
-            <?php foreach (['rating_turnout' => 'Turnout and discipline','rating_records' => 'Post and records','rating_condition' => 'Site condition and safety','rating_equipment' => 'Equipment'] as $field => $label): ?>
-                <label><?= htmlspecialchars($label) ?></label>
-                <select name="<?= htmlspecialchars($field) ?>"><option>OK</option><option>Issue</option><option>N/A</option></select>
-            <?php endforeach; ?>
-            <label>Issues found and action taken (required when any rating is Issue)</label>
-            <textarea name="issues_action_taken"></textarea>
-            <label>Photos (maximum 5)</label>
-            <input type="file" name="photos[]" accept="image/*" multiple>
-            <button name="confirm_action" value="Time Out">Confirm Time Out and Submit Report</button>
+
+            <!-- Client Representative Input -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+                <label for="client_rep_name" style="margin-top: 0; font-size: 13px; font-weight: 750; color: #0f172a;">
+                    Client Representative Name (if present on site)
+                </label>
+                <input type="text" id="client_rep_name" name="client_rep_name" placeholder="Enter client representative name, e.g. Mr. Ahmed (Facility Manager)" value="<?= htmlspecialchars($openVisit['client_rep_name'] ?? '') ?>" oninput="document.getElementById('clientRepDisplay').innerText = this.value.trim() || 'Optional on site';">
+            </div>
+
+            <!-- Sticky Live Summary Bar -->
+            <div class="sticky-summary" id="checklistStickySummary">
+                <span style="font-weight: 850; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #ffffff;">Checklist Summary:</span>
+                <div style="display: flex; gap: 12px; font-weight: 800; font-size: 13px;">
+                    <span style="color: #4ade80;">Yes <span id="sumYes">0</span></span>
+                    <span style="color: #f87171;">No <span id="sumNo">0</span></span>
+                    <span style="color: #94a3b8;">N/A <span id="sumNA">0</span></span>
+                    <span style="color: #fde047;">Unanswered <span id="sumUnanswered">22</span></span>
+                </div>
+            </div>
+
+            <!-- 2. Field Supervisor – Site Inspection Checklist (22 Items) -->
+            <div class="section-header-box">
+                2. Field Supervisor – Site Inspection Checklist (22 Items)
+            </div>
+
+            <div id="checklistContainer">
+                <?php foreach ($questions as $qId => $qText): ?>
+                    <div class="chk-card" id="chk_card_<?= $qId ?>">
+                        <div class="chk-header">
+                            <div class="chk-title">
+                                <span style="color: #0284c7; font-weight: 800;"><?= $qId ?>.</span> <?= htmlspecialchars($qText) ?>:
+                            </div>
+                            <span class="chk-pill pill-unanswered" id="chk_pill_<?= $qId ?>">Not answered</span>
+                        </div>
+                        <div class="opt-group">
+                            <label class="opt-label" id="lbl_<?= $qId ?>_Yes">
+                                <input type="radio" name="chk_q_<?= $qId ?>" value="Yes" onchange="onChkAnswer(<?= $qId ?>, 'Yes')">
+                                <span>✓ Yes</span>
+                            </label>
+                            <label class="opt-label" id="lbl_<?= $qId ?>_No">
+                                <input type="radio" name="chk_q_<?= $qId ?>" value="No" onchange="onChkAnswer(<?= $qId ?>, 'No')">
+                                <span>✕ No</span>
+                            </label>
+                            <label class="opt-label" id="lbl_<?= $qId ?>_NA">
+                                <input type="radio" name="chk_q_<?= $qId ?>" value="N/A" onchange="onChkAnswer(<?= $qId ?>, 'N/A')">
+                                <span>— N/A</span>
+                            </label>
+                        </div>
+                        <div id="rem_box_<?= $qId ?>" style="display: none; margin-top: 10px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px;">
+                            <label for="chk_rem_<?= $qId ?>" style="color: #dc2626; font-size: 12px; font-weight: 800; margin: 0 0 4px 0;">
+                                Mandatory Deficiency Remarks (Required for 'No') *
+                            </label>
+                            <textarea name="chk_rem_<?= $qId ?>" id="chk_rem_<?= $qId ?>" rows="2" placeholder="Specify deficiency observed, guard actions, and immediate instruction given..."></textarea>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- 3. Guard Attendance & Turnout Verification -->
+            <div class="section-header-box">
+                3. Guard Attendance &amp; Turnout Verification
+            </div>
+
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+                <label>Purpose of visit</label>
+                <select name="purpose_of_visit">
+                    <?php foreach (['Routine','Surprise','Follow-up','Complaint','Client meeting','Other'] as $option): ?>
+                        <option><?= htmlspecialchars($option) ?></option>
+                    <?php endforeach; ?>
+                </select>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label>Guards found on duty</label>
+                        <input type="number" name="guards_count" min="0" value="<?= (int)($openVisit['guards_count'] ?? 0) ?>">
+                    </div>
+                    <div>
+                        <label>Attendance Status</label>
+                        <select name="guards_attendance">
+                            <?php foreach (['All present','Absent','Late'] as $option): ?>
+                                <option><?= htmlspecialchars($option) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <label>Guard names on post (optional)</label>
+                <textarea name="guards_names" rows="2" placeholder="e.g. Guard John Doe (G-102), Guard Ali Khan (G-108)"><?= htmlspecialchars($openVisit['guards_names'] ?? '') ?></textarea>
+
+                <label>Mandatory Supervisor Overall Inspection Remarks (minimum <?= (int)$minimumRemarksLength ?> characters) *</label>
+                <textarea name="remarks" minlength="<?= (int)$minimumRemarksLength ?>" required rows="3" placeholder="Enter comprehensive inspection remarks and observation details..."><?= htmlspecialchars($openVisit['remarks'] ?? '') ?></textarea>
+            </div>
+
+            <!-- 4. Corrective-Action Tracking -->
+            <div class="section-header-box">
+                4. Corrective-Action Tracking
+            </div>
+
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+                <label>Corrective Actions Assigned / Issues Found &amp; Action Taken</label>
+                <textarea name="issues_action_taken" id="issues_action_taken" rows="2" placeholder="Describe corrective actions assigned, remedial post instructions, or operations follow-up..."><?= htmlspecialchars($openVisit['issues_action_taken'] ?? '') ?></textarea>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                    <div>
+                        <label>Responsible Person / Assignee</label>
+                        <input type="text" name="corrective_action_assignee" placeholder="e.g. Lead Guard / Site In-Charge" value="<?= htmlspecialchars($openVisit['corrective_action_assignee'] ?? '') ?>">
+                    </div>
+                    <div>
+                        <label>Due Date</label>
+                        <input type="date" name="corrective_action_due_date" value="<?= htmlspecialchars($openVisit['corrective_action_due_date'] ?? date('Y-m-d')) ?>">
+                    </div>
+                    <div>
+                        <label>Action Status</label>
+                        <select name="corrective_action_status">
+                            <option value="Pending" <?= ($openVisit['corrective_action_status'] ?? '') === 'Pending' ? 'selected' : '' ?>>Pending</option>
+                            <option value="In Progress" <?= ($openVisit['corrective_action_status'] ?? '') === 'In Progress' ? 'selected' : '' ?>>In Progress</option>
+                            <option value="Resolved" <?= ($openVisit['corrective_action_status'] ?? '') === 'Resolved' ? 'selected' : '' ?>>Resolved</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Photographic Evidence (Up to 5 Photos with Comments) -->
+            <div class="section-header-box">
+                5. Photographic Evidence (Deficiencies &amp; Site Observations)
+            </div>
+
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                <p style="margin: 0 0 12px 0; font-size: 12.5px; color: #64748b;">
+                    Attach up to 5 photos showing deficiencies, guard turnout, or site checkpoints. Comments can be added to each photo.
+                </p>
+                <?php for ($pIdx = 1; $pIdx <= 5; $pIdx++): ?>
+                    <div class="photo-slot">
+                        <label style="margin: 0 0 4px 0; font-size: 12px; color: #334155; font-weight: 700;">
+                            Photo #<?= $pIdx ?> (Evidence Image)
+                        </label>
+                        <input type="file" name="photos[]" accept="image/*" style="padding: 6px; font-size: 12px; margin-bottom: 6px;">
+                        <input type="text" name="photo_captions[]" placeholder="Photo #<?= $pIdx ?> comment / deficiency description (optional)" style="font-size: 12.5px; padding: 7px 10px;">
+                    </div>
+                <?php endfor; ?>
+            </div>
+
+            <button type="submit" name="confirm_action" value="Time Out" class="btn-submit-inspection">
+                ✓ Confirm Time Out &amp; Submit Inspection Report
+            </button>
         </form>
+
+        <script>
+        const checkinTimestamp = new Date("<?= date('c', strtotime($openVisit['time_in'])) ?>").getTime();
+        function updateDurationClock() {
+            const now = new Date();
+            const diffMs = Math.max(0, now.getTime() - checkinTimestamp);
+            const diffMins = Math.max(1, Math.round(diffMs / 60000));
+            const hours = Math.floor(diffMins / 60);
+            const remMins = diffMins % 60;
+            const str = hours > 0 ? (hours + "h " + remMins + "m (" + diffMins + " mins)") : (diffMins + " mins");
+            const minEl = document.getElementById("liveMinutesSpent");
+            if (minEl) minEl.innerText = str;
+
+            const pad = n => String(n).padStart(2, "0");
+            let h = now.getHours();
+            const ampm = h >= 12 ? "PM" : "AM";
+            h = h % 12 || 12;
+            const clockEl = document.getElementById("liveDepClock");
+            if (clockEl) clockEl.innerText = pad(h) + ":" + pad(now.getMinutes()) + " " + ampm;
+        }
+        setInterval(updateDurationClock, 10000);
+        updateDurationClock();
+
+        const answersState = {};
+        for (let i = 1; i <= 22; i++) {
+            answersState[i] = "Unanswered";
+        }
+
+        function onChkAnswer(id, val) {
+            answersState[id] = val;
+            const card = document.getElementById("chk_card_" + id);
+            const pill = document.getElementById("chk_pill_" + id);
+            const remBox = document.getElementById("rem_box_" + id);
+            const remInput = document.getElementById("chk_rem_" + id);
+
+            if (card) card.classList.remove("has-error");
+
+            // Update label styles
+            ["Yes", "No", "NA"].forEach(k => {
+                const lbl = document.getElementById("lbl_" + id + "_" + k);
+                if (lbl) {
+                    lbl.classList.remove("active-yes", "active-no", "active-na");
+                }
+            });
+
+            if (val === "Yes") {
+                const lbl = document.getElementById("lbl_" + id + "_Yes");
+                if (lbl) lbl.classList.add("active-yes");
+                if (pill) {
+                    pill.className = "chk-pill pill-yes-active";
+                    pill.innerText = "Yes";
+                }
+                if (remBox) remBox.style.display = "none";
+            } else if (val === "No") {
+                const lbl = document.getElementById("lbl_" + id + "_No");
+                if (lbl) lbl.classList.add("active-no");
+                if (pill) {
+                    pill.className = "chk-pill pill-no-active";
+                    pill.innerText = "No";
+                }
+                if (remBox) {
+                    remBox.style.display = "block";
+                    if (remInput && !remInput.value.trim()) {
+                        remInput.focus();
+                    }
+                }
+            } else if (val === "N/A") {
+                const lbl = document.getElementById("lbl_" + id + "_NA");
+                if (lbl) lbl.classList.add("active-na");
+                if (pill) {
+                    pill.className = "chk-pill pill-na-active";
+                    pill.innerText = "N/A";
+                }
+                if (remBox) remBox.style.display = "none";
+            }
+
+            recalcTally();
+        }
+
+        function recalcTally() {
+            let yes = 0, no = 0, na = 0, un = 0;
+            for (let i = 1; i <= 22; i++) {
+                const v = answersState[i];
+                if (v === "Yes") yes++;
+                else if (v === "No") no++;
+                else if (v === "N/A") na++;
+                else un++;
+            }
+            document.getElementById("sumYes").innerText = yes;
+            document.getElementById("sumNo").innerText = no;
+            document.getElementById("sumNA").innerText = na;
+            document.getElementById("sumUnanswered").innerText = un;
+        }
+
+        function validateInspectionForm(e) {
+            let firstErr = null;
+            for (let i = 1; i <= 22; i++) {
+                if (answersState[i] === "No") {
+                    const remInput = document.getElementById("chk_rem_" + i);
+                    if (!remInput || !remInput.value.trim()) {
+                        const card = document.getElementById("chk_card_" + i);
+                        if (card) card.classList.add("has-error");
+                        if (!firstErr) firstErr = { id: i, el: remInput, card: card };
+                    }
+                }
+            }
+            if (firstErr) {
+                if (e) e.preventDefault();
+                alert("Checklist Item " + firstErr.id + ": Mandatory deficiency remarks are required when marked No.");
+                if (firstErr.card) {
+                    firstErr.card.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+                if (firstErr.el) firstErr.el.focus();
+                return false;
+            }
+            return true;
+        }
+        </script>
     <?php endif; ?>
     <p><a href="<?= APP_URL ?>/sup/duty.php">Return to duty cockpit</a></p>
 </main>

@@ -446,14 +446,23 @@ $timeFormatted = $totHours > 0 ? "{$totHours} hrs {$totRemMins} mins" : "{$totRe
                             <td class="col-spent"><?= (int)$v['minutes_spent'] ?> mins</td>
                             <td class="col-remarks">
                                 <div><?= htmlspecialchars($v['remarks'] ?: 'Inspection complete. No major irregularities observed.') ?></div>
-                                <?php
-                                $rep = json_decode($v['site_report'] ?? '', true);
-                                if ($rep):
-                                ?>
-                                    <div style="font-size: 6.5pt; color: #64748b; margin-top: 2px;">
-                                        Guards: <strong><?= htmlspecialchars($rep['guard_alertness'] ?? '') ?></strong> &bull;
-                                        Logbook: <strong><?= htmlspecialchars($rep['logbook_check'] ?? '') ?></strong> &bull;
-                                        Perimeter: <strong><?= htmlspecialchars($rep['perimeter_status'] ?? '') ?></strong>
+                                <div style="font-size: 6.8pt; color: #334155; margin-top: 2px;">
+                                    <?php if (!empty($v['checklist_summary'])): ?>
+                                        <strong>Checklist (22 Items):</strong> <?= htmlspecialchars($v['checklist_summary']) ?>
+                                    <?php endif; ?>
+                                    <?php if (!empty($v['client_rep_name'])): ?>
+                                        &bull; <strong>Client Rep:</strong> <?= htmlspecialchars($v['client_rep_name']) ?>
+                                    <?php endif; ?>
+                                    <?php if ((int)$v['checklist_no_count'] > 0): ?>
+                                        &bull; <strong style="color: #b91c1c;">Deficiencies: <?= (int)$v['checklist_no_count'] ?></strong>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if (!empty($v['issues_action_taken'])): ?>
+                                    <div style="font-size: 6.5pt; color: #7f1d1d; margin-top: 2px; background: #fef2f2; padding: 2px 4px; border-radius: 2px;">
+                                        <strong>Action:</strong> <?= htmlspecialchars(mb_strimwidth($v['issues_action_taken'], 0, 80, '...')) ?>
+                                        <?php if (!empty($v['corrective_action_status'])): ?>
+                                            (<?= htmlspecialchars($v['corrective_action_status']) ?>)
+                                        <?php endif; ?>
                                     </div>
                                 <?php endif; ?>
                             </td>
