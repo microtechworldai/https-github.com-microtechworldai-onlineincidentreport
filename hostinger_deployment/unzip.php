@@ -48,3 +48,4 @@ if ($res === TRUE) {
 } else {
     echo "<h2 style='color:red;'>Extraction failed with ZipArchive error code: " . $res . "</h2>";
 }
+
