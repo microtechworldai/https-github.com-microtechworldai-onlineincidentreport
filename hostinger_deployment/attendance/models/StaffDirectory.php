@@ -86,7 +86,7 @@ class StaffDirectory {
             $day = (int)$dt->format('j');
             $dateStr = $dt->format('Y-m-d');
 
-            // Find cell codes in other sites where staff is recorded with D, N, or B
+            // Find cell codes in other sites where staff is recorded with any attendance code
             $stmt = $db->prepare("
                 SELECT s.id as sheet_id, st.site_name, st.site_code, c.code
                 FROM att_sheets s
@@ -97,7 +97,7 @@ class StaffDirectory {
                   AND s.year = ?
                   AND s.month = ?
                   AND s.site_id != ?
-                  AND c.code IN ('D', 'N', 'B')
+                  AND c.code != '' AND c.code IS NOT NULL
             ");
             $stmt->execute([$day, $empNo, $year, $month, (int)$targetSiteId]);
             $matches = $stmt->fetchAll();
@@ -125,6 +125,26 @@ class StaffDirectory {
         $staff = self::getByEmpNo($empNo);
         if (!$staff) {
             throw new RuntimeException("Staff member not found: {$empNo}");
+        }
+
+        require_once __DIR__ . '/AttendanceSheet.php';
+
+        // Check company-wide duplicate attendance conflicts
+        $conflicts = self::checkSiteAssignmentConflicts($empNo, $siteId, $dateFrom, $dateTo);
+        if (!empty($conflicts)) {
+            $first = $conflicts[0];
+            $siteNames = array_unique(array_column($conflicts, 'site_name'));
+            $siteList = count($siteNames) > 1 ? implode(', ', $siteNames) : $siteNames[0];
+            $formattedDate = date('j F Y', strtotime($first['date']));
+            $msg = "Attendance already exists for {$staff['emp_name']} at {$siteList} on {$formattedDate}. This employee cannot be assigned attendance at another site on the same date.";
+            throw new AttendanceDuplicateException($msg, [
+                'emp_no' => $empNo,
+                'emp_name' => $staff['emp_name'],
+                'date' => $first['date'],
+                'formatted_date' => $formattedDate,
+                'existing_sites' => $siteList,
+                'conflicts' => $conflicts
+            ]);
         }
 
         // Record assignment

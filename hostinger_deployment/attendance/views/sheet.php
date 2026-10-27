@@ -568,6 +568,40 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
   min-width: 38px !important;
   max-width: 38px !important;
 }
+
+/* Duplicate Attendance Conflict Visual Alerts */
+.att-row-conflict td {
+  background-color: rgba(239, 68, 68, 0.16) !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.att-row-conflict {
+  animation: attConflictPulse 1.2s ease-in-out infinite alternate !important;
+  outline: 2px solid #ef4444 !important;
+  outline-offset: -1px !important;
+}
+
+@keyframes attConflictPulse {
+  0% {
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
+  }
+}
+
+.att-cell-conflict {
+  border: 2px solid #ef4444 !important;
+  background-color: #fee2e2 !important;
+  color: #b91c1c !important;
+  animation: attCellShake 0.4s ease-in-out !important;
+}
+
+@keyframes attCellShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
 </style>
 
 
@@ -970,6 +1004,41 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
         <div class="att-modal-footer">
             <button type="button" class="att-btn att-btn-secondary att-modal-close">Cancel</button>
             <button type="button" class="att-btn att-btn-primary" id="att-btn-submit-edit-staff">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Duplicate Attendance Prevention Warning -->
+<div class="att-modal-overlay no-print" id="att-modal-duplicate-warning" style="z-index: 99999;">
+    <div class="att-modal" style="width: 580px; max-width: 95vw; border-top: 4px solid #ef4444;">
+        <div class="att-modal-header" style="background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);">
+            <span style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:20px;">⚠️</span>
+                <span>Duplicate Attendance Blocked</span>
+            </span>
+            <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">&times;</button>
+        </div>
+        <div class="att-modal-body" style="padding: 20px;">
+            <div style="background:#fef2f2; border:1.5px solid #f87171; border-radius:8px; padding:16px; margin-bottom:16px;">
+                <div style="display:flex; gap:12px; align-items:flex-start;">
+                    <span style="font-size:26px; line-height:1;">🚫</span>
+                    <div style="flex:1;">
+                        <h4 style="margin:0 0 6px 0; color:#991b1b; font-size:14px; font-weight:800;">
+                            Company Policy Validation Warning
+                        </h4>
+                        <p id="att-dup-warning-msg" style="margin:0; font-size:13.5px; color:#7f1d1d; line-height:1.5; font-weight:600;">
+                            Attendance already exists for this employee on this date.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:12px 14px; font-size:12px; color:#475569; line-height:1.5;">
+                <strong>📌 USS ROSTER &amp; PAYROLL Rule:</strong> An employee is allowed a maximum of <strong>one attendance record per calendar date</strong> across all sites, clients, and shifts. The conflicting entry has been blocked, the cell has been reverted, and previous roster records remain unchanged.
+            </div>
+        </div>
+        <div class="att-modal-footer">
+            <button type="button" class="att-btn att-btn-primary att-modal-close" style="background:#991b1b; border-color:#991b1b; padding:8px 22px;">Acknowledge &amp; Return</button>
         </div>
     </div>
 </div>

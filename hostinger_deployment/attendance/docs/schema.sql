@@ -181,3 +181,24 @@ CREATE TABLE IF NOT EXISTS `att_additional_deployments` (
   INDEX `idx_add_deploy_sheet` (`sheet_id`),
   CONSTRAINT `fk_add_deploy_sheet` FOREIGN KEY (`sheet_id`) REFERENCES `att_sheets` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 12. Central Company-Wide Attendance Registry (Guarantees one attendance per employee per calendar date)
+CREATE TABLE IF NOT EXISTS `att_central_attendance` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `emp_no` VARCHAR(60) NOT NULL,
+  `attendance_date` DATE NOT NULL,
+  `site_id` INT UNSIGNED NOT NULL,
+  `sheet_id` INT UNSIGNED NOT NULL,
+  `row_id` INT UNSIGNED NOT NULL,
+  `cell_id` INT UNSIGNED NOT NULL,
+  `code` VARCHAR(5) NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `uk_central_emp_date` (`emp_no`, `attendance_date`),
+  INDEX `idx_central_cell` (`cell_id`),
+  INDEX `idx_central_site_date` (`site_id`, `attendance_date`),
+  INDEX `idx_central_sheet` (`sheet_id`),
+  INDEX `idx_central_row` (`row_id`),
+  CONSTRAINT `fk_central_cell` FOREIGN KEY (`cell_id`) REFERENCES `att_cells` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_central_site` FOREIGN KEY (`site_id`) REFERENCES `att_sites` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -192,8 +192,27 @@ class Router {
             $this->jsonError("Invalid attendance code '$val'. Allowed: D, N, S, B, OFF or empty.");
         }
 
-        $res = AttendanceSheet::updateCellCode($sheetId, $rowId, $day, $val, 1, $_SESSION['admin_name'] ?? 'Super Admin');
-        $this->jsonSuccess($res);
+        try {
+            $res = AttendanceSheet::updateCellCode($sheetId, $rowId, $day, $val, 1, $_SESSION['admin_name'] ?? 'Super Admin');
+            $this->jsonSuccess($res);
+        } catch (AttendanceDuplicateException $de) {
+            $data = $de->getConflictData();
+            echo json_encode([
+                'success' => false,
+                'is_duplicate' => true,
+                'error' => $de->getMessage(),
+                'emp_no' => $data['emp_no'] ?? '',
+                'emp_name' => $data['emp_name'] ?? '',
+                'date' => $data['date'] ?? '',
+                'formatted_date' => $data['formatted_date'] ?? '',
+                'existing_site' => $data['existing_sites'] ?? '',
+                'row_id' => $rowId,
+                'day' => $day
+            ]);
+            exit;
+        } catch (Throwable $e) {
+            $this->jsonError($e->getMessage());
+        }
     }
 
     private function handleCopyStaff() {
@@ -434,8 +453,14 @@ class Router {
             $this->jsonError('Replacement staff details are required.');
         }
 
-        $res = AttendanceSheet::replaceStaffInRow($sheetId, $rowId, $newEmpNo, $newName, $clearCodes, $_SESSION['admin_name'] ?? 'Super Admin');
-        $this->jsonSuccess(['replaced' => $res]);
+        try {
+            $res = AttendanceSheet::replaceStaffInRow($sheetId, $rowId, $newEmpNo, $newName, $clearCodes, $_SESSION['admin_name'] ?? 'Super Admin');
+            $this->jsonSuccess(['replaced' => $res]);
+        } catch (AttendanceDuplicateException $de) {
+            $this->jsonError($de->getMessage());
+        } catch (Throwable $e) {
+            $this->jsonError($e->getMessage());
+        }
     }
 
     private function handleDeleteDirectoryStaff() {
@@ -495,8 +520,14 @@ class Router {
             $this->jsonError('Staff, site, start date, and end date are required.');
         }
 
-        $res = StaffDirectory::assignToSite($empNo, $siteId, $startDate, $endDate, $defaultCode, $isOverride, $reason, $_SESSION['admin_name'] ?? 'Super Admin');
-        $this->jsonSuccess(['assigned' => $res]);
+        try {
+            $res = StaffDirectory::assignToSite($empNo, $siteId, $startDate, $endDate, $defaultCode, $isOverride, $reason, $_SESSION['admin_name'] ?? 'Super Admin');
+            $this->jsonSuccess(['assigned' => $res]);
+        } catch (AttendanceDuplicateException $de) {
+            $this->jsonError($de->getMessage());
+        } catch (Throwable $e) {
+            $this->jsonError($e->getMessage());
+        }
     }
 
     private function handlePayrollView() {
