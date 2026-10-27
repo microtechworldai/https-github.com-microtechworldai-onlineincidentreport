@@ -732,6 +732,17 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                         <?php endforeach; ?>
                     <?php endif; ?>
 
+                    <!-- Separator Row Between Staff and Summary -->
+                    <tr class="att-row-spacer" style="height: 22px; background: #ffffff;">
+                        <td class="att-col-emp" style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <td class="att-col-name" style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <td class="att-col-site" style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <?php for ($d = 1; $d <= $daysInMonth; $d++): ?>
+                            <td class="att-col-day" style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                        <?php endfor; ?>
+                        <td class="att-col-action no-print" style="border: 1px solid #cbd5e1; background: #ffffff;"></td>
+                    </tr>
+
                     <!-- Bottom Summary Row 1: Day Shift (D) -->
                     <tr class="att-tr-day-total" style="background:#ffffff !important;background-color:#ffffff !important;">
                         <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:normal !important;">DAY SHIFT (D):</td>
