@@ -363,89 +363,57 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
   border-radius: 4px !important;
 }
 
-/* 4. SUMMARY ROWS: DAY, NIGHT, AND TOTAL ON DUTY - Dark Background Removed */
-.att-tr-day-total, .att-tr-night-total, .att-tr-grand-total {
+/* ====================================================================
+ * 4. SUMMARY ROWS: DAY, NIGHT, AND TOTAL ON DUTY - COMPLETELY WITHOUT COLOUR
+ * Strictly NO Background Color: Pure Crisp White / Clean Monochrome
+ * ==================================================================== */
+.att-tr-day-total,
+.att-tr-night-total,
+.att-tr-grand-total {
   height: 28px !important;
   font-size: 14px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
   border-top: 2px solid #cbd5e1 !important;
 }
 
+.att-tr-day-total td,
+.att-tr-night-total td,
+.att-tr-grand-total td,
+.att-tr-day-total .att-summary-label,
+.att-tr-night-total .att-summary-label,
+.att-tr-grand-total .att-summary-label,
 .att-summary-label {
-  background: #f8fafc !important;
-  color: #0f172a !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
   text-align: center !important;
   padding: 0 10px !important;
   font-weight: 900 !important;
-  letter-spacing: 0.5px !important;
-  position: sticky !important;
-  left: 0 !important;
-  z-index: 10 !important;
   font-size: 13.5px !important;
+  letter-spacing: 0.5px !important;
   border: 1px solid #cbd5e1 !important;
   text-shadow: none !important;
+  box-shadow: none !important;
 }
 
-.att-tr-day-total .att-summary-label {
-  color: #b45309 !important;
-  background: #fffbeb !important;
-}
-
-.att-tr-night-total .att-summary-label {
-  color: #0369a1 !important;
-  background: #f0f9ff !important;
-}
-
-.att-tr-grand-total .att-summary-label {
-  background: #ecfdf5 !important;
-  color: #047857 !important;
-  font-size: 14px !important;
-}
-
-.att-col-total-d, .att-col-total-n, .att-col-total-grand {
+.att-col-total-d,
+.att-col-total-n,
+.att-col-total-grand,
+.att-roster-outer-table .att-deploy-ok,
+.att-roster-outer-table .att-deploy-less,
+.att-roster-outer-table .att-deploy-over,
+.att-roster-outer-table .att-deploy-neutral {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
   text-align: center !important;
   vertical-align: middle !important;
   font-weight: 900 !important;
   font-size: 14px !important;
-}
-
-/* ====================================================================
- * DEPLOYMENT STATUSES: Clean, Decent, Soft Color Effect
- * 🟢 OK (Met) | 🔴 Shortage (Less) | 🟡 Over Deployed
- * ==================================================================== */
-.att-deploy-ok {
-  background: #dcfce7 !important;
-  color: #15803d !important;
-  font-weight: 900 !important;
-  font-size: 14px !important;
-  border: 1px solid #86efac !important;
+  border: 1px solid #cbd5e1 !important;
   text-shadow: none !important;
   box-shadow: none !important;
-}
-
-.att-deploy-less {
-  background: #fee2e2 !important;
-  color: #b91c1c !important;
-  font-weight: 900 !important;
-  font-size: 14px !important;
-  border: 1px solid #fca5a5 !important;
-  text-shadow: none !important;
-  box-shadow: none !important;
-}
-
-.att-deploy-over {
-  background: #fef3c7 !important;
-  color: #b45309 !important;
-  font-weight: 900 !important;
-  font-size: 14px !important;
-  border: 1px solid #fcd34d !important;
-  text-shadow: none !important;
-  box-shadow: none !important;
-}
-
-.att-deploy-neutral {
-  background-color: #ffffff !important;
-  color: #94a3b8 !important;
-  font-weight: 800 !important;
 }
 
 /* Legend Pills */
@@ -609,8 +577,8 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                     <?php endif; ?>
 
                     <!-- Bottom Summary Row 1: Day Shift (D) -->
-                    <tr class="att-tr-day-total">
-                        <td colspan="3" class="att-summary-label">DAY SHIFT (D):</td>
+                    <tr class="att-tr-day-total" style="background:#ffffff !important;background-color:#ffffff !important;">
+                        <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;">DAY SHIFT (D):</td>
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): 
                             $stD = $dayDeployStatuses[$d] ?? 'neutral';
                             $clsD = 'att-deploy-' . $stD;
@@ -618,14 +586,14 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                             $cntD = $dayShiftCounts[$d] ?: '0';
                             $tipD = "Day {$d} Day Shift: Deployed {$cntD} / Required {$reqD}";
                         ?>
-                            <td class="att-col-total-d <?= $clsD ?>" data-day="<?= $d ?>" data-req-d="<?= $reqD ?>" title="<?= htmlspecialchars($tipD) ?>"><?= $cntD ?></td>
+                            <td class="att-col-total-d <?= $clsD ?>" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;" data-day="<?= $d ?>" data-req-d="<?= $reqD ?>" title="<?= htmlspecialchars($tipD) ?>"><?= $cntD ?></td>
                         <?php endfor; ?>
                         <td class="att-col-action no-print"></td>
                     </tr>
 
                     <!-- Bottom Summary Row 2: Night Shift (N) -->
-                    <tr class="att-tr-night-total">
-                        <td colspan="3" class="att-summary-label">NIGHT SHIFT (N):</td>
+                    <tr class="att-tr-night-total" style="background:#ffffff !important;background-color:#ffffff !important;">
+                        <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;">NIGHT SHIFT (N):</td>
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): 
                             $stN = $nightDeployStatuses[$d] ?? 'neutral';
                             $clsN = 'att-deploy-' . $stN;
@@ -633,14 +601,14 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                             $cntN = $nightShiftCounts[$d] ?: '0';
                             $tipN = "Day {$d} Night Shift: Deployed {$cntN} / Required {$reqN}";
                         ?>
-                            <td class="att-col-total-n <?= $clsN ?>" data-day="<?= $d ?>" data-req-n="<?= $reqN ?>" title="<?= htmlspecialchars($tipN) ?>"><?= $cntN ?></td>
+                            <td class="att-col-total-n <?= $clsN ?>" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;" data-day="<?= $d ?>" data-req-n="<?= $reqN ?>" title="<?= htmlspecialchars($tipN) ?>"><?= $cntN ?></td>
                         <?php endfor; ?>
                         <td class="att-col-action no-print"></td>
                     </tr>
 
                     <!-- Bottom Summary Row 3: Total on Duty (D + N) -->
-                    <tr class="att-tr-grand-total">
-                        <td colspan="3" class="att-summary-label">TOTAL ON DUTY (D + N):</td>
+                    <tr class="att-tr-grand-total" style="background:#ffffff !important;background-color:#ffffff !important;">
+                        <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;">TOTAL ON DUTY (D + N):</td>
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): 
                             $stTot = $totalDeployStatuses[$d] ?? 'neutral';
                             $clsTot = 'att-deploy-' . $stTot;
@@ -648,7 +616,7 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                             $cntTot = $totalDutyCounts[$d] ?: '0';
                             $tipTot = "Day {$d} Total Duty: Deployed {$cntTot} / Required {$reqTot}";
                         ?>
-                            <td class="att-col-total-grand <?= $clsTot ?>" data-day="<?= $d ?>" data-req-total="<?= $reqTot ?>" title="<?= htmlspecialchars($tipTot) ?>"><?= $cntTot ?></td>
+                            <td class="att-col-total-grand <?= $clsTot ?>" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:900 !important;" data-day="<?= $d ?>" data-req-total="<?= $reqTot ?>" title="<?= htmlspecialchars($tipTot) ?>"><?= $cntTot ?></td>
                         <?php endfor; ?>
                         <td class="att-col-action no-print"></td>
                     </tr>
