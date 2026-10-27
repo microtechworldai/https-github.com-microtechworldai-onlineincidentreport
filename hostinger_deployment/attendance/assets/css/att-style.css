@@ -507,49 +507,56 @@ body.att-body {
 /* Title Banner: Executive Gradient */
 .att-th-banner-darkteal {
   height: 52px !important;
-  font-size: 20px !important;
+  font-size: 19px !important;
   line-height: 52px !important;
-  background: linear-gradient(135deg, #094857 0%, #005f73 50%, #0a9396 100%) !important;
+  background: linear-gradient(135deg, #07162c 0%, #0d274c 45%, #183c66 100%) !important;
   color: #ffffff !important;
-  font-weight: 800 !important;
+  font-weight: 900 !important;
   text-align: center !important;
   vertical-align: middle !important;
-  letter-spacing: 0.8px;
-  border-bottom: 2px solid var(--att-accent) !important;
-  text-transform: uppercase;
+  letter-spacing: 1.2px !important;
+  border-bottom: 3px solid #f59e0b !important;
+  text-transform: uppercase !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important;
 }
 
 /* 1st Header Row (Emp No, Name, Site, Day Numbers) */
 .att-th-top-row {
-  height: 28px !important;
-  background-color: #0a9396 !important;
+  height: 32px !important;
+  background: linear-gradient(180deg, #163456 0%, #0d223a 100%) !important;
   color: #ffffff !important;
-  font-weight: 800 !important;
-  font-size: 15px !important;
+  font-weight: 900 !important;
+  font-size: 14px !important;
+  letter-spacing: 0.5px !important;
   position: sticky;
   top: 0;
   z-index: 10;
-  padding: 2px 4px !important;
+  padding: 3px 6px !important;
+  border: 1px solid #234164 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Weekday Sub-Header Row */
 .att-th-teal-sub {
   height: 26px !important;
-  background-color: #087f82 !important;
-  color: #ffffff !important;
-  font-weight: 800 !important;
-  font-size: 12.5px !important;
+  background-color: #0b1a2c !important;
+  color: #94a3b8 !important;
+  font-weight: 900 !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.5px !important;
   padding: 2px 4px !important;
+  border: 1px solid #1a324e !important;
 }
 
 /* Weekend Column Highlights */
 .att-th-teal-weekend {
-  background-color: #00606b !important;
-  color: #fde047 !important;
+  background: #081525 !important;
+  color: #facc15 !important;
+  font-weight: 900 !important;
 }
 
 .att-td-weekend {
-  background-color: var(--att-weekend-bg) !important;
+  background-color: rgba(15, 23, 42, 0.04) !important;
 }
 
 /* Sticky Left Columns */
@@ -558,27 +565,41 @@ body.att-body {
   left: 0;
   z-index: 8;
   background-color: var(--att-card-bg);
-  width: 75px !important;
-  min-width: 75px !important;
+  width: 80px !important;
+  min-width: 80px !important;
+  font-weight: 900 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.5px !important;
+  color: var(--att-text) !important;
 }
 
 .att-col-name {
   position: sticky;
-  left: 75px;
+  left: 80px;
   z-index: 8;
   background-color: var(--att-card-bg);
-  width: 140px !important;
-  min-width: 140px !important;
+  width: 160px !important;
+  min-width: 160px !important;
+  font-weight: 900 !important;
+  font-size: 13.5px !important;
+  letter-spacing: 0.3px !important;
+  text-align: left !important;
+  padding-left: 10px !important;
+  color: var(--att-text) !important;
 }
 
 .att-col-site {
   position: sticky;
-  left: 215px;
+  left: 240px;
   z-index: 8;
   background-color: var(--att-card-bg);
-  width: 150px !important;
-  min-width: 150px !important;
-  color: #0ea5e9;
+  width: 165px !important;
+  min-width: 165px !important;
+  color: #0284c7 !important;
+  font-weight: 800 !important;
+  font-size: 12.5px !important;
+  text-align: left !important;
+  padding-left: 10px !important;
   box-shadow: 3px 0 6px rgba(0, 0, 0, 0.08);
 }
 
@@ -586,14 +607,16 @@ body.att-body {
 .att-th-top-row.att-col-name,
 .att-th-top-row.att-col-site {
   z-index: 25 !important;
-  background-color: #0a9396 !important;
+  background: linear-gradient(180deg, #163456 0%, #0d223a 100%) !important;
+  text-align: center !important;
 }
 
 .att-col-day {
-  width: 36px !important;
-  min-width: 36px !important;
-  max-width: 36px !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
   padding: 0 !important;
+  font-weight: 900 !important;
 }
 
 /* Row Hover Highlight */
@@ -601,22 +624,23 @@ tr.att-row-staff:hover td {
   background-color: var(--att-cell-hover) !important;
 }
 
-/* Interactive Cell Input */
+/* Interactive Cell Input (Bold & Crisp) */
 .att-cell-input {
   width: 100%;
-  height: 24px;
+  height: 25px;
   border: none;
   background: transparent;
   text-align: center !important;
   font-family: var(--att-font-condensed) !important;
-  font-size: 13px !important;
-  font-weight: 800;
+  font-size: 13.5px !important;
+  font-weight: 900 !important;
   color: var(--att-text);
   text-transform: uppercase;
   padding: 0;
   margin: 0;
   cursor: pointer;
   transition: all 0.12s ease;
+  letter-spacing: 0.5px;
 }
 
 .att-cell-input:focus {
@@ -628,36 +652,40 @@ tr.att-row-staff:hover td {
   position: relative;
 }
 
-/* Soft Color-Coded Shift Tags */
+/* Color-Coded Shift Tags (Vibrant, Bold & Crisp) */
 .att-code-D {
-  color: #059669 !important;
-  background: rgba(16, 185, 129, 0.12) !important;
+  color: #047857 !important;
+  background: rgba(16, 185, 129, 0.18) !important;
   border-radius: 4px;
+  font-weight: 900 !important;
 }
 
 .att-code-N {
-  color: #3b82f6 !important;
-  background: rgba(59, 130, 246, 0.12) !important;
+  color: #1d4ed8 !important;
+  background: rgba(59, 130, 246, 0.18) !important;
   border-radius: 4px;
+  font-weight: 900 !important;
 }
 
 .att-code-OFF {
-  color: #ef4444 !important;
-  background: rgba(239, 68, 68, 0.15) !important;
+  color: #be123c !important;
+  background: rgba(244, 63, 94, 0.22) !important;
   border-radius: 4px;
   font-weight: 900 !important;
 }
 
 .att-code-S {
-  color: #f59e0b !important;
-  background: rgba(245, 158, 11, 0.15) !important;
+  color: #b45309 !important;
+  background: rgba(245, 158, 11, 0.22) !important;
   border-radius: 4px;
+  font-weight: 900 !important;
 }
 
 .att-code-B {
-  color: #8b5cf6 !important;
-  background: rgba(139, 92, 246, 0.12) !important;
+  color: #6d28d9 !important;
+  background: rgba(139, 92, 246, 0.2) !important;
   border-radius: 4px;
+  font-weight: 900 !important;
 }
 
 /* In-Row Action Buttons */
@@ -695,67 +723,89 @@ tr.att-row-staff:hover td {
  * 5. SUMMARY ROWS: DAY, NIGHT, AND TOTAL ON DUTY
  * ==================================================================== */
 .att-tr-day-total, .att-tr-night-total, .att-tr-grand-total {
-  height: 26px;
-  font-size: 13px !important;
-  border-top: 2px solid var(--att-border-strong) !important;
+  height: 28px;
+  font-size: 13.5px !important;
+  border-top: 2px solid #1e3a5f !important;
 }
 
 .att-summary-label {
-  background: linear-gradient(135deg, #0e2a47 0%, #1e3a5f 100%) !important;
+  background: linear-gradient(135deg, #07162c 0%, #0d274c 100%) !important;
   color: #ffffff !important;
   text-align: center !important;
-  padding: 0 8px !important;
-  font-weight: 800;
-  letter-spacing: 0.5px;
+  padding: 0 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.6px !important;
   position: sticky;
   left: 0;
   z-index: 10;
-  box-shadow: 3px 0 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 3px 0 8px rgba(0, 0, 0, 0.25);
+  font-size: 13px !important;
 }
 
 .att-tr-day-total .att-summary-label {
   color: #fbbf24 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .att-tr-night-total .att-summary-label {
   color: #38bdf8 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .att-tr-grand-total .att-summary-label {
-  background: linear-gradient(135deg, #0b192c 0%, #0d3b66 100%) !important;
+  background: linear-gradient(135deg, #05101f 0%, #091c36 100%) !important;
   color: #4ade80 !important;
-  font-size: 13px !important;
+  font-size: 13.5px !important;
+  letter-spacing: 0.8px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 /* Status Cells */
 .att-col-total-d, .att-col-total-n, .att-col-total-grand {
   text-align: center !important;
   vertical-align: middle !important;
-  font-weight: 800 !important;
-  font-size: 13px !important;
+  font-weight: 900 !important;
+  font-size: 13.5px !important;
 }
 
+/* ====================================================================
+ * VIBRANT COLOR EFFECT FOR DEPLOYMENT STATUSES:
+ * 🟢 OK (Met) | 🔴 Shortage (Less) | 🟡 Over Deployed
+ * ==================================================================== */
 .att-deploy-ok {
-  background-color: #10b981 !important;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
   color: #ffffff !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  font-weight: 900 !important;
+  font-size: 13.5px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.2), 0 2px 4px rgba(16, 185, 129, 0.3) !important;
+  border: 1px solid #047857 !important;
 }
 
 .att-deploy-less {
-  background-color: #ef4444 !important;
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 50%, #be123c 100%) !important;
   color: #ffffff !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  font-weight: 900 !important;
+  font-size: 13.5px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.2), 0 2px 4px rgba(225, 29, 72, 0.3) !important;
+  border: 1px solid #9f1239 !important;
 }
 
 .att-deploy-over {
-  background-color: #f59e0b !important;
-  color: #0f172a !important;
+  background: linear-gradient(135deg, #fde047 0%, #eab308 50%, #ca8a04 100%) !important;
+  color: #3b1d04 !important;
   font-weight: 900 !important;
+  font-size: 13.5px !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(0, 0, 0, 0.15), 0 2px 4px rgba(234, 179, 8, 0.35) !important;
+  border: 1px solid #a16207 !important;
 }
 
 .att-deploy-neutral {
   background-color: var(--att-card-bg) !important;
   color: var(--att-text-muted) !important;
+  font-weight: 800 !important;
 }
 
 /* ====================================================================
@@ -834,11 +884,29 @@ tr.att-row-staff:hover td {
 .att-pill-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
+  gap: 6px;
+  padding: 5px 12px !important;
   border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 700;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.3px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.att-pill-badge:hover {
+  transform: translateY(-1px);
+}
+
+.att-pill-badge.att-deploy-ok {
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.45) !important;
+}
+
+.att-pill-badge.att-deploy-less {
+  box-shadow: 0 3px 10px rgba(244, 63, 94, 0.45) !important;
+}
+
+.att-pill-badge.att-deploy-over {
+  box-shadow: 0 3px 10px rgba(234, 179, 8, 0.45) !important;
 }
 
 /* Executive Signatures */
@@ -982,43 +1050,66 @@ tr.att-row-staff:hover td {
  * 8. CONSOLIDATED PAYROLL VIEW SPECIFIC STYLES
  * ==================================================================== */
 .att-payroll-header-banner {
-  background: linear-gradient(135deg, #094857 0%, #005f73 50%, #0a9396 100%) !important;
+  background: linear-gradient(135deg, #07162c 0%, #0d274c 45%, #183c66 100%) !important;
   color: #ffffff !important;
-  font-size: 20px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.8px !important;
-  height: 48px !important;
-  line-height: 48px;
+  font-size: 19px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.2px !important;
+  height: 52px !important;
+  line-height: 52px !important;
   text-align: center !important;
   vertical-align: middle !important;
-  border-bottom: 2px solid var(--att-accent) !important;
-  text-transform: uppercase;
+  border-bottom: 3px solid #0ea5e9 !important;
+  text-transform: uppercase !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important;
 }
 
 .att-th-teal-pay {
-  background-color: #0a9396 !important;
+  background: linear-gradient(180deg, #163456 0%, #0d223a 100%) !important;
   color: #ffffff !important;
-  font-weight: 800 !important;
-  font-size: 15px !important;
-  height: 28px !important;
+  font-weight: 900 !important;
+  font-size: 13.5px !important;
+  height: 32px !important;
   vertical-align: middle !important;
   text-align: center !important;
+  border: 1px solid #234164 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
 
 .att-th-teal-pay-sub {
-  background-color: #087f82 !important;
-  color: #ffffff !important;
-  font-weight: 800 !important;
-  font-size: 12px !important;
+  background-color: #0b1a2c !important;
+  color: #94a3b8 !important;
+  font-weight: 900 !important;
+  font-size: 11.5px !important;
   height: 26px !important;
   vertical-align: middle !important;
   text-align: center !important;
+  border: 1px solid #1a324e !important;
+}
+
+.att-col-stat {
+  font-weight: 900 !important;
+  font-size: 13.5px !important;
+  width: 44px !important;
+  min-width: 44px !important;
+}
+
+.att-col-total {
+  font-weight: 900 !important;
+  font-size: 14px !important;
+  width: 75px !important;
+  min-width: 75px !important;
+}
+
+.att-payroll-row td {
+  font-size: 13px !important;
+  font-weight: 800 !important;
 }
 
 .att-off-cell {
-  color: #ef4444 !important;
+  color: #be123c !important;
   font-weight: 900 !important;
-  background: rgba(239, 68, 68, 0.12) !important;
+  background: rgba(244, 63, 94, 0.18) !important;
 }
 
 .att-conflict-note {
