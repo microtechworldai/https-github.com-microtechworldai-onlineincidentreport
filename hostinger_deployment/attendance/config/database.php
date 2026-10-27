@@ -2,8 +2,30 @@
 /**
  * Database Connection for uss_attendance
  * Seamlessly integrates with the active Hostinger database or dedicated attendance DB
+ * Includes zero-crash automated self-healing schema creation
  */
 require_once __DIR__ . '/config.php';
+
+function att_ensure_schema(PDO $pdo) {
+    static $checked = false;
+    if ($checked) {
+        return;
+    }
+    $checked = true;
+
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'att_sites'");
+        if (!$stmt->fetch()) {
+            $schemaFile = dirname(__DIR__) . '/docs/schema.sql';
+            if (file_exists($schemaFile)) {
+                $sql = file_get_contents($schemaFile);
+                $pdo->exec($sql);
+            }
+        }
+    } catch (Throwable $e) {
+        @error_log("[" . date('Y-m-d H:i:s') . "] Attendance Schema Auto-Init Warning: " . $e->getMessage() . "\n", 3, defined('ATT_LOGS_PATH') ? ATT_LOGS_PATH . '/db_errors.log' : __DIR__ . '/../logs/db_errors.log');
+    }
+}
 
 function att_get_db() {
     static $pdo = null;
@@ -22,6 +44,7 @@ function att_get_db() {
             $mainPdo = Database::getInstance();
             if ($mainPdo instanceof PDO) {
                 $pdo = $mainPdo;
+                att_ensure_schema($pdo);
                 return $pdo;
             }
         } catch (Throwable $e) {
@@ -47,10 +70,10 @@ function att_get_db() {
 
     try {
         $pdo = new PDO($dsn, ATT_DB_USER, ATT_DB_PASS, $options);
+        att_ensure_schema($pdo);
         return $pdo;
     } catch (PDOException $e) {
-        @error_log("[" . date('Y-m-d H:i:s') . "] Attendance DB Error: " . $e->getMessage() . "
-", 3, ATT_LOGS_PATH . '/db_errors.log');
+        @error_log("[" . date('Y-m-d H:i:s') . "] Attendance DB Error: " . $e->getMessage() . "\n", 3, defined('ATT_LOGS_PATH') ? ATT_LOGS_PATH . '/db_errors.log' : __DIR__ . '/../logs/db_errors.log');
         http_response_code(503);
         die("<h3>Attendance Subsystem Unavailable</h3><p>Could not connect to the database. Error: " . htmlspecialchars($e->getMessage()) . "</p>");
     }
