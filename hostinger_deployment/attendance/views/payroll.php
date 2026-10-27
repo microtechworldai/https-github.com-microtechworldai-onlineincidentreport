@@ -1,15 +1,6 @@
 <?php
 // Attendance & Payroll Module - Consolidated Payroll View
-// - Two top buttons: 1. Attendance Roster and 2. Consolidated Payroll
-// - From Date & To Date selection (supports cross-month, e.g. 27 Sep to 26 Oct)
-// - One site or all sites selection
-// - Lay out: Emp No, Emp Name, Site Name, each date with its weekday, Day, Night, Basic, Sick, Off, Total No. of Days, Custom Columns, Remarks
-// - Staff on more than one site merged into one row showing all worked sites
-// - Conflict warning ("Conflict: 15 Oct") if different codes exist
-// - Bottom row totals for each count column and numeric custom columns
-// - Export Excel button (Excel only, no PDF button on payroll), teal title & header, thin black borders, real formulas, A4 landscape print fit
-// - Wrap text enabled across all cells
-// - + Add column, edit (rename/change type), delete custom column with confirmation
+// Enterprise Executive Redesign
 // File: hostinger_deployment/attendance/views/payroll.php
 
 if (!defined('ATT_ACCESS')) {
@@ -32,109 +23,104 @@ $startFormatted = strtoupper(date('j M Y', strtotime($startDate)));
 $endFormatted = strtoupper(date('j M Y', strtotime($endDate)));
 
 $totalTableCols = 2 + $daysCount + 6 + $customColCount + 1;
+
+// Precalculate totals for Executive KPI Ribbon
+$sumDay = 0; $sumNight = 0; $sumBasic = 0; $sumSick = 0; $sumOff = 0; $sumTotalDays = 0;
+$customSums = [];
+foreach ($customCols as $cc) {
+    if ($cc['col_type'] === 'number') {
+        $customSums[$cc['id']] = 0;
+    }
+}
+
+foreach ($staffList as $st) {
+    $sumDay += (int)($st['day_shifts'] ?? 0);
+    $sumNight += (int)($st['night_shifts'] ?? 0);
+    $sumBasic += (int)($st['basic_shifts'] ?? 0);
+    $sumSick += (int)($st['sick_leaves'] ?? 0);
+    $sumOff += (int)($st['off_days'] ?? 0);
+    $sumTotalDays += (int)($st['total_working_days'] ?? 0);
+}
+$totalBilledDuties = $sumDay + $sumNight;
+$totalStaffCount = count($staffList);
 ?>
 
-<style>
-/* Teal title & header for Payroll: 45px height and 24px font size */
-.att-payroll-header-banner {
-    background-color: #005f73 !important;
-    color: #ffffff !important;
-    font-size: 24px !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.5px !important;
-    height: 45px !important;
-    line-height: 45px;
-    text-align: center !important;
-    vertical-align: middle !important;
-    padding: 0 8px !important;
-}
+<!-- 1. EXECUTIVE PAYROLL KPI RIBBON -->
+<div class="att-kpi-ribbon no-print">
+    <!-- Card 1: Total Workforce on Payroll -->
+    <div class="att-kpi-card att-kpi-primary">
+        <div class="att-kpi-top">
+            <span class="att-kpi-title">Workforce on Payroll</span>
+            <span class="att-kpi-tag att-tag-blue"><?= !empty($_GET['site_id']) ? 'Filtered Site' : 'Consolidated' ?></span>
+        </div>
+        <div class="att-kpi-value">
+            👥 <?= $totalStaffCount ?> <span class="att-kpi-subval">Active Guards</span>
+        </div>
+        <div class="att-kpi-meta">
+            <span>Period: <strong><?= $startFormatted ?> &rarr; <?= $endFormatted ?></strong></span>
+        </div>
+    </div>
 
-.att-th-teal-pay {
-    background-color: #0a9396 !important;
-    color: #ffffff !important;
-    font-weight: bold !important;
-    font-size: 18px !important;
-    height: 28px !important;
-    border: 1px solid #000000 !important;
-    vertical-align: middle !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-    padding: 1px 3px !important;
-    box-sizing: border-box !important;
-}
+    <!-- Card 2: Total Billed Duties Worked -->
+    <div class="att-kpi-card att-kpi-success">
+        <div class="att-kpi-top">
+            <span class="att-kpi-title">Total Billed Duties</span>
+            <span class="att-kpi-tag att-tag-green">Delivered</span>
+        </div>
+        <div class="att-kpi-value" style="color: #10b981;">
+            📋 <?= $totalBilledDuties ?> <span class="att-kpi-subval">Duties Worked</span>
+        </div>
+        <div class="att-kpi-meta">
+            <span>Total Payable Days: <strong><?= $sumTotalDays ?> Days</strong></span>
+        </div>
+    </div>
 
-.att-th-teal-pay-sub {
-    background-color: #0a9396 !important;
-    color: #ffffff !important;
-    font-weight: bold !important;
-    font-size: 14px !important;
-    height: 28px !important;
-    border: 1px solid #000000 !important;
-    vertical-align: middle !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-    padding: 2px 4px !important;
-    box-sizing: border-box !important;
-}
+    <!-- Card 3: Shift Distribution -->
+    <div class="att-kpi-card att-kpi-warning">
+        <div class="att-kpi-top">
+            <span class="att-kpi-title">Shift Breakdown</span>
+            <span class="att-kpi-tag att-tag-amber"><?= $daysCount ?> Calendar Days</span>
+        </div>
+        <div class="att-kpi-value">
+            <span>☀️ <?= $sumDay ?> Day</span>
+            <span class="att-kpi-subval">&bull;</span>
+            <span>🌙 <?= $sumNight ?> Night</span>
+        </div>
+        <div class="att-kpi-meta">
+            <span>Basic Posts: <strong><?= $sumBasic ?> Duties</strong></span>
+        </div>
+    </div>
 
-.att-off-cell {
-    color: #c00000 !important;
-    font-weight: 800 !important;
-    font-size: 11px !important;
-}
+    <!-- Card 4: Rest Days & Sick Leave Welfare -->
+    <div class="att-kpi-card att-kpi-purple">
+        <div class="att-kpi-top">
+            <span class="att-kpi-title">Rest &amp; Medical Welfare</span>
+            <span class="att-kpi-tag att-tag-blue">Compliance</span>
+        </div>
+        <div class="att-kpi-value">
+            <span>🏖️ <?= $sumOff ?> Off</span>
+            <span class="att-kpi-subval">&bull;</span>
+            <span>🏥 <?= $sumSick ?> Sick</span>
+        </div>
+        <div class="att-kpi-meta">
+            <span>All Rosters Consolidated &bull; Real-time Calculations</span>
+        </div>
+    </div>
+</div>
 
-.att-conflict-note {
-    color: #b91c1c !important;
-    font-weight: 700;
-}
-
-.att-col-custom-th {
-    position: relative;
-    padding: 2px 4px !important;
-    min-width: 75px;
-}
-
-.att-col-actions {
-    display: inline-flex;
-    gap: 4px;
-    margin-left: 4px;
-    vertical-align: middle;
-}
-
-.att-btn-col-action {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: 11px;
-    padding: 0 2px;
-    line-height: 1;
-    opacity: 0.75;
-    color: #ffffff;
-}
-
-.att-btn-col-action:hover {
-    opacity: 1;
-    transform: scale(1.15);
-}
-
-.att-btn-col-delete:hover {
-    color: #fca5a5 !important;
-}
-</style>
-
-<!-- Action & Filter Bar -->
-<div class="att-controlbar">
-    <form method="GET" action="index.php" class="att-filters">
+<!-- 2. MODERN CONTROL & FILTER TOOLBAR -->
+<div class="att-controlbar no-print">
+    <form method="GET" action="index.php" class="att-filters" id="att-payroll-filter-form">
         <input type="hidden" name="action" value="payroll">
 
-        <label for="att-pay-start"><strong>From Date:</strong></label>
+        <label for="att-pay-start"><strong>From:</strong></label>
         <input type="date" id="att-pay-start" name="start_date" class="att-input" value="<?= htmlspecialchars($startDate) ?>">
 
-        <label for="att-pay-end"><strong>To Date:</strong></label>
+        <label for="att-pay-end"><strong>To:</strong></label>
         <input type="date" id="att-pay-end" name="end_date" class="att-input" value="<?= htmlspecialchars($endDate) ?>">
 
         <label for="att-pay-site"><strong>Site:</strong></label>
-        <select id="att-pay-site" name="site_id" class="att-select">
+        <select id="att-pay-site" name="site_id" class="att-select" onchange="this.form.submit()">
             <option value="">-- All Sites Consolidated --</option>
             <?php foreach ($sites as $s): ?>
                 <option value="<?= $s['id'] ?>" <?= (isset($_GET['site_id']) && $_GET['site_id'] == $s['id']) ? 'selected' : '' ?>>
@@ -143,8 +129,19 @@ $totalTableCols = 2 + $daysCount + 6 + $customColCount + 1;
             <?php endforeach; ?>
         </select>
 
-        <button type="submit" class="att-btn att-btn-primary">Apply Date Range</button>
-        <span style="color:#64748b;font-size:12px;">(<?= $daysCount ?> days)</span>
+        <button type="submit" class="att-btn att-btn-primary">Apply Range</button>
+
+        <!-- Quick Cycle Presets -->
+        <div style="display:flex;gap:4px;margin-left:6px;">
+            <button type="button" class="att-btn att-btn-secondary" id="att-preset-cur-month" style="font-size:11.5px;padding:5px 9px;" title="Current Calendar Month">🗓️ This Month</button>
+            <button type="button" class="att-btn att-btn-secondary" id="att-preset-payroll-cycle" style="font-size:11.5px;padding:5px 9px;" title="Standard UAE 27th to 26th Payroll Cutoff">🔄 27th - 26th Cycle</button>
+            <button type="button" class="att-btn att-btn-secondary" id="att-preset-prev-month" style="font-size:11.5px;padding:5px 9px;" title="Previous Full Month">⏪ Last Month</button>
+        </div>
+
+        <!-- Live Search Filter Input -->
+        <div style="margin-left:10px;">
+            <input type="text" id="att-payroll-search" class="att-input" placeholder="🔍 Filter Guard..." style="width:160px;padding:5px 10px;font-size:12px;">
+        </div>
     </form>
 
     <div class="att-actions">
@@ -153,43 +150,40 @@ $totalTableCols = 2 + $daysCount + 6 + $customColCount + 1;
             + Add column
         </button>
 
-        <!-- Excel export only, no PDF button as specified -->
+        <!-- Excel Export Only -->
         <a href="index.php?action=export_excel&export_type=payroll&start_date=<?= urlencode($startDate) ?>&end_date=<?= urlencode($endDate) ?><?= !empty($_GET['site_id']) ? '&site_id=' . (int)$_GET['site_id'] : '' ?>" 
            class="att-btn att-btn-success">
             ⬇ Export Excel (.xls)
         </a>
 
-        <!-- One-click Database Backup Button -->
-        <a href="index.php?action=backup_download" class="att-btn att-btn-secondary" style="background:#0f172a;color:#ffffff;border-color:#0f172a;" title="Download complete SQL database backup for long run safety and reuse">
-            🛡️ Backup Database (.sql)
+        <!-- Database Backup -->
+        <a href="index.php?action=backup_download" class="att-btn att-btn-secondary" title="Download complete SQL database backup">
+            🛡️ Backup
         </a>
     </div>
 </div>
 
 <main class="att-container">
     <div class="att-grid-wrapper">
-        <table class="att-table" style="border: 2px solid #000000;">
+        <table class="att-table" id="att-payroll-table">
             <thead>
-                <!-- Teal Title Banner: height 45px, font size 24px -->
-                <tr style="height: 45px;">
+                <!-- Executive Title Banner -->
+                <tr>
                     <th colspan="<?= $totalTableCols ?>" class="att-payroll-header-banner">
-                        ULTIMATE SECURITY SERVICES PAYROLL ATTENDANCE FROM <?= $startFormatted ?> TO <?= $endFormatted ?>
+                        Ultimate Security Services &bull; Consolidated Payroll Attendance (<?= $startFormatted ?> &rarr; <?= $endFormatted ?>)
                     </th>
                 </tr>
 
-                <!-- Blank White Row In Between -->
-                <tr class="att-tr-blank-spacer" style="height: 12px; background-color: #ffffff;">
-                    <th colspan="<?= $totalTableCols ?>" style="height: 12px; background-color: #ffffff; border: 1px solid #000000; padding: 0;"></th>
-                </tr>
-
-                <!-- Header Row 1: Exactly 28px tall, font size 14px bold -->
-                <tr style="height: 28px;">
+                <!-- Header Row 1: Emp No, Name, Day Numbers, Stat Columns -->
+                <tr>
                     <th rowspan="2" class="att-th-teal-pay att-col-emp">Emp No</th>
-                    <th rowspan="2" class="att-th-teal-pay att-col-name">Emp Name</th>
+                    <th rowspan="2" class="att-th-teal-pay att-col-name">Guard Name</th>
 
                     <!-- Date Numbers -->
-                    <?php foreach ($datesList as $dInfo): ?>
-                        <th class="att-th-teal-pay att-col-day"><?= $dInfo['day'] ?></th>
+                    <?php foreach ($datesList as $dInfo): 
+                        $isWk = in_array(strtoupper($dInfo['weekday'] ?? ''), ['FRI', 'SUN']);
+                    ?>
+                        <th class="att-th-teal-pay att-col-day <?= $isWk ? 'att-th-teal-weekend' : '' ?>"><?= $dInfo['day'] ?></th>
                     <?php endforeach; ?>
 
                     <!-- Count Columns: Day, Night, Basic, Sick, Off, Total No. of Days -->
@@ -198,13 +192,13 @@ $totalTableCols = 2 + $daysCount + 6 + $customColCount + 1;
                     <th rowspan="2" class="att-th-teal-pay att-col-stat">Basic</th>
                     <th rowspan="2" class="att-th-teal-pay att-col-stat">Sick</th>
                     <th rowspan="2" class="att-th-teal-pay att-col-stat">Off</th>
-                    <th rowspan="2" class="att-th-teal-pay att-col-total">Total No. of Days</th>
+                    <th rowspan="2" class="att-th-teal-pay att-col-total" style="background:#0e4e5e !important;color:#ffffff !important;">Total Days</th>
 
                     <!-- Custom Extra Columns -->
                     <?php foreach ($customCols as $cc): ?>
                         <th rowspan="2" class="att-th-teal-pay att-col-custom-th" data-col-id="<?= $cc['id'] ?>" data-col-name="<?= htmlspecialchars($cc['column_name']) ?>" data-col-type="<?= htmlspecialchars($cc['col_type']) ?>">
                             <span class="att-col-title"><?= htmlspecialchars($cc['column_name']) ?></span>
-                            <div class="att-col-actions">
+                            <div class="att-col-actions no-print">
                                 <button type="button" class="att-btn-col-action att-btn-col-edit" title="Edit column">✏️</button>
                                 <button type="button" class="att-btn-col-action att-btn-col-delete" title="Delete column">✕</button>
                             </div>
@@ -214,59 +208,57 @@ $totalTableCols = 2 + $daysCount + 6 + $customColCount + 1;
                     <th rowspan="2" class="att-th-teal-pay" style="min-width:140px;">Remarks</th>
                 </tr>
 
-                <!-- Header Row 2 (Weekday Names: TUE, WED, THU...): Exactly 28px tall, font size 14px bold -->
-                <tr style="height: 28px;">
-                    <?php foreach ($datesList as $dInfo): ?>
-                        <th class="att-th-teal-pay-sub att-col-day"><?= $dInfo['weekday'] ?></th>
+                <!-- Header Row 2 (Weekday Names: TUE, WED, THU...) -->
+                <tr>
+                    <?php foreach ($datesList as $dInfo): 
+                        $isWk = in_array(strtoupper($dInfo['weekday'] ?? ''), ['FRI', 'SUN']);
+                    ?>
+                        <th class="att-th-teal-pay-sub att-col-day <?= $isWk ? 'att-th-teal-weekend' : '' ?>"><?= $dInfo['weekday'] ?></th>
                     <?php endforeach; ?>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($staffList)): ?>
                     <tr>
-                        <td colspan="<?= $totalTableCols ?>" style="padding:24px;color:#64748b;background:#f8fafc;text-align:center;">
-                            No attendance records found for this period. Mark attendance on rosters first.
+                        <td colspan="<?= $totalTableCols ?>" style="padding:40px;color:var(--att-text-muted);text-align:center;">
+                            <div style="font-size:24px;margin-bottom:8px;">💼</div>
+                            <div style="font-size:14px;font-weight:700;">No attendance records found for this selected period</div>
+                            <div style="margin-top:6px;font-size:12px;">Ensure attendance has been entered on the Attendance Rosters for these dates.</div>
                         </td>
                     </tr>
                 <?php else: ?>
                     <?php 
-                    $sumDay = 0; $sumNight = 0; $sumBasic = 0; $sumSick = 0; $sumOff = 0; $sumTotalDays = 0;
-                    $customSums = [];
-                    foreach ($customCols as $cc) {
-                        if ($cc['col_type'] === 'number') {
-                            $customSums[$cc['id']] = 0;
-                        }
-                    }
-
                     foreach ($staffList as $st): 
-                        $sumDay += $st['day_shifts'];
-                        $sumNight += $st['night_shifts'];
-                        $sumBasic += $st['basic_shifts'];
-                        $sumSick += $st['sick_leaves'];
-                        $sumOff += $st['off_days'];
-                        $sumTotalDays += $st['total_working_days'];
                     ?>
-                        <tr style="height:20px;">
-                            <td style="font-weight:700;text-align:center;"><?= htmlspecialchars($st['emp_no'] ?? '') ?></td>
-                            <td class="att-col-name" style="text-align:center;"><?= htmlspecialchars(strtoupper($st['staff_name'])) ?></td>
+                        <tr class="att-payroll-row" data-emp-no="<?= htmlspecialchars(strtolower($st['emp_no'] ?? '')) ?>" data-emp-name="<?= htmlspecialchars(strtolower($st['staff_name'] ?? '')) ?>">
+                            <td class="att-col-emp"><?= htmlspecialchars($st['emp_no'] ?? '') ?></td>
+                            <td class="att-col-name"><?= htmlspecialchars(strtoupper($st['staff_name'])) ?></td>
 
                             <!-- Daily Shift Codes -->
                             <?php foreach ($datesList as $dInfo): 
                                 $code = $st['daily_codes'][$dInfo['date_str']] ?? '';
                                 $isOff = ($code === 'OFF');
+                                $isWk = in_array(strtoupper($dInfo['weekday'] ?? ''), ['FRI', 'SUN']);
+                                $codeCls = in_array($code, ['D', 'N', 'OFF', 'S', 'B']) ? 'att-code-' . $code : '';
                             ?>
-                                <td class="att-col-day <?= $isOff ? 'att-off-cell' : '' ?>" style="text-align:center;">
-                                    <?= htmlspecialchars($code) ?>
+                                <td class="att-col-day <?= $isWk ? 'att-td-weekend' : '' ?>">
+                                    <?php if (!empty($code)): ?>
+                                        <span class="att-cell-input <?= $codeCls ?>" style="display:inline-block;line-height:24px;">
+                                            <?= htmlspecialchars($code) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span style="color:var(--att-text-muted);">&bull;</span>
+                                    <?php endif; ?>
                                 </td>
                             <?php endforeach; ?>
 
                             <!-- Counts: Day, Night, Basic, Sick, Off, Total No. of Days -->
-                            <td class="att-col-stat" style="text-align:center;"><?= $st['day_shifts'] ?: '0' ?></td>
-                            <td class="att-col-stat" style="text-align:center;"><?= $st['night_shifts'] ?: '0' ?></td>
-                            <td class="att-col-stat" style="text-align:center;"><?= $st['basic_shifts'] ?: '0' ?></td>
-                            <td class="att-col-stat" style="text-align:center;"><?= $st['sick_leaves'] ?: '0' ?></td>
-                            <td class="att-col-stat" style="color:#c00000;text-align:center;"><?= $st['off_days'] ?: '0' ?></td>
-                            <td class="att-col-total" style="font-weight:700;text-align:center;"><?= $st['total_working_days'] ?></td>
+                            <td class="att-col-stat" style="color:#059669;font-weight:800;"><?= $st['day_shifts'] ?: '0' ?></td>
+                            <td class="att-col-stat" style="color:#3b82f6;font-weight:800;"><?= $st['night_shifts'] ?: '0' ?></td>
+                            <td class="att-col-stat" style="color:#8b5cf6;font-weight:800;"><?= $st['basic_shifts'] ?: '0' ?></td>
+                            <td class="att-col-stat" style="color:#f59e0b;font-weight:800;"><?= $st['sick_leaves'] ?: '0' ?></td>
+                            <td class="att-col-stat" style="color:#ef4444;font-weight:800;"><?= $st['off_days'] ?: '0' ?></td>
+                            <td class="att-col-total" style="font-weight:900;background:rgba(14,165,233,0.15);color:#0284c7;"><?= $st['total_working_days'] ?></td>
 
                             <!-- Custom Column Values -->
                             <?php foreach ($customCols as $cc): 
@@ -290,39 +282,39 @@ $totalTableCols = 2 + $daysCount + 6 + $customColCount + 1;
                                            data-col-id="<?= $cc['id'] ?>"
                                            data-col-type="<?= $cc['col_type'] ?>"
                                            value="<?= htmlspecialchars($valDisp) ?>" 
-                                           style="text-align:center;padding:0;font-size:12px;height:19px;"
+                                           style="text-align:center;padding:0;font-size:12px;height:24px;"
                                            placeholder="...">
                                 </td>
                             <?php endforeach; ?>
 
                             <!-- Remarks Input with Conflict Note if any -->
-                            <td style="text-align:center;padding:0 2px;">
+                            <td style="text-align:center;padding:0 4px;">
                                 <input type="text" class="att-cell-input att-remarks-input" 
                                        data-emp-no="<?= htmlspecialchars($st['emp_no']) ?>" 
                                        value="<?= htmlspecialchars($st['remarks'] ?? '') ?>" 
-                                       style="text-align:center;font-weight:normal;font-size:12px;height:19px;" 
+                                       style="text-align:center;font-weight:normal;font-size:12px;height:24px;" 
                                        placeholder="...">
                             </td>
                         </tr>
                     <?php endforeach; ?>
 
-                    <!-- Bottom TOTAL Row: totals each count column for the whole period -->
-                    <tr style="height:20px;font-weight:800;background:#f8fafc;border-top:2px solid #000000;">
-                        <td colspan="2" style="text-align:center;font-weight:800;">TOTAL</td>
+                    <!-- Bottom TOTAL Row -->
+                    <tr style="height:28px;font-weight:800;background:linear-gradient(135deg, #0e2a47 0%, #1e3a5f 100%);color:#ffffff;border-top:2px solid var(--att-border-strong);">
+                        <td colspan="2" class="att-summary-label" style="text-align:center;font-weight:900;color:#fde047;letter-spacing:0.8px;">TOTAL CONSOLIDATED</td>
                         <?php foreach ($datesList as $dInfo): ?>
                             <td></td>
                         <?php endforeach; ?>
-                        <td style="font-weight:800;text-align:center;"><?= $sumDay ?></td>
-                        <td style="font-weight:800;text-align:center;"><?= $sumNight ?></td>
-                        <td style="font-weight:800;text-align:center;"><?= $sumBasic ?></td>
-                        <td style="font-weight:800;text-align:center;"><?= $sumSick ?></td>
-                        <td style="font-weight:800;color:#c00000;text-align:center;"><?= $sumOff ?></td>
-                        <td style="font-weight:800;background:#e2e8f0;text-align:center;"><?= $sumTotalDays ?></td>
+                        <td style="font-weight:900;text-align:center;color:#4ade80;"><?= $sumDay ?></td>
+                        <td style="font-weight:900;text-align:center;color:#60a5fa;"><?= $sumNight ?></td>
+                        <td style="font-weight:900;text-align:center;color:#c084fc;"><?= $sumBasic ?></td>
+                        <td style="font-weight:900;text-align:center;color:#fde047;"><?= $sumSick ?></td>
+                        <td style="font-weight:900;color:#f87171;text-align:center;"><?= $sumOff ?></td>
+                        <td style="font-weight:900;background:#0284c7;color:#ffffff;text-align:center;font-size:14px;"><?= $sumTotalDays ?></td>
 
                         <!-- Totals for Custom Columns -->
                         <?php foreach ($customCols as $cc): ?>
                             <?php if ($cc['col_type'] === 'number'): ?>
-                                <td style="font-weight:800;" class="att-custom-total-cell" data-col-id="<?= $cc['id'] ?>">
+                                <td style="font-weight:900;color:#fde047;" class="att-custom-total-cell" data-col-id="<?= $cc['id'] ?>">
                                     <?= $customSums[$cc['id']] ?? 0 ?>
                                 </td>
                             <?php else: ?>
@@ -335,34 +327,34 @@ $totalTableCols = 2 + $daysCount + 6 + $customColCount + 1;
                 <?php endif; ?>
             </tbody>
         </table>
+    </div>
 
-        <!-- Formula Explanation Legend -->
-        <div style="font-size:11px;font-weight:bold;color:#111;margin-top:10px;padding:4px;">
-            Total No. of Days = Day + Night + Basic + Sick (Off is shown but not counted).
-        </div>
+    <!-- Formula Explanation Note -->
+    <div style="font-size:11.5px;font-weight:700;color:var(--att-text-muted);margin-top:12px;padding:6px 10px;background:var(--att-card-bg);border:1px solid var(--att-card-border);border-radius:6px;display:inline-flex;align-items:center;gap:6px;">
+        <span>ℹ️</span> <strong>Payroll Formula:</strong> Total No. of Days = Day + Night + Basic + Sick (Off days are recorded for statutory compliance and not billed).
     </div>
 </main>
 
 <!-- Add Column Modal -->
-<div class="att-modal-overlay" id="att-modal-add-col">
-    <div class="att-modal" style="max-width: 420px;">
+<div class="att-modal-overlay no-print" id="att-modal-add-col">
+    <div class="att-modal" style="max-width: 440px;">
         <div class="att-modal-header">
-            <h3>+ Add Column to Payroll</h3>
+            <span>+ Add Custom Column to Payroll</span>
             <button type="button" class="att-modal-close" data-close-modal="att-modal-add-col">&times;</button>
         </div>
         <form id="att-form-add-col">
             <div class="att-modal-body">
-                <div class="att-form-group" style="margin-bottom: 12px;">
-                    <label for="att-new-col-name" style="display:block;margin-bottom:4px;font-weight:bold;">Column Name:</label>
-                    <input type="text" id="att-new-col-name" name="column_name" class="att-input" style="width:100%;" placeholder="e.g. Basic Salary, Overtime, Deduction" required>
+                <div class="att-form-group">
+                    <label for="att-new-col-name">Column Header Name:</label>
+                    <input type="text" id="att-new-col-name" name="column_name" class="att-input" placeholder="e.g. Overtime (Hrs), Transport Allowance, Advance Deduction" required>
                 </div>
                 <div class="att-form-group">
-                    <label style="display:block;margin-bottom:4px;font-weight:bold;">Column Type:</label>
-                    <label style="margin-right: 16px; font-weight: normal; cursor: pointer;">
-                        <input type="radio" name="col_type" value="number" checked> Number (accepts digits, shows total)
+                    <label>Data Entry Format:</label>
+                    <label style="margin-right: 16px; font-weight: normal; cursor: pointer; display:flex; align-items:center; gap:6px;">
+                        <input type="radio" name="col_type" value="number" checked> <strong>Numeric</strong> (Accepts numbers, automatically computes bottom total)
                     </label>
-                    <label style="font-weight: normal; cursor: pointer; display: block; margin-top: 6px;">
-                        <input type="radio" name="col_type" value="text"> Text (accepts anything, no total)
+                    <label style="font-weight: normal; cursor: pointer; display:flex; align-items:center; gap:6px; margin-top: 8px;">
+                        <input type="radio" name="col_type" value="text"> <strong>Text</strong> (Accepts remarks, codes, or text)
                     </label>
                 </div>
             </div>
@@ -375,27 +367,29 @@ $totalTableCols = 2 + $daysCount + 6 + $customColCount + 1;
 </div>
 
 <!-- Edit Column Modal -->
-<div class="att-modal-overlay" id="att-modal-edit-col">
-    <div class="att-modal" style="max-width: 420px;">
+<div class="att-modal-overlay no-print" id="att-modal-edit-col">
+    <div class="att-modal" style="max-width: 440px;">
         <div class="att-modal-header">
-            <h3>Edit Column</h3>
+            <span>✏️ Edit Column Settings</span>
             <button type="button" class="att-modal-close" data-close-modal="att-modal-edit-col">&times;</button>
         </div>
         <form id="att-form-edit-col">
             <input type="hidden" id="att-edit-col-id" name="column_id" value="">
             <div class="att-modal-body">
-                <div class="att-form-group" style="margin-bottom: 12px;">
-                    <label for="att-edit-col-name" style="display:block;margin-bottom:4px;font-weight:bold;">Column Name:</label>
-                    <input type="text" id="att-edit-col-name" name="column_name" class="att-input" style="width:100%;" required>
+                <div class="att-form-group">
+                    <label for="att-edit-col-name">Column Header Name:</label>
+                    <input type="text" id="att-edit-col-name" name="column_name" class="att-input" required>
                 </div>
                 <div class="att-form-group">
-                    <label style="display:block;margin-bottom:4px;font-weight:bold;">Column Type:</label>
-                    <label style="margin-right: 16px; font-weight: normal; cursor: pointer;">
-                        <input type="radio" id="att-edit-type-number" name="col_type" value="number"> Number
-                    </label>
-                    <label style="font-weight: normal; cursor: pointer;">
-                        <input type="radio" id="att-edit-type-text" name="col_type" value="text"> Text
-                    </label>
+                    <label>Data Entry Format:</label>
+                    <div style="display:flex;gap:16px;">
+                        <label style="cursor: pointer; display:flex; align-items:center; gap:6px;">
+                            <input type="radio" id="att-edit-type-number" name="col_type" value="number"> Number
+                        </label>
+                        <label style="cursor: pointer; display:flex; align-items:center; gap:6px;">
+                            <input type="radio" id="att-edit-type-text" name="col_type" value="text"> Text
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="att-modal-footer">
@@ -411,6 +405,84 @@ document.addEventListener('DOMContentLoaded', () => {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const startDate = "<?= htmlspecialchars($startDate) ?>";
     const endDate = "<?= htmlspecialchars($endDate) ?>";
+
+    // Quick Date Range Presets
+    const btnCurMonth = document.getElementById('att-preset-cur-month');
+    const btnPayrollCycle = document.getElementById('att-preset-payroll-cycle');
+    const btnPrevMonth = document.getElementById('att-preset-prev-month');
+    const startInput = document.getElementById('att-pay-start');
+    const endInput = document.getElementById('att-pay-end');
+    const filterForm = document.getElementById('att-payroll-filter-form');
+
+    function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+    if (btnCurMonth) {
+        btnCurMonth.addEventListener('click', () => {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = now.getMonth();
+            const first = new Date(y, m, 1);
+            const last = new Date(y, m + 1, 0);
+            startInput.value = `${y}-${pad2(m + 1)}-01`;
+            endInput.value = `${y}-${pad2(m + 1)}-${pad2(last.getDate())}`;
+            filterForm.submit();
+        });
+    }
+
+    if (btnPayrollCycle) {
+        btnPayrollCycle.addEventListener('click', () => {
+            const now = new Date();
+            const curY = now.getFullYear();
+            const curM = now.getMonth(); // 0-indexed
+            // If current day is >= 27, cycle is 27th curMonth to 26th nextMonth
+            // Otherwise cycle is 27th prevMonth to 26th curMonth
+            let startY, startM, endY, endM;
+            if (now.getDate() >= 27) {
+                startY = curY; startM = curM + 1;
+                const nextM = new Date(curY, curM + 1, 1);
+                endY = nextM.getFullYear(); endM = nextM.getMonth() + 1;
+            } else {
+                const prevM = new Date(curY, curM - 1, 1);
+                startY = prevM.getFullYear(); startM = prevM.getMonth() + 1;
+                endY = curY; endM = curM + 1;
+            }
+            startInput.value = `${startY}-${pad2(startM)}-27`;
+            endInput.value = `${endY}-${pad2(endM)}-26`;
+            filterForm.submit();
+        });
+    }
+
+    if (btnPrevMonth) {
+        btnPrevMonth.addEventListener('click', () => {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = now.getMonth() - 1;
+            const first = new Date(y, m, 1);
+            const last = new Date(y, m + 1, 0);
+            const realY = first.getFullYear();
+            const realM = first.getMonth() + 1;
+            startInput.value = `${realY}-${pad2(realM)}-01`;
+            endInput.value = `${realY}-${pad2(realM)}-${pad2(last.getDate())}`;
+            filterForm.submit();
+        });
+    }
+
+    // Real-Time Guard Search / Filter
+    const searchInput = document.getElementById('att-payroll-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim().toLowerCase();
+            document.querySelectorAll('.att-payroll-row').forEach(row => {
+                const no = row.dataset.empNo || '';
+                const name = row.dataset.empName || '';
+                if (!q || no.includes(q) || name.includes(q)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
 
     // Modal helpers
     function openModal(id) {
@@ -578,10 +650,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.querySelectorAll('.att-custom-val-input').forEach(inp => {
-        // Enforce digits only for number columns
         if (inp.dataset.colType === 'number') {
             inp.addEventListener('input', () => {
-                // allow digits and optional single decimal point
                 inp.value = inp.value.replace(/[^0-9.]/g, '');
                 const parts = inp.value.split('.');
                 if (parts.length > 2) {
@@ -591,7 +661,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Save value on change
         inp.addEventListener('change', () => {
             const empNo = inp.dataset.empNo;
             const colId = inp.dataset.colId;

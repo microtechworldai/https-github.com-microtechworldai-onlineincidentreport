@@ -1,13 +1,6 @@
 <?php
 // Attendance & Payroll Module - Attendance Roster Main View
-// Features:
-// 1. Staff List button next to + Add Staff with searchable directory modal (by Emp No or Name).
-// 2. Add individual staff from directory to current sheet.
-// 3. "+ New staff" option saves to directory and adds to sheet.
-// 4. "Add all on this sheet to list" button to copy existing sheet staff into saved directory in one click.
-// 5. In-row actions: Replace (search for another person to take over row, with checkbox to clear day codes or keep them), Edit, and Remove (removes from this site and month only).
-// 6. Borders: Black border on every cell, thicker outer border, lines stay locked when scrolling sideways. Light grey in dark mode.
-// 7. Top header row with Emp No, Name, Site Name, Day numbers is exactly 45px tall.
+// Enterprise Executive Redesign
 // File: hostinger_deployment/attendance/views/sheet.php
 
 if (!defined('ATT_ACCESS')) {
@@ -40,6 +33,7 @@ $additionalDeployments = $sheetData['additionalDeployments'] ?? [];
 
 $siteReqDay = isset($sheet['req_day']) ? (int)$sheet['req_day'] : 1;
 $siteReqNight = isset($sheet['req_night']) ? (int)$sheet['req_night'] : 1;
+$siteReqTotal = $siteReqDay + $siteReqNight;
 $contractStart = $sheet['contract_start'] ?? '';
 $contractEnd = $sheet['contract_end'] ?? '';
 
@@ -50,169 +44,82 @@ $prevYear = $curMonth === 1 ? $curYear - 1 : $curYear;
 $monthTotalDayShifts = array_sum($dayShiftCounts);
 $monthTotalNightShifts = array_sum($nightShiftCounts);
 $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
+$expectedMonthlyTotal = $siteReqTotal * $daysInMonth;
+$fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expectedMonthlyTotal) * 100, 1) : 100;
 ?>
 
-<style>
-/* Dark Teal Title Banner: 55px height and 25px font size */
-.att-th-banner-darkteal {
-    height: 55px !important;
-    font-size: 25px !important;
-    line-height: 55px !important;
-    background-color: #005f73 !important;
-    color: #ffffff !important;
-    font-weight: bold !important;
-    text-align: center !important;
-    vertical-align: middle !important;
-    border: 1px solid var(--att-border) !important;
-    padding: 0 8px !important;
-    letter-spacing: 0.5px;
-}
+<?php if ($sheet): ?>
+<!-- 1. EXECUTIVE KPI STATS RIBBON -->
+<div class="att-kpi-ribbon no-print">
+    <!-- Card 1: Site & Contract Details -->
+    <div class="att-kpi-card att-kpi-primary">
+        <div class="att-kpi-top">
+            <span class="att-kpi-title">Deployment Post</span>
+            <span class="att-kpi-tag att-tag-blue">Active Site</span>
+        </div>
+        <div class="att-kpi-value" style="font-size: 19px;">
+            🏢 <?= htmlspecialchars($sheet['site_name']) ?>
+        </div>
+        <div class="att-kpi-meta">
+            <span>📅 Contract: <strong><?= !empty($contractStart) ? htmlspecialchars($contractStart) : 'Open' ?> &rarr; <?= !empty($contractEnd) ? htmlspecialchars($contractEnd) : 'Ongoing' ?></strong></span>
+            <?php if (!empty($additionalDeployments)): ?>
+                <span class="att-kpi-tag att-tag-amber" style="margin-left:auto;">⚡ <?= count($additionalDeployments) ?> Extra Days</span>
+            <?php endif; ?>
+        </div>
+    </div>
 
-/* Auto-fit to contents, centered, and bold columns */
-.att-roster-outer-table {
-    border: 2px solid var(--att-border) !important;
-    border-collapse: collapse;
-    width: 100%;
-    font-family: var(--att-font-condensed);
-    font-size: 12px;
-}
+    <!-- Card 2: Required Post Strength -->
+    <div class="att-kpi-card att-kpi-warning">
+        <div class="att-kpi-top">
+            <span class="att-kpi-title">Required Post Strength</span>
+            <span class="att-kpi-tag att-tag-amber"><?= $siteReqTotal ?> Guards / Day</span>
+        </div>
+        <div class="att-kpi-value">
+            <span>☀️ <?= $siteReqDay ?> Day</span>
+            <span class="att-kpi-subval">&bull;</span>
+            <span>🌙 <?= $siteReqNight ?> Night</span>
+        </div>
+        <div class="att-kpi-meta">
+            <span>Expected Month Total: <strong><?= $expectedMonthlyTotal ?> Duties</strong></span>
+        </div>
+    </div>
 
-.att-roster-outer-table th, .att-roster-outer-table td {
-    border: 1px solid var(--att-border) !important;
-    padding: 2px 4px;
-    height: 28px;
-    text-align: center !important;
-    vertical-align: middle !important;
-    font-weight: bold !important;
-    white-space: nowrap !important;
-}
+    <!-- Card 3: Roster Fulfillment Health -->
+    <div class="att-kpi-card att-kpi-success">
+        <div class="att-kpi-top">
+            <span class="att-kpi-title">Roster Delivery Rate</span>
+            <span class="att-kpi-tag <?= $fulfillmentPct >= 100 ? 'att-tag-green' : 'att-tag-red' ?>">
+                <?= $fulfillmentPct >= 100 ? '🟢 100% Fulfilled' : '🔴 ' . $fulfillmentPct . '% Coverage' ?>
+            </span>
+        </div>
+        <div class="att-kpi-value" style="color: #10b981;">
+            <?= $monthTotalDuties ?> <span class="att-kpi-subval">/ <?= $expectedMonthlyTotal ?> Duties</span>
+        </div>
+        <div class="att-kpi-meta">
+            <span>Day: <strong><?= $monthTotalDayShifts ?></strong> &bull; Night: <strong><?= $monthTotalNightShifts ?></strong></span>
+        </div>
+    </div>
 
-.att-col-emp, .att-col-name, .att-col-site, .att-col-action {
-    width: auto !important;
-    white-space: nowrap !important;
-    text-align: center !important;
-    font-weight: bold !important;
-    padding: 2px 8px !important;
-}
+    <!-- Card 4: Personnel & Roster Status -->
+    <div class="att-kpi-card att-kpi-purple">
+        <div class="att-kpi-top">
+            <span class="att-kpi-title">Assigned Personnel</span>
+            <span class="att-kpi-tag <?= $isLocked ? 'att-tag-amber' : 'att-tag-green' ?>">
+                <?= $isLocked ? '🔒 Locked' : '🔓 Live Edit' ?>
+            </span>
+        </div>
+        <div class="att-kpi-value">
+            👥 <?= count($rows) ?> <span class="att-kpi-subval">Guards Rostered</span>
+        </div>
+        <div class="att-kpi-meta">
+            <span>Period: <strong><?= $monthName ?> <?= $curYear ?></strong></span>
+            <span style="margin-left:auto; font-size:11px; color:#10b981;">● Auto-Saved</span>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
-.att-col-day {
-    width: 38px !important;
-    min-width: 38px !important;
-    text-align: center !important;
-    font-weight: bold !important;
-}
-
-.att-cell-input {
-    text-align: center !important;
-    font-weight: bold !important;
-    font-size: 12px !important;
-}
-
-.att-row-btn-icon {
-    background: transparent;
-    border: 1px solid transparent;
-    cursor: pointer;
-    font-size: 11px !important;
-    line-height: 1 !important;
-    padding: 1px 2px !important;
-    margin: 0 1px !important;
-    border-radius: 3px;
-    transition: all 0.15s ease;
-    vertical-align: middle;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px !important;
-    height: 20px !important;
-}
-.att-row-btn-icon:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    transform: scale(1.15);
-}
-.att-row-btn-icon.att-btn-remove-staff:hover {
-    background: #fee2e2;
-    border-color: #fca5a5;
-}
-.att-row-btn-icon.att-btn-replace-staff:hover {
-    background: #fef3c7;
-    border-color: #fcd34d;
-}
-
-/* Deployment Status Colors for Summary Rows */
-.att-col-total-d, .att-col-total-n, .att-col-total-grand {
-    text-align: center !important;
-    vertical-align: middle !important;
-    font-weight: bold !important;
-    font-size: 12px !important;
-    transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.att-deploy-ok {
-    background-color: #16a34a !important;
-    color: #ffffff !important;
-}
-
-.att-deploy-less {
-    background-color: #dc2626 !important;
-    color: #ffffff !important;
-}
-
-.att-deploy-over {
-    background-color: #facc15 !important;
-    color: #000000 !important;
-}
-
-.att-deploy-neutral {
-    background-color: #f1f5f9 !important;
-    color: #475569 !important;
-}
-
-.att-month-total-line {
-    margin-top: 10px;
-    padding: 8px 12px;
-    background: #e2e8f0;
-    border: 1px solid var(--att-border);
-    font-weight: bold;
-    font-size: 11px;
-    display: flex;
-    justify-content: flex-start;
-    gap: 28px;
-    color: #000000;
-}
-
-.att-legend-box {
-    margin-top: 10px;
-    padding: 6px 4px;
-    font-size: 11px;
-    font-weight: bold;
-    color: #111;
-}
-
-.att-signatures-block {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 24px;
-    padding: 0 10px 24px 10px;
-    font-size: 11px;
-    font-weight: bold;
-    color: #222;
-}
-
-.att-sig-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.att-sig-line {
-    display: inline-block;
-    width: 170px;
-    border-bottom: 1px solid var(--att-border);
-}
-</style>
-
-<!-- Action & Filter Bar -->
+<!-- 2. MODERN CONTROL & ACTION TOOLBAR -->
 <div class="att-controlbar no-print">
     <form method="GET" action="index.php" class="att-filters">
         <input type="hidden" name="action" value="sheet">
@@ -246,89 +153,65 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
             <?php endfor; ?>
         </select>
 
-        <span id="att-status-indicator" class="att-status-indicator att-status-saved">✓ Stored in Database (MySQL)</span>
+        <span id="att-status-indicator" class="att-status-indicator att-status-saved">
+            <span>●</span> Stored in MySQL
+        </span>
     </form>
 
     <div class="att-actions">
         <button type="button" class="att-btn att-btn-secondary" id="att-btn-add-site">+ New Site</button>
         <?php if ($sheet): ?>
-            <button type="button" class="att-btn att-btn-danger" id="att-btn-delete-site" style="background:#dc2626;color:#ffffff;border-color:#dc2626;" title="Delete this site from attendance">🗑️ Delete Site</button>
-            <button type="button" class="att-btn att-btn-secondary" id="att-btn-add-deployment" style="background:#0284c7;color:#ffffff;border-color:#0284c7;" title="Manage additional deployment for this month or specific dates">➕ Additional Deployment</button>
-            <button type="button" class="att-btn att-btn-secondary" id="att-btn-site-reqs" title="Edit site requirements & contract dates">⚙️ Requirements</button>
-            <!-- Staff list button next to + Add staff -->
             <button type="button" class="att-btn att-btn-secondary" id="att-btn-staff-list">👥 Staff List</button>
             <button type="button" class="att-btn att-btn-primary" id="att-btn-add-staff">+ Add Staff</button>
+            <button type="button" class="att-btn att-btn-secondary" id="att-btn-add-deployment" title="Manage additional deployment for this month or specific dates">➕ Additional Deployment</button>
+            <button type="button" class="att-btn att-btn-secondary" id="att-btn-site-reqs" title="Edit site requirements & contract dates">⚙️ Requirements</button>
             <button type="button" class="att-btn att-btn-secondary" id="att-btn-copy-prev" 
                     data-site-id="<?= $sheet['site_id'] ?>" data-year="<?= $curYear ?>" data-month="<?= $curMonth ?>">
-                ↻ Copy staff from previous month
+                ↻ Copy from Prev Month
             </button>
             <button type="button" class="att-btn <?= $isLocked ? 'att-btn-warning' : 'att-btn-secondary' ?>" id="att-btn-lock" 
                     data-sheet-id="<?= $sheet['id'] ?>" data-lock="<?= $isLocked ? '0' : '1' ?>">
                 <?= $isLocked ? '🔒 Unlock Sheet' : '🔓 Lock Sheet' ?>
             </button>
             <a href="index.php?action=export_excel&export_type=sheet&sheet_id=<?= $sheet['id'] ?>" class="att-btn att-btn-success">
-                ⬇ Download Excel (.xls)
+                ⬇ Excel (.xls)
             </a>
             <a href="index.php?action=export_pdf&sheet_id=<?= $sheet['id'] ?>" class="att-btn att-btn-secondary" target="_blank">
-                🖨 Print / PDF (A4 Landscape)
+                🖨 Print / PDF
             </a>
-            <a href="index.php?action=backup_download" class="att-btn att-btn-secondary" style="background:#0f172a;color:#ffffff;border-color:#0f172a;" title="Download complete SQL database backup for long run safety and reuse">
-                🛡️ Backup Database (.sql)
+            <a href="index.php?action=backup_download" class="att-btn att-btn-secondary" title="Download complete SQL database backup">
+                🛡️ Backup
             </a>
+            <button type="button" class="att-btn att-btn-danger" id="att-btn-delete-site" title="Delete this site from attendance">🗑️</button>
         <?php endif; ?>
     </div>
 </div>
 
-<?php if ($sheet): ?>
-<!-- Site Deployment & Contract Info Strip -->
-<div class="att-container no-print" style="margin-top:6px;margin-bottom:6px;">
-    <div style="background:#f1f5f9;border:1px solid #cbd5e1;padding:6px 12px;border-radius:4px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-family:var(--att-font-condensed);font-weight:bold;">
-        <div style="display:flex;align-items:center;gap:16px;">
-            <span>🏢 Site: <span style="color:#005f73;"><?= htmlspecialchars($sheet['site_name']) ?></span></span>
-            <span>☀️ Required Day Shift: <span style="color:#0f766e;"><?= $siteReqDay ?></span></span>
-            <span>🌙 Required Night Shift: <span style="color:#0f766e;"><?= $siteReqNight ?></span></span>
-            <span>📅 Contract: <span style="color:#334155;"><?= !empty($contractStart) ? htmlspecialchars($contractStart) : 'Open' ?></span> to <span style="color:#334155;"><?= !empty($contractEnd) ? htmlspecialchars($contractEnd) : 'Ongoing' ?></span></span>
-            <?php if (!empty($additionalDeployments)): ?>
-                <span style="color:#0284c7;background:#e0f2fe;padding:2px 8px;border-radius:3px;">⚡ <?= count($additionalDeployments) ?> day(s) Additional Deployment Active</span>
-            <?php endif; ?>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;font-size:11px;">
-            <span>Status:</span>
-            <span style="background:#16a34a;color:#fff;padding:2px 6px;border-radius:3px;">🟢 OK</span>
-            <span style="background:#dc2626;color:#fff;padding:2px 6px;border-radius:3px;">🔴 Less</span>
-            <span style="background:#facc15;color:#000;padding:2px 6px;border-radius:3px;">🟡 Over</span>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
 <main class="att-container">
     <?php if (!$sheet): ?>
-        <div style="background:#fff;padding:40px;text-align:center;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <h3 style="margin-top:0;color:#005f73;">Welcome to Attendance Roster</h3>
-            <p style="color:#64748b;max-width:500px;margin:0 auto 20px;">No sites have been added to the dedicated attendance directory yet. Get started by adding your first site.</p>
-            <button type="button" class="att-btn att-btn-primary" onclick="document.getElementById('att-modal-new-site').classList.add('att-open')">+ Add Site</button>
+        <div style="background:var(--att-card-bg);padding:60px 40px;text-align:center;border-radius:12px;border:1px solid var(--att-card-border);box-shadow:var(--att-shadow-md);">
+            <div style="font-size:48px;margin-bottom:12px;">🏢</div>
+            <h2 style="margin:0 0 8px 0;color:var(--att-text);font-weight:800;">Welcome to Attendance Roster</h2>
+            <p style="color:var(--att-text-muted);max-width:540px;margin:0 auto 24px;font-size:14px;line-height:1.5;">
+                No site has been selected or created for attendance tracking yet. Select an existing site from the dropdown or click below to register a new site.
+            </p>
+            <button type="button" class="att-btn att-btn-primary" style="padding:10px 22px;font-size:14px;" onclick="document.getElementById('att-modal-new-site').classList.add('att-open')">+ Create First Site</button>
         </div>
     <?php else: ?>
         <div class="att-grid-wrapper">
             <table class="att-roster-outer-table" id="att-roster-table" data-sheet-id="<?= $sheet['id'] ?>" data-locked="<?= $isLocked ? '1' : '0' ?>">
                 <thead>
-                    <!-- Dark Teal Title Bar: height 55px, font size 25px -->
-                    <tr style="height: 55px;">
+                    <!-- Executive Title Banner -->
+                    <tr>
                         <th colspan="<?= $daysInMonth + 4 ?>" class="att-th-banner-darkteal">
-                            Ultimate Security Services Actual Attendance for the month of <?= $monthName ?> - <?= $curYear ?>
+                            Ultimate Security Services &bull; Attendance Roster for <?= $monthName ?> - <?= $curYear ?>
                         </th>
                     </tr>
 
-                    <!-- Blank White Row In Between -->
-                    <tr class="att-tr-blank-spacer" style="height: 12px; background-color: #ffffff;">
-                        <th colspan="<?= $daysInMonth + 4 ?>" style="height: 12px; background-color: #ffffff; border: 1px solid #000000; padding: 0;"></th>
-                    </tr>
-
-                    <!-- Top Header Row 1: Exactly 28px tall, font size 18px bold -->
-                    <tr style="height: 28px;">
+                    <!-- Top Header Row 1: Emp No, Name, Site Name, Day Numbers 1 to 31 -->
+                    <tr>
                         <th rowspan="2" class="att-th-top-row att-col-emp">Emp No</th>
-                        <th rowspan="2" class="att-th-top-row att-col-name">Name</th>
+                        <th rowspan="2" class="att-th-top-row att-col-name">Guard Name</th>
                         <th rowspan="2" class="att-th-top-row att-col-site">Site Name</th>
 
                         <!-- Days of Month (1 to 28/29/30/31) -->
@@ -339,12 +222,12 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
                             <th class="att-th-top-row att-col-day <?= $isWk ? 'att-th-teal-weekend' : '' ?>"><?= $d ?></th>
                         <?php endfor; ?>
 
-                        <!-- Action Column Header after 31st date -->
-                        <th rowspan="2" class="att-th-top-row att-col-action">Action</th>
+                        <!-- Action Column Header -->
+                        <th rowspan="2" class="att-th-top-row att-col-action no-print">Action</th>
                     </tr>
 
-                    <!-- Weekday Names Row 2 (SAT, SUN, MON...): Exactly 28px tall, font size 14px bold -->
-                    <tr style="height: 28px;">
+                    <!-- Weekday Names Row 2 (SAT, SUN, MON...) -->
+                    <tr>
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): 
                             $wName = strtoupper(substr(date('D', mktime(0, 0, 0, $curMonth, $d, $curYear)), 0, 3));
                             $isWk = in_array($wName, ['FRI', 'SUN']);
@@ -356,8 +239,10 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
                 <tbody>
                     <?php if (empty($rows)): ?>
                         <tr>
-                            <td colspan="<?= $daysInMonth + 4 ?>" style="padding:24px;color:#64748b;background:#f8fafc;text-align:center;">
-                                No staff assigned to this site and month yet. Click "<strong>+ Add Staff</strong>" or "<strong>Copy staff from previous month</strong>" above.
+                            <td colspan="<?= $daysInMonth + 4 ?>" style="padding:40px;color:var(--att-text-muted);text-align:center;">
+                                <div style="font-size:24px;margin-bottom:8px;">👥</div>
+                                <div style="font-size:14px;font-weight:700;">No security staff assigned to this site for <?= $monthName ?> <?= $curYear ?></div>
+                                <div style="margin-top:6px;font-size:12px;">Click "<strong>+ Add Staff</strong>" or "<strong>↻ Copy from Prev Month</strong>" in the toolbar above to populate this roster.</div>
                             </td>
                         </tr>
                     <?php else: ?>
@@ -367,9 +252,9 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
                             $cellVals = $r['days'] ?? $r['cells'] ?? [];
                         ?>
                             <tr class="att-row-staff" data-row-id="<?= $r['id'] ?>" data-emp-no="<?= htmlspecialchars($r['emp_no'] ?? '') ?>">
-                                <td class="att-col-emp" style="font-weight:700;text-align:center;"><?= htmlspecialchars($r['emp_no'] ?? '') ?></td>
-                                <td class="att-col-name" style="font-weight:700;text-align:center;"><?= htmlspecialchars($displayName) ?></td>
-                                <td class="att-col-site" style="font-weight:700;text-align:center;"><?= htmlspecialchars($sheet['site_name']) ?></td>
+                                <td class="att-col-emp"><?= htmlspecialchars($r['emp_no'] ?? '') ?></td>
+                                <td class="att-col-name"><?= htmlspecialchars($displayName) ?></td>
+                                <td class="att-col-site"><?= htmlspecialchars($sheet['site_name']) ?></td>
 
                                 <!-- Day Boxes -->
                                 <?php for ($d = 1; $d <= $daysInMonth; $d++): 
@@ -389,119 +274,155 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
                                     </td>
                                 <?php endfor; ?>
 
-                                <!-- Action Buttons Cell: Delete and Replace icons ONLY -->
-                                <td class="att-col-action no-print" style="white-space:nowrap;text-align:center;padding:2px 4px;">
+                                <!-- Action Buttons: Replace & Delete -->
+                                <td class="att-col-action no-print">
                                     <?php if (!$isLocked): ?>
                                         <button type="button" class="att-row-btn-icon att-btn-replace-staff" 
                                                 data-row-id="<?= $r['id'] ?>" 
                                                 data-emp-no="<?= htmlspecialchars($r['emp_no'] ?? '', ENT_QUOTES) ?>" 
                                                 data-name="<?= htmlspecialchars($displayName, ENT_QUOTES) ?>" 
-                                                title="Replace" aria-label="Replace">🔁</button>
+                                                title="Replace Guard">🔁</button>
                                         <button type="button" class="att-row-btn-icon att-btn-remove-staff" 
                                                 data-row-id="<?= $r['id'] ?>" 
                                                 data-staff-name="<?= htmlspecialchars($displayName, ENT_QUOTES) ?>" 
-                                                title="Delete" aria-label="Delete">🗑️</button>
+                                                title="Delete Row">🗑️</button>
                                     <?php endif; ?>
                                 </td>
                             </tr>
-                        <?php 
-                        endforeach; 
-                        ?>
+                        <?php endforeach; ?>
                     <?php endif; ?>
 
-                    <!-- Bottom Counts Row 1: Day shift (D) -->
-                        <tr class="att-tr-day-total">
-                            <td colspan="3" class="att-summary-label">DAY SHIFT (D):</td>
-                            <?php for ($d = 1; $d <= $daysInMonth; $d++): 
-                                $stD = $dayDeployStatuses[$d] ?? 'neutral';
-                                $clsD = 'att-deploy-' . $stD;
-                                $reqD = $dayRequirements[$d] ?? 0;
-                                $cntD = $dayShiftCounts[$d] ?: '0';
-                                $tipD = "Day {$d} Day Shift: Deployed {$cntD} / Required {$reqD} (" . ($stD === 'ok' ? 'OK' : ($stD === 'less' ? 'Shortage' : 'Over Deployed')) . ")";
-                            ?>
-                                <td class="att-col-total-d <?= $clsD ?>" data-day="<?= $d ?>" data-req-d="<?= $reqD ?>" title="<?= htmlspecialchars($tipD) ?>"><?= $cntD ?></td>
-                            <?php endfor; ?>
-                            <td class="att-col-action"></td>
-                        </tr>
+                    <!-- Bottom Summary Row 1: Day Shift (D) -->
+                    <tr class="att-tr-day-total">
+                        <td colspan="3" class="att-summary-label">DAY SHIFT (D):</td>
+                        <?php for ($d = 1; $d <= $daysInMonth; $d++): 
+                            $stD = $dayDeployStatuses[$d] ?? 'neutral';
+                            $clsD = 'att-deploy-' . $stD;
+                            $reqD = $dayRequirements[$d] ?? 0;
+                            $cntD = $dayShiftCounts[$d] ?: '0';
+                            $tipD = "Day {$d} Day Shift: Deployed {$cntD} / Required {$reqD}";
+                        ?>
+                            <td class="att-col-total-d <?= $clsD ?>" data-day="<?= $d ?>" data-req-d="<?= $reqD ?>" title="<?= htmlspecialchars($tipD) ?>"><?= $cntD ?></td>
+                        <?php endfor; ?>
+                        <td class="att-col-action no-print"></td>
+                    </tr>
 
-                        <!-- Bottom Counts Row 2: Night shift (N) -->
-                        <tr class="att-tr-night-total">
-                            <td colspan="3" class="att-summary-label">NIGHT SHIFT (N):</td>
-                            <?php for ($d = 1; $d <= $daysInMonth; $d++): 
-                                $stN = $nightDeployStatuses[$d] ?? 'neutral';
-                                $clsN = 'att-deploy-' . $stN;
-                                $reqN = $nightRequirements[$d] ?? 0;
-                                $cntN = $nightShiftCounts[$d] ?: '0';
-                                $tipN = "Day {$d} Night Shift: Deployed {$cntN} / Required {$reqN} (" . ($stN === 'ok' ? 'OK' : ($stN === 'less' ? 'Shortage' : 'Over Deployed')) . ")";
-                            ?>
-                                <td class="att-col-total-n <?= $clsN ?>" data-day="<?= $d ?>" data-req-n="<?= $reqN ?>" title="<?= htmlspecialchars($tipN) ?>"><?= $cntN ?></td>
-                            <?php endfor; ?>
-                            <td class="att-col-action"></td>
-                        </tr>
+                    <!-- Bottom Summary Row 2: Night Shift (N) -->
+                    <tr class="att-tr-night-total">
+                        <td colspan="3" class="att-summary-label">NIGHT SHIFT (N):</td>
+                        <?php for ($d = 1; $d <= $daysInMonth; $d++): 
+                            $stN = $nightDeployStatuses[$d] ?? 'neutral';
+                            $clsN = 'att-deploy-' . $stN;
+                            $reqN = $nightRequirements[$d] ?? 0;
+                            $cntN = $nightShiftCounts[$d] ?: '0';
+                            $tipN = "Day {$d} Night Shift: Deployed {$cntN} / Required {$reqN}";
+                        ?>
+                            <td class="att-col-total-n <?= $clsN ?>" data-day="<?= $d ?>" data-req-n="<?= $reqN ?>" title="<?= htmlspecialchars($tipN) ?>"><?= $cntN ?></td>
+                        <?php endfor; ?>
+                        <td class="att-col-action no-print"></td>
+                    </tr>
 
-                        <!-- Bottom Counts Row 3: Total on duty (D + N) -->
-                        <tr class="att-tr-grand-total">
-                            <td colspan="3" class="att-summary-label">TOTAL ON DUTY (D + N):</td>
-                            <?php for ($d = 1; $d <= $daysInMonth; $d++): 
-                                $stTot = $totalDeployStatuses[$d] ?? 'neutral';
-                                $clsTot = 'att-deploy-' . $stTot;
-                                $reqTot = $totalRequirements[$d] ?? 0;
-                                $cntTot = $totalDutyCounts[$d] ?: '0';
-                                $tipTot = "Day {$d} Total Duty: Deployed {$cntTot} / Required {$reqTot} (" . ($stTot === 'ok' ? 'OK' : ($stTot === 'less' ? 'Shortage' : 'Over Deployed')) . ")";
-                            ?>
-                                <td class="att-col-total-grand <?= $clsTot ?>" data-day="<?= $d ?>" data-req-total="<?= $reqTot ?>" title="<?= htmlspecialchars($tipTot) ?>"><?= $cntTot ?></td>
-                            <?php endfor; ?>
-                            <td class="att-col-action"></td>
-                        </tr>
+                    <!-- Bottom Summary Row 3: Total on Duty (D + N) -->
+                    <tr class="att-tr-grand-total">
+                        <td colspan="3" class="att-summary-label">TOTAL ON DUTY (D + N):</td>
+                        <?php for ($d = 1; $d <= $daysInMonth; $d++): 
+                            $stTot = $totalDeployStatuses[$d] ?? 'neutral';
+                            $clsTot = 'att-deploy-' . $stTot;
+                            $reqTot = $totalRequirements[$d] ?? 0;
+                            $cntTot = $totalDutyCounts[$d] ?: '0';
+                            $tipTot = "Day {$d} Total Duty: Deployed {$cntTot} / Required {$reqTot}";
+                        ?>
+                            <td class="att-col-total-grand <?= $clsTot ?>" data-day="<?= $d ?>" data-req-total="<?= $reqTot ?>" title="<?= htmlspecialchars($tipTot) ?>"><?= $cntTot ?></td>
+                        <?php endfor; ?>
+                        <td class="att-col-action no-print"></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Month Total Summary Line -->
-        <div class="att-month-total-line">
-                <span>Month Total Day Shifts: <strong id="att-month-total-d"><?= $monthTotalDayShifts ?></strong></span>
-                <span>Month Total Night Shifts: <strong id="att-month-total-n"><?= $monthTotalNightShifts ?></strong></span>
-                <span>Month Total Duties: <strong id="att-month-total-duties"><?= $monthTotalDuties ?></strong></span>
+        <!-- 3. EXECUTIVE MONTH SUMMARY RIBBON -->
+        <div class="att-month-total-ribbon">
+            <div class="att-metric-chip">
+                <div class="att-chip-icon">☀️</div>
+                <div class="att-chip-info">
+                    <span class="att-chip-lbl">Month Day Shifts</span>
+                    <span class="att-chip-val" id="att-month-total-d"><?= $monthTotalDayShifts ?></span>
+                </div>
             </div>
+            <div class="att-metric-chip">
+                <div class="att-chip-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6;">🌙</div>
+                <div class="att-chip-info">
+                    <span class="att-chip-lbl">Month Night Shifts</span>
+                    <span class="att-chip-val" id="att-month-total-n"><?= $monthTotalNightShifts ?></span>
+                </div>
+            </div>
+            <div class="att-metric-chip">
+                <div class="att-chip-icon" style="background:rgba(16,185,129,0.15);color:#10b981;">📋</div>
+                <div class="att-chip-info">
+                    <span class="att-chip-lbl">Total Scheduled Duties</span>
+                    <span class="att-chip-val" id="att-month-total-duties"><?= $monthTotalDuties ?></span>
+                </div>
+            </div>
+            <div class="att-metric-chip">
+                <div class="att-chip-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b;">🎯</div>
+                <div class="att-chip-info">
+                    <span class="att-chip-lbl">Contract Delivery Rate</span>
+                    <span class="att-chip-val" style="color:#10b981;"><?= $fulfillmentPct ?>%</span>
+                </div>
+            </div>
+        </div>
 
-            <!-- Legend Box -->
-            <div class="att-legend-box">
-                <strong>Shift Codes:</strong> &nbsp;&nbsp; 
-                <span style="color:#005f73;">D = Day Shift</span> &nbsp;&nbsp;|&nbsp;&nbsp; 
-                <span style="color:#1e3a8a;">N = Night Shift</span> &nbsp;&nbsp;|&nbsp;&nbsp; 
-                <span style="color:#c00000;">OFF = Day Off</span> &nbsp;&nbsp;|&nbsp;&nbsp; 
-                <span style="color:#d97706;">S = Sick Leave</span> &nbsp;&nbsp;|&nbsp;&nbsp; 
-                <span style="color:#4b5563;">B = Basic</span>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <strong>Deployment Status:</strong> &nbsp;&nbsp;
-                <span style="display:inline-block;padding:2px 7px;background:#16a34a;color:#ffffff;border-radius:3px;font-size:11px;font-weight:bold;">🟢 Green: OK (Met)</span> &nbsp;
-                <span style="display:inline-block;padding:2px 7px;background:#dc2626;color:#ffffff;border-radius:3px;font-size:11px;font-weight:bold;">🔴 Red: Shortage (Less)</span> &nbsp;
-                <span style="display:inline-block;padding:2px 7px;background:#facc15;color:#000000;border-radius:3px;font-size:11px;font-weight:bold;">🟡 Yellow: Over Deployed</span>
+        <!-- 4. MODERN INTERACTIVE LEGEND -->
+        <div class="att-legend-pills">
+            <div class="att-legend-group">
+                <span style="color:var(--att-text-muted);font-weight:800;text-transform:uppercase;font-size:11px;">Shift Codes:</span>
+                <span class="att-pill-badge" style="background:rgba(16,185,129,0.15);color:#059669;">● D = Day Shift</span>
+                <span class="att-pill-badge" style="background:rgba(59,130,246,0.15);color:#3b82f6;">● N = Night Shift</span>
+                <span class="att-pill-badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">● OFF = Day Off</span>
+                <span class="att-pill-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">● S = Sick Leave</span>
+                <span class="att-pill-badge" style="background:rgba(139,92,246,0.15);color:#8b5cf6;">● B = Basic</span>
             </div>
+            <div class="att-legend-group">
+                <span style="color:var(--att-text-muted);font-weight:800;text-transform:uppercase;font-size:11px;">Deployment Status:</span>
+                <span class="att-pill-badge att-deploy-ok">🟢 OK (Met)</span>
+                <span class="att-pill-badge att-deploy-less">🔴 Shortage (Less)</span>
+                <span class="att-pill-badge att-deploy-over">🟡 Over Deployed</span>
+            </div>
+        </div>
 
-            <!-- Three Signature Lines -->
-            <div class="att-signatures-block">
-                <div class="att-sig-item">
-                    <span>Prepared by:</span>
-                    <span class="att-sig-line"></span>
-                </div>
-                <div class="att-sig-item">
-                    <span>Checked by:</span>
-                    <span class="att-sig-line"></span>
-                </div>
-                <div class="att-sig-item">
-                    <span>Approved by:</span>
-                    <span class="att-sig-line"></span>
+        <!-- 5. EXECUTIVE SIGN-OFF CARDS -->
+        <div class="att-signatures-grid">
+            <div class="att-sig-card">
+                <div class="att-sig-role">Prepared By (Site Supervisor)</div>
+                <div class="att-sig-line-box">
+                    <span>Signature &amp; Stamp</span>
+                    <span>Date: ____/____/2026</span>
                 </div>
             </div>
+            <div class="att-sig-card">
+                <div class="att-sig-role">Checked By (Operations Manager)</div>
+                <div class="att-sig-line-box">
+                    <span>Signature &amp; Stamp</span>
+                    <span>Date: ____/____/2026</span>
+                </div>
+            </div>
+            <div class="att-sig-card">
+                <div class="att-sig-role">Approved By (Security Director)</div>
+                <div class="att-sig-line-box">
+                    <span>Signature &amp; Stamp</span>
+                    <span>Date: ____/____/2026</span>
+                </div>
+            </div>
+        </div>
     <?php endif; ?>
 </main>
 
+<!-- Modals -->
 <!-- Modal: Searchable Staff Directory & Add to Sheet -->
 <div class="att-modal-overlay no-print" id="att-modal-staff-directory">
     <div class="att-modal">
         <div class="att-modal-header">
-            <span id="att-dir-modal-title">Saved Staff Directory</span>
+            <span id="att-dir-modal-title">👥 Saved Staff Directory</span>
             <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
         </div>
         <div class="att-modal-body">
@@ -511,18 +432,17 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
             </div>
 
             <!-- Inline New Staff Form inside modal -->
-            <div id="att-new-staff-inline-form" style="display:none;background:#f8fafc;padding:12px;border:1px solid #cbd5e1;border-radius:4px;margin-bottom:12px;">
-                <h4 style="margin:0 0 8px 0;font-size:12px;color:#005f73;">Save New Staff Member</h4>
-                <div style="display:flex;gap:8px;">
-                    <input type="text" id="att-inline-emp-no" class="att-input" placeholder="ID / Emp No *" style="width:120px;">
-                    <input type="text" id="att-inline-name" class="att-input" placeholder="Full Name *" style="flex:1;">
+            <div id="att-new-staff-inline-form" style="display:none;background:var(--att-bg);padding:14px;border:1px solid var(--att-card-border);border-radius:8px;margin-bottom:14px;">
+                <h4 style="margin:0 0 10px 0;font-size:12.5px;color:var(--att-text);font-weight:800;">Register New Guard to Directory</h4>
+                <div style="display:flex;gap:10px;">
+                    <input type="text" id="att-inline-emp-no" class="att-input" placeholder="Staff ID (e.g. SG1003) *" style="width:140px;">
+                    <input type="text" id="att-inline-name" class="att-input" placeholder="Full Guard Name *" style="flex:1;">
                     <button type="button" class="att-btn att-btn-success" id="att-btn-save-inline-staff">Save &amp; Add</button>
                 </div>
             </div>
 
             <div class="att-staff-list-container" id="att-staff-directory-list">
-                <!-- Loaded dynamically via JavaScript -->
-                <div style="padding:16px;text-align:center;color:#64748b;">Loading saved staff list...</div>
+                <div style="padding:20px;text-align:center;color:var(--att-text-muted);">Loading saved staff list...</div>
             </div>
         </div>
         <div class="att-modal-footer">
@@ -535,22 +455,22 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
 <div class="att-modal-overlay no-print" id="att-modal-replace-staff">
     <div class="att-modal">
         <div class="att-modal-header">
-            <span>Replace Staff on Row</span>
+            <span>🔁 Replace Guard on Roster</span>
             <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
         </div>
         <div class="att-modal-body">
-            <p style="margin-top:0;font-size:12px;">Select another saved person to take over this row for <strong id="att-replace-target-name"></strong>:</p>
+            <p style="margin-top:0;font-size:13px;color:var(--att-text-muted);">Select another registered guard to take over this position for <strong id="att-replace-target-name" style="color:var(--att-text);"></strong>:</p>
             <input type="hidden" id="att-replace-row-id" value="">
-            <input type="text" id="att-replace-search-input" class="att-input" placeholder="Search replacement staff by ID or Name..." style="margin-bottom:8px;">
+            <input type="text" id="att-replace-search-input" class="att-input" placeholder="Search replacement guard by ID or Name..." style="margin-bottom:10px;width:100%;">
 
-            <div style="margin-bottom:10px;">
-                <label style="font-size:11px;font-weight:bold;cursor:pointer;">
-                    <input type="checkbox" id="att-replace-clear-codes"> Clear row's day codes (By default the codes stay)
+            <div style="margin-bottom:12px;background:var(--att-bg);padding:8px 12px;border-radius:6px;border:1px solid var(--att-card-border);">
+                <label style="font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="att-replace-clear-codes"> Clear row's day codes (Unchecked keeps existing shift assignments)
                 </label>
             </div>
 
             <div class="att-staff-list-container" id="att-replace-directory-list" style="max-height:220px;">
-                <div style="padding:16px;text-align:center;color:#64748b;">Type to search saved staff...</div>
+                <div style="padding:16px;text-align:center;color:var(--att-text-muted);">Type to search saved staff...</div>
             </div>
         </div>
         <div class="att-modal-footer">
@@ -561,19 +481,19 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
 
 <!-- Modal: Edit Staff Name / ID -->
 <div class="att-modal-overlay no-print" id="att-modal-edit-staff">
-    <div class="att-modal" style="width:400px;">
+    <div class="att-modal" style="width:420px;">
         <div class="att-modal-header">
-            <span>Edit Staff Details</span>
+            <span>✏️ Edit Staff Details</span>
             <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
         </div>
         <div class="att-modal-body">
             <input type="hidden" id="att-edit-row-id" value="">
             <div class="att-form-group">
-                <label for="att-edit-emp-no">Emp No:</label>
+                <label for="att-edit-emp-no">Staff ID / Emp No:</label>
                 <input type="text" id="att-edit-emp-no" class="att-input" required>
             </div>
             <div class="att-form-group">
-                <label for="att-edit-name">Staff Name:</label>
+                <label for="att-edit-name">Guard Full Name:</label>
                 <input type="text" id="att-edit-name" class="att-input" required>
             </div>
         </div>
@@ -588,7 +508,7 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
 <div class="att-modal-overlay no-print" id="att-modal-new-site">
     <div class="att-modal">
         <div class="att-modal-header">
-            <span>Create New Attendance Site</span>
+            <span>🏢 Register New Attendance Site</span>
             <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
         </div>
         <form method="POST" action="index.php?action=save_site">
@@ -596,11 +516,11 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
             <div class="att-modal-body">
                 <div class="att-form-group">
                     <label for="att-new-site-name">Site Name: *</label>
-                    <input type="text" id="att-new-site-name" name="site_name" class="att-input" required placeholder="e.g. NASA Building">
+                    <input type="text" id="att-new-site-name" name="site_name" class="att-input" required placeholder="e.g. Danat Al Rolla Building">
                 </div>
                 <div class="att-form-group">
                     <label for="att-new-site-code">Site Code / Acronym: (Optional)</label>
-                    <input type="text" id="att-new-site-code" name="site_code" class="att-input" placeholder="e.g. NASABLDG">
+                    <input type="text" id="att-new-site-code" name="site_code" class="att-input" placeholder="e.g. DAR-01">
                 </div>
                 <div style="display:flex;gap:12px;">
                     <div class="att-form-group" style="flex:1;">
@@ -636,23 +556,23 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
 <div class="att-modal-overlay no-print" id="att-modal-delete-site">
     <div class="att-modal">
         <div class="att-modal-header" style="background:#dc2626;color:#ffffff;">
-            <span>Delete Site</span>
+            <span>🗑️ Delete Site</span>
             <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
         </div>
         <form method="POST" action="index.php?action=delete_site">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(att_get_csrf_token()) ?>">
             <input type="hidden" name="site_id" value="<?= $sheet['site_id'] ?>">
             <div class="att-modal-body">
-                <p style="font-size:14px;color:#1e293b;margin:0 0 12px 0;">
+                <p style="font-size:14px;color:var(--att-text);margin:0 0 12px 0;">
                     Are you sure you want to delete site <strong><?= htmlspecialchars($sheet['site_name']) ?></strong>?
                 </p>
-                <div style="background:#fef2f2;border:1px solid #fecaca;padding:12px;border-radius:4px;color:#991b1b;font-size:12px;line-height:1.4;">
-                    ⚠️ This site will be removed from the active attendance site list. All historical roster records are safely preserved in the database.
+                <div style="background:var(--att-danger-bg);border:1px solid rgba(239,68,68,0.3);padding:14px;border-radius:6px;color:var(--att-danger);font-size:12.5px;line-height:1.4;">
+                    ⚠️ This site will be removed from the active site roster. Historical records are preserved in the MySQL database.
                 </div>
             </div>
             <div class="att-modal-footer">
                 <button type="button" class="att-btn att-btn-secondary att-modal-close">Cancel</button>
-                <button type="submit" class="att-btn att-btn-danger" style="background:#dc2626;color:#ffffff;border-color:#dc2626;">Yes, Delete Site</button>
+                <button type="submit" class="att-btn att-btn-danger">Yes, Delete Site</button>
             </div>
         </form>
     </div>
@@ -661,23 +581,22 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
 <!-- Modal: Additional Deployment Options -->
 <div class="att-modal-overlay no-print" id="att-modal-additional-deployment">
     <div class="att-modal" style="width:640px;">
-        <div class="att-modal-header" style="background:#0284c7;color:#ffffff;">
-            <span>⚡ Additional Deployment Options - <?= htmlspecialchars($sheet['site_name']) ?></span>
+        <div class="att-modal-header">
+            <span>⚡ Additional Deployment - <?= htmlspecialchars($sheet['site_name']) ?></span>
             <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
         </div>
         <div class="att-modal-body">
-            <!-- Add New Additional Deployment -->
-            <form method="POST" action="index.php?action=save_additional_deployment" style="background:#f8fafc;padding:14px;border:1px solid #cbd5e1;border-radius:6px;margin-bottom:16px;">
+            <form method="POST" action="index.php?action=save_additional_deployment" style="background:var(--att-bg);padding:16px;border:1px solid var(--att-card-border);border-radius:8px;margin-bottom:16px;">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(att_get_csrf_token()) ?>">
                 <input type="hidden" name="sheet_id" value="<?= $sheet['id'] ?>">
                 <input type="hidden" name="site_id" value="<?= $sheet['site_id'] ?>">
                 <input type="hidden" name="month" value="<?= $curMonth ?>">
                 <input type="hidden" name="year" value="<?= $curYear ?>">
 
-                <h4 style="margin:0 0 10px 0;font-size:13px;color:#0369a1;">+ Set Additional Deployment</h4>
+                <h4 style="margin:0 0 10px 0;font-size:13px;color:var(--att-primary);font-weight:800;">+ Configure Additional Shift Deployment</h4>
                 <div style="display:flex;gap:10px;margin-bottom:10px;">
                     <div style="flex:1;">
-                        <label style="display:block;font-size:11px;font-weight:bold;margin-bottom:3px;">Apply To Day:</label>
+                        <label style="display:block;font-size:11px;font-weight:bold;margin-bottom:4px;">Apply To Day:</label>
                         <select name="day_number" class="att-select" style="width:100%;">
                             <option value="all">-- All Days in <?= $monthName ?> --</option>
                             <?php for ($d = 1; $d <= $daysInMonth; $d++): ?>
@@ -686,49 +605,48 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
                         </select>
                     </div>
                     <div style="width:110px;">
-                        <label style="display:block;font-size:11px;font-weight:bold;margin-bottom:3px;">Add Day (+D):</label>
+                        <label style="display:block;font-size:11px;font-weight:bold;margin-bottom:4px;">Add Day (+D):</label>
                         <input type="number" name="add_day" class="att-input" value="0" min="0" style="width:100%;">
                     </div>
                     <div style="width:110px;">
-                        <label style="display:block;font-size:11px;font-weight:bold;margin-bottom:3px;">Add Night (+N):</label>
+                        <label style="display:block;font-size:11px;font-weight:bold;margin-bottom:4px;">Add Night (+N):</label>
                         <input type="number" name="add_night" class="att-input" value="0" min="0" style="width:100%;">
                     </div>
                 </div>
                 <div style="display:flex;gap:10px;align-items:flex-end;">
                     <div style="flex:1;">
-                        <label style="display:block;font-size:11px;font-weight:bold;margin-bottom:3px;">Reason / Notes: (Optional)</label>
-                        <input type="text" name="notes" class="att-input" placeholder="e.g. VIP Visit, Weekend Event, Extra Post" style="width:100%;">
+                        <label style="display:block;font-size:11px;font-weight:bold;margin-bottom:4px;">Reason / Notes:</label>
+                        <input type="text" name="notes" class="att-input" placeholder="e.g. Event Security, VIP Visit, Client Request" style="width:100%;">
                     </div>
-                    <button type="submit" class="att-btn att-btn-primary" style="background:#0284c7;border-color:#0284c7;white-space:nowrap;">Save Additional</button>
+                    <button type="submit" class="att-btn att-btn-primary" style="white-space:nowrap;">Save Additional</button>
                 </div>
             </form>
 
-            <!-- Current Additional Deployments on this sheet -->
-            <h4 style="margin:0 0 8px 0;font-size:12px;color:#334155;">Active Additional Deployments for <?= $monthName ?> <?= $curYear ?>:</h4>
+            <h4 style="margin:0 0 8px 0;font-size:12px;color:var(--att-text);font-weight:800;">Active Additional Deployments for <?= $monthName ?> <?= $curYear ?>:</h4>
             <?php if (empty($additionalDeployments)): ?>
-                <div style="padding:14px;background:#f1f5f9;border-radius:4px;text-align:center;color:#64748b;font-size:12px;">
-                    No additional deployments recorded for this sheet. Base site contract requirements apply (Day: <?= $siteReqDay ?>, Night: <?= $siteReqNight ?>).
+                <div style="padding:16px;background:var(--att-bg);border-radius:6px;text-align:center;color:var(--att-text-muted);font-size:12px;">
+                    No additional deployments active for this period. Standard contract requirements apply.
                 </div>
             <?php else: ?>
-                <div style="max-height:220px;overflow-y:auto;border:1px solid #cbd5e1;border-radius:4px;">
+                <div style="max-height:220px;overflow-y:auto;border:1px solid var(--att-card-border);border-radius:6px;">
                     <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;">
                         <thead>
-                            <tr style="background:#e2e8f0;font-weight:bold;">
-                                <th style="padding:6px;border-bottom:1px solid #cbd5e1;">Day</th>
-                                <th style="padding:6px;border-bottom:1px solid #cbd5e1;">+Day</th>
-                                <th style="padding:6px;border-bottom:1px solid #cbd5e1;">+Night</th>
-                                <th style="padding:6px;border-bottom:1px solid #cbd5e1;">Reason</th>
-                                <th style="padding:6px;border-bottom:1px solid #cbd5e1;">Action</th>
+                            <tr style="background:var(--att-bg);font-weight:800;">
+                                <th style="padding:8px;border-bottom:1px solid var(--att-card-border);">Day</th>
+                                <th style="padding:8px;border-bottom:1px solid var(--att-card-border);">+Day</th>
+                                <th style="padding:8px;border-bottom:1px solid var(--att-card-border);">+Night</th>
+                                <th style="padding:8px;border-bottom:1px solid var(--att-card-border);">Reason</th>
+                                <th style="padding:8px;border-bottom:1px solid var(--att-card-border);">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($additionalDeployments as $ad): ?>
-                                <tr style="border-bottom:1px solid #f1f5f9;">
-                                    <td style="padding:6px;font-weight:bold;">Day <?= $ad['day_number'] ?></td>
-                                    <td style="padding:6px;color:#0f766e;font-weight:bold;">+<?= $ad['add_day'] ?></td>
-                                    <td style="padding:6px;color:#0f766e;font-weight:bold;">+<?= $ad['add_night'] ?></td>
-                                    <td style="padding:6px;color:#475569;"><?= htmlspecialchars($ad['notes'] ?: '-') ?></td>
-                                    <td style="padding:6px;">
+                                <tr style="border-bottom:1px solid var(--att-card-border);">
+                                    <td style="padding:8px;font-weight:700;">Day <?= $ad['day_number'] ?></td>
+                                    <td style="padding:8px;color:#10b981;font-weight:800;">+<?= $ad['add_day'] ?></td>
+                                    <td style="padding:8px;color:#3b82f6;font-weight:800;">+<?= $ad['add_night'] ?></td>
+                                    <td style="padding:8px;color:var(--att-text-muted);"><?= htmlspecialchars($ad['notes'] ?: '-') ?></td>
+                                    <td style="padding:8px;">
                                         <form method="POST" action="index.php?action=delete_additional_deployment" style="display:inline;" onsubmit="return confirm('Remove additional deployment for Day <?= $ad['day_number'] ?>?');">
                                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(att_get_csrf_token()) ?>">
                                             <input type="hidden" name="sheet_id" value="<?= $sheet['id'] ?>">
@@ -736,7 +654,7 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
                                             <input type="hidden" name="day_number" value="<?= $ad['day_number'] ?>">
                                             <input type="hidden" name="month" value="<?= $curMonth ?>">
                                             <input type="hidden" name="year" value="<?= $curYear ?>">
-                                            <button type="submit" class="att-row-btn-icon" style="color:#dc2626;" title="Remove">🗑️</button>
+                                            <button type="submit" class="att-row-btn-icon" style="color:#ef4444;" title="Remove">🗑️</button>
                                         </form>
                                     </td>
                                 </tr>
@@ -756,7 +674,7 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
 <div class="att-modal-overlay no-print" id="att-modal-site-reqs">
     <div class="att-modal">
         <div class="att-modal-header">
-            <span>⚙️ Site Contract & Requirements - <?= htmlspecialchars($sheet['site_name']) ?></span>
+            <span>⚙️ Site Contract &amp; Shift Requirements</span>
             <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
         </div>
         <form method="POST" action="index.php?action=update_site_requirements">
@@ -767,7 +685,7 @@ $monthTotalDuties = $monthTotalDayShifts + $monthTotalNightShifts;
             <div class="att-modal-body">
                 <div class="att-form-group">
                     <label>Site Name:</label>
-                    <input type="text" class="att-input" value="<?= htmlspecialchars($sheet['site_name']) ?>" disabled style="background:#f1f5f9;">
+                    <input type="text" class="att-input" value="<?= htmlspecialchars($sheet['site_name']) ?>" disabled style="opacity:0.8;">
                 </div>
                 <div style="display:flex;gap:12px;">
                     <div class="att-form-group" style="flex:1;">
