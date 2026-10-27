@@ -48,3 +48,7 @@ vite.config.ts.timestamp*
 
 # Archives
 *.zip
+
+# Deploy export folders
+UPLOAD_TO_HOSTINGER/
+
