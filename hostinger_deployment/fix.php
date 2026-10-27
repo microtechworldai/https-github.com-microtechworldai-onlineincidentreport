@@ -180,6 +180,14 @@ try {
         $db->exec("ALTER TABLE sites ADD COLUMN supervisor_qr_token_encrypted TEXT NULL");
     }
     $results[] = "✅ All checkpoint table columns verified & healthy.";
+
+    // Ensure all Attendance & Payroll tables exist (att_sites, att_staff, att_sheets, etc.)
+    $schemaFile = $baseDir . '/attendance/docs/schema.sql';
+    if (file_exists($schemaFile)) {
+        $attSql = file_get_contents($schemaFile);
+        $db->exec($attSql);
+        $results[] = "✅ Attendance & Payroll tables (att_sites, att_staff, att_sheets, att_rows, att_cells) verified & active.";
+    }
 } catch (Throwable $e) {
     $results[] = "⚠️ Database check notice: " . htmlspecialchars($e->getMessage());
 }
