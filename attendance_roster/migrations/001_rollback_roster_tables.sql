@@ -12,3 +12,4 @@ DROP TABLE IF EXISTS `roster_entries`;
 DROP TABLE IF EXISTS `roster_assignments`;
 DROP TABLE IF EXISTS `roster_sites_config`;
 DROP TABLE IF EXISTS `roster_staff`;
+

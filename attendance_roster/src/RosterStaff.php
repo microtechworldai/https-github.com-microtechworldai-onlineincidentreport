@@ -174,3 +174,4 @@ class RosterStaff {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
+

@@ -142,3 +142,4 @@ CREATE TABLE IF NOT EXISTS `roster_alerts` (
   KEY `idx_roster_alerts_date` (`alert_date`),
   KEY `idx_roster_alerts_res` (`is_resolved`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

@@ -38,3 +38,4 @@ if (php_sapi_name() === 'cli' && isset($argv[0]) && realpath($argv[0]) === __FIL
     $action = $argv[1] ?? 'up';
     roster_run_migration($action);
 }
+

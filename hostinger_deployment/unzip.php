@@ -7,6 +7,7 @@ header('Content-Type: text/html; charset=utf-8');
 
 $zipNames = [
     'HOSTINGER_UPDATE_PATCH_LATEST.zip',
+    'UPLOAD_TO_HOSTINGER.zip',
     'UPLOAD_TO_HOSTINGER_public_html.zip',
     'hostinger_deployment.zip'
 ];
@@ -56,8 +57,10 @@ if ($res === TRUE) {
     echo "<p style='color:#94a3b8;'>Timestamp: <strong style='color:#facc15;'>{$zipMtime}</strong></p>";
     echo "<p style='color:#94a3b8;'>Extracted into: <br><code style='color:#38bdf8; background:#0f172a; padding:6px 12px; border-radius:4px; display:inline-block; margin-top:6px;'>" . htmlspecialchars($targetDir) . "</code></p>";
     echo "<div style='margin-top:24px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;'>";
-    echo "<a href='attendance/index.php?action=sheet' style='display:inline-block; padding:12px 24px; background:#10b981; color:white; text-decoration:none; border-radius:8px; font-weight:bold;'>👉 View Attendance Sheet</a>";
-    echo "<a href='attendance/index.php?action=payroll' style='display:inline-block; padding:12px 24px; background:#0284c7; color:white; text-decoration:none; border-radius:8px; font-weight:bold;'>👉 View Consolidated Payroll</a>";
+    echo "<a href='attendance_roster/index.php' style='display:inline-block; padding:12px 24px; background:#0f766e; color:white; text-decoration:none; border-radius:8px; font-weight:bold;'>🏢 New Attendance Roster</a>";
+    echo "<a href='attendance/index.php?action=sheet' style='display:inline-block; padding:12px 24px; background:#10b981; color:white; text-decoration:none; border-radius:8px; font-weight:bold;'>👉 Attendance Sheet</a>";
+    echo "<a href='attendance/index.php?action=payroll' style='display:inline-block; padding:12px 24px; background:#0284c7; color:white; text-decoration:none; border-radius:8px; font-weight:bold;'>👉 Consolidated Payroll</a>";
+    echo "<a href='admin/index.php' style='display:inline-block; padding:12px 24px; background:#475569; color:white; text-decoration:none; border-radius:8px; font-weight:bold;'>🛡️ Admin Panel</a>";
     echo "</div>";
     echo "</div></div>";
 } else {

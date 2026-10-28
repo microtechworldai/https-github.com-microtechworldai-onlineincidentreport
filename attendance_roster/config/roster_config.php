@@ -55,17 +55,48 @@ function roster_require_super_admin() {
     }
 }
 
-// 5. Database Connection Helper (Reuses system PDO without altering external files)
+// 5. Automated Zero-Crash Schema Initializer
+function roster_auto_ensure_schema(PDO $pdo) {
+    static $checked = false;
+    if ($checked) return;
+    $checked = true;
+
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'roster_staff'");
+        if (!$stmt->fetch()) {
+            $migrationSql = dirname(__DIR__) . '/migrations/001_create_roster_tables.sql';
+            if (file_exists($migrationSql)) {
+                $sql = file_get_contents($migrationSql);
+                $queries = array_filter(array_map('trim', explode(';', $sql)));
+                foreach ($queries as $q) {
+                    if (!empty($q)) {
+                        $pdo->exec($q);
+                    }
+                }
+            }
+        }
+    } catch (Throwable $e) {
+        @error_log("[" . date('Y-m-d H:i:s') . "] Roster Auto-Schema Error: " . $e->getMessage() . "\n");
+    }
+}
+
+// 6. Database Connection Helper (Reuses system PDO or connects seamlessly on Hostinger)
 function roster_get_db() {
     static $pdo = null;
     if ($pdo !== null) {
         return $pdo;
     }
 
-    // Try parent db.php if available
-    $parentDb = dirname(__DIR__) . '/hostinger_deployment/includes/db.php';
-    if (!class_exists('Database') && file_exists($parentDb)) {
-        @require_once $parentDb;
+    // Priority 1: Check root includes/db.php (when deployed at Hostinger public_html/attendance_roster)
+    $hostingerDb = dirname(__DIR__) . '/includes/db.php';
+    if (!class_exists('Database') && file_exists($hostingerDb)) {
+        @require_once $hostingerDb;
+    }
+
+    // Priority 2: Check local development hostinger_deployment/includes/db.php
+    $localDevDb = dirname(dirname(__DIR__)) . '/hostinger_deployment/includes/db.php';
+    if (!class_exists('Database') && file_exists($localDevDb)) {
+        @require_once $localDevDb;
     }
 
     if (class_exists('Database')) {
@@ -73,31 +104,35 @@ function roster_get_db() {
             $mainPdo = Database::getInstance();
             if ($mainPdo instanceof PDO) {
                 $pdo = $mainPdo;
+                roster_auto_ensure_schema($pdo);
                 return $pdo;
             }
         } catch (Throwable $e) {}
     }
 
-    // Fallback: connect to local MySQL instance
-    $host = getenv('DB_HOST') ?: 'localhost';
-    $dbname = getenv('DB_NAME') ?: 'uss_attendance';
-    $user = getenv('DB_USER') ?: 'root';
-    $pass = getenv('DB_PASS') ?: '';
-    $port = getenv('DB_PORT') ?: 3306;
+    // Fallback: connect using system DB_* constants or environment variables
+    $host = defined('DB_HOST') ? DB_HOST : (getenv('DB_HOST') ?: 'localhost');
+    $dbname = defined('DB_NAME') ? DB_NAME : (getenv('DB_NAME') ?: 'uss_attendance');
+    $user = defined('DB_USER') ? DB_USER : (getenv('DB_USER') ?: 'root');
+    $pass = defined('DB_PASS') ? DB_PASS : (getenv('DB_PASS') ?: '');
+    $port = defined('DB_PORT') ? DB_PORT : (getenv('DB_PORT') ?: 3306);
+    $charset = defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4';
 
-    $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
+    $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
     $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
-        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
+        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset} COLLATE utf8mb4_unicode_ci"
     ];
 
     try {
         $pdo = new PDO($dsn, $user, $pass, $options);
+        roster_auto_ensure_schema($pdo);
         return $pdo;
     } catch (PDOException $e) {
         http_response_code(503);
         die("<h3>Attendance Roster Database Unavailable</h3><p>" . htmlspecialchars($e->getMessage()) . "</p>");
     }
 }
+

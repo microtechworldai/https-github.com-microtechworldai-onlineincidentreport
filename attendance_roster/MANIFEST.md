@@ -72,3 +72,4 @@
 - Controlled in `config/roster_config.php` via `define('ROSTER_ENABLED', true);`.
 - Setting to `false` returns HTTP 503 Service Unavailable and halts all execution.
 - Executing `migrations/001_rollback_roster_tables.sql` drops all `roster_*` tables, leaving the rest of the USS system completely untouched.
+

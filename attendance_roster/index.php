@@ -148,3 +148,4 @@ try {
     }
     echo '<div style="padding:20px;color:#b91c1c;font-family:sans-serif;"><h3>Roster Error</h3><p>' . htmlspecialchars($e->getMessage()) . '</p></div>';
 }
+
