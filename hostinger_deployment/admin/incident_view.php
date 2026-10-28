@@ -508,7 +508,7 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="form-group">
                         <label class="form-label" style="font-weight: 800; color: #000000 !important;">Recommendation / Action Taken</label>
-                        <textarea name="recommendation_action_taken" class="form-control" rows="2" placeholder="Corrective actions initiated at post..." style="font-weight: 700; width: 100%; box-sizing: border-box;"><?= htmlspecialchars($incident['recommendation_action_taken'] ?? '') ?></textarea>
+                        <textarea name="recommendation_action_taken" class="form-control" rows="2" placeholder="Corrective actions initiated at post..." style="font-weight: 700; width: 100%; box-sizing: border-box; text-align: left !important; vertical-align: top !important; padding: 8px 12px !important; line-height: 1.4 !important; font-family: inherit !important; resize: vertical;"><?= htmlspecialchars($incident['recommendation_action_taken'] ?? '') ?></textarea>
                     </div>
                 </div>
 
@@ -580,7 +580,7 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="form-group">
                         <label class="form-label" style="font-weight: 800; color: #000000 !important;">Client Action Taken</label>
-                        <textarea name="client_manager_action_taken" class="form-control" rows="2" placeholder="Client acknowledgement or notes..." style="font-weight: 700; width: 100%; box-sizing: border-box;"><?= htmlspecialchars($incident['client_manager_action_taken'] ?? '') ?></textarea>
+                        <textarea name="client_manager_action_taken" class="form-control" rows="2" placeholder="Client acknowledgement or notes..." style="font-weight: 700; width: 100%; box-sizing: border-box; text-align: left !important; vertical-align: top !important; padding: 8px 12px !important; line-height: 1.4 !important; font-family: inherit !important; resize: vertical;"><?= htmlspecialchars($incident['client_manager_action_taken'] ?? '') ?></textarea>
                     </div>
 
                     <div class="form-group">

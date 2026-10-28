@@ -3197,3 +3197,21 @@ aside.app-sidebar {
   color: #FFFFFF !important;
   font-weight: 800 !important;
 }
+
+/* Top-left text and placeholder alignment for sign-off textareas */
+textarea,
+textarea.form-control,
+textarea[name="recommendation_action_taken"],
+textarea[name="client_manager_action_taken"] {
+  text-align: left !important;
+  vertical-align: top !important;
+  line-height: 1.4 !important;
+  padding-top: 8px !important;
+  padding-left: 10px !important;
+}
+
+textarea::placeholder,
+textarea.form-control::placeholder {
+  text-align: left !important;
+  vertical-align: top !important;
+}

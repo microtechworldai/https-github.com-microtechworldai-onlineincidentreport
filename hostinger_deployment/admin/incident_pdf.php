@@ -776,8 +776,10 @@ $companyDisplayName = !empty($settings['company_name'])
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            align-items: stretch !important;
             border-bottom: 1.8px solid #000 !important;
             box-sizing: border-box !important;
+            text-align: left !important;
         }
 
         .action-text {
@@ -792,6 +794,10 @@ $companyDisplayName = !empty($settings['company_name'])
             line-height: 1.30 !important;
             max-height: 9.5mm !important;
             overflow: hidden !important;
+            text-align: left !important;
+            vertical-align: top !important;
+            align-self: flex-start !important;
+            width: 100% !important;
         }
 
         .signoff-bottom {
@@ -1093,8 +1099,8 @@ $companyDisplayName = !empty($settings['company_name'])
         </tr>
         <tr>
             <td colspan="2" style="padding: 0; border-bottom: 1.8px solid #000;">
-                <div class="action-box">
-                    <div class="action-text">
+                <div class="action-box" style="text-align: left !important;">
+                    <div class="action-text" style="text-align: left !important; vertical-align: top !important; align-self: flex-start !important; width: 100% !important;">
                         <?= nl2br(htmlspecialchars($incident['recommendation_action_taken'] ?: '')) ?>
                     </div>
                     <div class="signoff-bottom">
@@ -1120,8 +1126,8 @@ $companyDisplayName = !empty($settings['company_name'])
         </tr>
         <tr>
             <td colspan="2" style="padding: 0; border-bottom: 1.8px solid #000;">
-                <div class="action-box">
-                    <div class="action-text">
+                <div class="action-box" style="text-align: left !important;">
+                    <div class="action-text" style="text-align: left !important; vertical-align: top !important; align-self: flex-start !important; width: 100% !important;">
                         <?= nl2br(htmlspecialchars($incident['client_manager_action_taken'] ?: '')) ?>
                     </div>
                     <div class="signoff-bottom">
