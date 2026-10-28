@@ -7,13 +7,21 @@ $destPublicHtml = 'C:\Users\micro\OneDrive\Desktop\public_html'
 
 Write-Host ">>> Starting Hostinger All-in-One Deployment Packaging..."
 
-# 1. Sync Attendance module
+# 1. Sync Core Assets & Styles
+Copy-Item -Path "$destDeployment\assets\*" -Destination "$destUpload\assets" -Recurse -Force
+Write-Host "Copied assets to UPLOAD_TO_HOSTINGER\assets"
+
+# 2. Sync Includes (Theme Picker & Bootstrapper)
+Copy-Item -Path "$destDeployment\includes\*" -Destination "$destUpload\includes" -Recurse -Force
+Write-Host "Copied includes to UPLOAD_TO_HOSTINGER\includes"
+
+# 3. Sync Attendance module
 $attSrc = "$destDeployment\attendance"
 $attDest = "$destUpload\attendance"
 Copy-Item -Path "$attSrc\*" -Destination $attDest -Recurse -Force
 Write-Host "Copied attendance to UPLOAD_TO_HOSTINGER\attendance"
 
-# 2. Sync Attendance Roster
+# 4. Sync Attendance Roster
 $rosterSrc = "$rootProject\attendance_roster"
 $rosterDestUpload = "$destUpload\attendance_roster"
 $rosterDestDeploy = "$destDeployment\attendance_roster"
@@ -30,13 +38,13 @@ if (-not (Test-Path $rosterDestDeploy)) {
 Copy-Item -Path "$rosterSrc\*" -Destination $rosterDestDeploy -Recurse -Force
 Write-Host "Copied attendance_roster to hostinger_deployment\attendance_roster"
 
-# 3. Sync to public_html if present
+# 5. Sync to public_html if present
 if (Test-Path $destPublicHtml) {
     Copy-Item -Path "$destUpload\*" -Destination $destPublicHtml -Recurse -Force
     Write-Host "Copied all root files to public_html"
 }
 
-# 4. Build Deployment ZIP packages
+# 6. Build Deployment ZIP packages
 $zipSource = $destUpload
 $zipPaths = @(
     "$rootProject\HOSTINGER_UPDATE_PATCH_LATEST.zip",

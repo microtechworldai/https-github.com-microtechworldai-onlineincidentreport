@@ -280,6 +280,360 @@
   --chip-low-text: #10B981;
 }
 
+/* ====================================================================
+ * 4B. ADDITIONAL THEMES (REFERENCE DESIGNS: IMAGES 1 - 5)
+ * ==================================================================== */
+
+/* THEME 11: STUDENT RESULT DASHBOARD (Navy Vibrant) - Reference Image 1 */
+[data-theme="student-navy"], [data-theme="theme-student"], [data-theme="theme-11"] {
+  --sidebar-bg: #0C1427;
+  --sidebar-text: #FFFFFF;
+  --sidebar-muted: #8FA0B5;
+  --sidebar-item-text: #8FA0B5;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-hover-text: #FFFFFF;
+  --sidebar-active-bg: #2563EB;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-icon: #FFFFFF;
+  --sidebar-active-shadow: 0 4px 14px rgba(37, 99, 235, 0.40);
+  --sidebar-divider: rgba(255, 255, 255, 0.08);
+  --sidebar-footer-bg: #080D1A;
+
+  --dashboard-bg: #F3F6FC;
+  --card-bg: #FFFFFF;
+  --card-bg-hover: #F8FAFC;
+  --card-border: #E2E8F0;
+  --card-shadow: 0 1px 3px rgba(12, 20, 39, 0.04), 0 4px 12px rgba(12, 20, 39, 0.03);
+  --card-shadow-hover: 0 4px 12px rgba(12, 20, 39, 0.08);
+  --border-color: #E2E8F0;
+  --border-subtle: #E2E8F0;
+
+  --header-bg: #FFFFFF;
+  --header-border: #E2E8F0;
+  --header-title: #0F172A;
+  --header-sub: #64748B;
+
+  --brand-primary: #2563EB;
+  --brand-primary-hover: #1D4ED8;
+  --brand-navy: #0C1427;
+
+  --table-th-bg: #F1F5F9;
+  --table-th-text: #0F172A;
+  --table-th-border: #E2E8F0;
+  --table-td-border: #F1F5F9;
+  --table-hover-bg: #F8FAFC;
+  --table-text: #0F172A;
+
+  --input-bg: #FFFFFF;
+  --input-border: #CBD5E1;
+  --input-text: #0F172A;
+  --input-focus-border: #2563EB;
+  --input-focus-ring: rgba(37, 99, 235, 0.20);
+
+  --bg: #F3F6FC;
+  --surface: #FFFFFF;
+  --surface-2: #F1F5F9;
+  --border: #E2E8F0;
+  --border-strong: #94A3B8;
+  --text: #0F172A;
+  --text-2: #334155;
+  --text-muted: #64748B;
+  --heading: #0F172A;
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --link: #2563EB;
+  --header-band: #0C1427;
+  --accent: #8B5CF6;
+  --success: #059669;
+  --warning: #EA580C;
+  --danger: #EF4444;
+  --info: #0284C7;
+  --focus: #2563EB;
+
+  --card-shadow: 0 2px 8px rgba(12, 20, 39, 0.05);
+  --modal-overlay: rgba(12, 20, 39, 0.65);
+}
+
+/* THEME 12: ORIPIOFIN (Emerald Fintech) - Reference Image 2 */
+[data-theme="oripiofin"], [data-theme="theme-oripiofin"], [data-theme="theme-12"] {
+  --sidebar-bg: #FFFFFF;
+  --sidebar-text: #111827;
+  --sidebar-muted: #94A3B8;
+  --sidebar-item-text: #475569;
+  --sidebar-hover: #F1F5F9;
+  --sidebar-hover-text: #111827;
+  --sidebar-active-bg: #111827;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-icon: #FFFFFF;
+  --sidebar-active-shadow: 0 4px 12px rgba(17, 24, 39, 0.25);
+  --sidebar-divider: #E5E7EB;
+  --sidebar-footer-bg: #F9FAFB;
+
+  --dashboard-bg: #F4F6F8;
+  --card-bg: #FFFFFF;
+  --card-bg-hover: #FAFBFC;
+  --card-border: #E5E7EB;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02);
+  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --border-color: #E5E7EB;
+  --border-subtle: #E5E7EB;
+
+  --header-bg: #FFFFFF;
+  --header-border: #E5E7EB;
+  --header-title: #111827;
+  --header-sub: #6B7280;
+
+  --brand-primary: #059669;
+  --brand-primary-hover: #047857;
+  --brand-navy: #111827;
+
+  --table-th-bg: #F9FAFB;
+  --table-th-text: #111827;
+  --table-th-border: #E5E7EB;
+  --table-td-border: #F3F4F6;
+  --table-hover-bg: #F9FAFB;
+  --table-text: #111827;
+
+  --input-bg: #FFFFFF;
+  --input-border: #D1D5DB;
+  --input-text: #111827;
+  --input-focus-border: #059669;
+  --input-focus-ring: rgba(5, 150, 105, 0.20);
+
+  --bg: #F4F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #F3F4F6;
+  --border: #E5E7EB;
+  --border-strong: #9CA3AF;
+  --text: #111827;
+  --text-2: #374151;
+  --text-muted: #6B7280;
+  --heading: #111827;
+  --primary: #059669;
+  --primary-hover: #047857;
+  --link: #059669;
+  --header-band: #111827;
+  --accent: #10B981;
+  --success: #059669;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --info: #0284C7;
+  --focus: #059669;
+
+  --card-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  --modal-overlay: rgba(17, 24, 39, 0.6);
+}
+
+/* THEME 13: INVENTORY MANAGEMENT (Powder Blue & Slate Teal) - Reference Image 3 */
+[data-theme="inventory-slate"], [data-theme="theme-inventory"], [data-theme="theme-13"] {
+  --sidebar-bg: #1E3A4B;
+  --sidebar-text: #FFFFFF;
+  --sidebar-muted: #8BA2B2;
+  --sidebar-item-text: #9BB3C4;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-hover-text: #FFFFFF;
+  --sidebar-active-bg: #2D6A7D;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-icon: #FFFFFF;
+  --sidebar-active-shadow: 0 4px 14px rgba(45, 106, 125, 0.40);
+  --sidebar-divider: rgba(255, 255, 255, 0.08);
+  --sidebar-footer-bg: #152A36;
+
+  --dashboard-bg: #DCE7EE;
+  --card-bg: #FFFFFF;
+  --card-bg-hover: #F4F8FA;
+  --card-border: #CBDDE6;
+  --card-shadow: 0 2px 8px rgba(30, 58, 75, 0.06), 0 6px 16px rgba(30, 58, 75, 0.04);
+  --card-shadow-hover: 0 4px 16px rgba(30, 58, 75, 0.10);
+  --border-color: #CBDDE6;
+  --border-subtle: #CBDDE6;
+
+  --header-bg: #FFFFFF;
+  --header-border: #CBDDE6;
+  --header-title: #1E3A4B;
+  --header-sub: #526A7A;
+
+  --brand-primary: #2D6A7D;
+  --brand-primary-hover: #225362;
+  --brand-navy: #1E3A4B;
+
+  --table-th-bg: #E7EEF3;
+  --table-th-text: #1E3A4B;
+  --table-th-border: #CBDDE6;
+  --table-td-border: #E2EBF0;
+  --table-hover-bg: #F0F5F8;
+  --table-text: #1E293B;
+
+  --input-bg: #FFFFFF;
+  --input-border: #B8CFDC;
+  --input-text: #1E293B;
+  --input-focus-border: #2D6A7D;
+  --input-focus-ring: rgba(45, 106, 125, 0.20);
+
+  --bg: #DCE7EE;
+  --surface: #FFFFFF;
+  --surface-2: #E7EEF3;
+  --border: #CBDDE6;
+  --border-strong: #8BA2B2;
+  --text: #1E293B;
+  --text-2: #334155;
+  --text-muted: #526A7A;
+  --heading: #1E3A4B;
+  --primary: #2D6A7D;
+  --primary-hover: #225362;
+  --link: #2D6A7D;
+  --header-band: #1E3A4B;
+  --accent: #36798E;
+  --success: #059669;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --info: #2D6A7D;
+  --focus: #2D6A7D;
+
+  --card-shadow: 0 2px 8px rgba(30, 58, 75, 0.06);
+  --modal-overlay: rgba(30, 58, 75, 0.65);
+}
+
+/* THEME 14: NEXORA CRM (Midnight Cyan) - Reference Image 4 */
+[data-theme="nexora-crm"], [data-theme="theme-nexora"], [data-theme="theme-14"] {
+  --sidebar-bg: #0B162C;
+  --sidebar-text: #FFFFFF;
+  --sidebar-muted: #8FA0B5;
+  --sidebar-item-text: #8FA0B5;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-hover-text: #FFFFFF;
+  --sidebar-active-bg: #0EA5E9;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-icon: #FFFFFF;
+  --sidebar-active-shadow: 0 4px 14px rgba(14, 165, 233, 0.45);
+  --sidebar-divider: rgba(255, 255, 255, 0.08);
+  --sidebar-footer-bg: #070E1C;
+
+  --dashboard-bg: #F8FAFC;
+  --card-bg: #FFFFFF;
+  --card-bg-hover: #F1F5F9;
+  --card-border: #E2E8F0;
+  --card-shadow: 0 1px 3px rgba(11, 22, 44, 0.04), 0 4px 12px rgba(11, 22, 44, 0.03);
+  --card-shadow-hover: 0 4px 14px rgba(11, 22, 44, 0.08);
+  --border-color: #E2E8F0;
+  --border-subtle: #E2E8F0;
+
+  --header-bg: #FFFFFF;
+  --header-border: #E2E8F0;
+  --header-title: #0F172A;
+  --header-sub: #64748B;
+
+  --brand-primary: #0EA5E9;
+  --brand-primary-hover: #0284C7;
+  --brand-navy: #0B162C;
+
+  --table-th-bg: #F1F5F9;
+  --table-th-text: #0F172A;
+  --table-th-border: #E2E8F0;
+  --table-td-border: #F1F5F9;
+  --table-hover-bg: #F8FAFC;
+  --table-text: #0F172A;
+
+  --input-bg: #FFFFFF;
+  --input-border: #CBD5E1;
+  --input-text: #0F172A;
+  --input-focus-border: #0EA5E9;
+  --input-focus-ring: rgba(14, 165, 233, 0.20);
+
+  --bg: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-2: #F1F5F9;
+  --border: #E2E8F0;
+  --border-strong: #94A3B8;
+  --text: #0F172A;
+  --text-2: #334155;
+  --text-muted: #64748B;
+  --heading: #0F172A;
+  --primary: #0EA5E9;
+  --primary-hover: #0284C7;
+  --link: #0EA5E9;
+  --header-band: #0B162C;
+  --accent: #06B6D4;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #0284C7;
+  --focus: #0EA5E9;
+
+  --card-shadow: 0 1px 4px rgba(11, 22, 44, 0.05);
+  --modal-overlay: rgba(11, 22, 44, 0.65);
+}
+
+/* THEME 15: EDUSPHERE (Royal Indigo & Periwinkle) - Reference Image 5 */
+[data-theme="edusphere-indigo"], [data-theme="theme-edusphere"], [data-theme="theme-15"] {
+  --sidebar-bg: #0D1B3E;
+  --sidebar-text: #FFFFFF;
+  --sidebar-muted: #94A3B8;
+  --sidebar-item-text: #94A3B8;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-hover-text: #FFFFFF;
+  --sidebar-active-bg: #4F46E5;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-icon: #FFFFFF;
+  --sidebar-active-shadow: 0 4px 14px rgba(79, 70, 229, 0.45);
+  --sidebar-divider: rgba(255, 255, 255, 0.08);
+  --sidebar-footer-bg: #081126;
+
+  --dashboard-bg: #F3F4FA;
+  --card-bg: #FFFFFF;
+  --card-bg-hover: #F8F9FC;
+  --card-border: #E5E7EB;
+  --card-shadow: 0 2px 8px rgba(13, 27, 62, 0.04), 0 8px 24px rgba(13, 27, 62, 0.03);
+  --card-shadow-hover: 0 4px 16px rgba(13, 27, 62, 0.08);
+  --border-color: #E5E7EB;
+  --border-subtle: #E5E7EB;
+
+  --header-bg: #FFFFFF;
+  --header-border: #E5E7EB;
+  --header-title: #1E1B4B;
+  --header-sub: #4338CA;
+
+  --brand-primary: #4F46E5;
+  --brand-primary-hover: #4338CA;
+  --brand-navy: #0D1B3E;
+
+  --table-th-bg: #EEF0F8;
+  --table-th-text: #1E1B4B;
+  --table-th-border: #E5E7EB;
+  --table-td-border: #EEF0F8;
+  --table-hover-bg: #F6F7FB;
+  --table-text: #1E1B4B;
+
+  --input-bg: #FFFFFF;
+  --input-border: #D1D5DB;
+  --input-text: #1E1B4B;
+  --input-focus-border: #4F46E5;
+  --input-focus-ring: rgba(79, 70, 229, 0.20);
+
+  --bg: #F3F4FA;
+  --surface: #FFFFFF;
+  --surface-2: #EEF0F8;
+  --border: #E5E7EB;
+  --border-strong: #94A3B8;
+  --text: #1E1B4B;
+  --text-2: #312E81;
+  --text-muted: #4338CA;
+  --heading: #1E1B4B;
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --link: #4F46E5;
+  --header-band: #0D1B3E;
+  --accent: #8B5CF6;
+  --success: #059669;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --info: #3B82F6;
+  --focus: #4F46E5;
+
+  --card-shadow: 0 2px 8px rgba(13, 27, 62, 0.05);
+  --modal-overlay: rgba(13, 27, 62, 0.65);
+}
+
 /* 5. ALWAYS-LIGHT PRINT & EXPORT OVERRIDE */
 @media print {
   :root, body, [data-theme="dark"], [data-theme="light"] {
