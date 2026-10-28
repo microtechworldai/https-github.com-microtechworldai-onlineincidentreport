@@ -988,7 +988,7 @@ $companyDisplayName = !empty($settings['company_name'])
             <td class="col-side-label" rowspan="2" style="width: 16%; font-weight: bold; font-size: 10.5pt; text-align: center; vertical-align: middle; border-right: 1.5px solid #000; border-bottom: 1.5px solid #000; background: #ffffff; color: #000000; padding: 4px;">
                 Incident<br>Description
             </td>
-            <td style="background: #ffffff; color: #000000; font-weight: bold; font-style: italic; font-size: 8.5pt; padding: 3.5px 8px; border-bottom: 1px solid #000;">
+            <td style="background: #002266 !important; color: #ffffff !important; font-weight: bold; font-style: italic; font-size: 8.5pt; padding: 3.5px 8px; border-bottom: 1px solid #000;">
                 (Explain What, Where, When, Who, Why and How action taken)
             </td>
         </tr>
