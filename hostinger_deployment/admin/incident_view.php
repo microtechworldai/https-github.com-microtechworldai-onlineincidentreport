@@ -9,7 +9,7 @@ require_once __DIR__ . '/../includes/functions.php';
 
 require_admin_auth();
 
-$id = (int)($_GET['id'] ?? 0);
+$id = (int)($_GET['id'] ?? ($_POST['id'] ?? 0));
 if (!$id) {
     header("Location: " . APP_URL . "/admin/incidents.php");
     exit;
@@ -19,9 +19,21 @@ $db = get_db();
 $msg = '';
 $msgType = 'success';
 
-// Auto-heal missing columns on incidents table to avoid 500 crashes
+// Date cleaner helper to prevent MySQL 1292 Incorrect date value errors
+if (!function_exists('safe_mysql_date')) {
+    function safe_mysql_date($d) {
+        if (empty($d)) return null;
+        $d = trim((string)$d);
+        if ($d === '' || $d === '0000-00-00') return null;
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) return $d;
+        $ts = strtotime(str_replace('/', '-', $d));
+        return $ts ? date('Y-m-d', $ts) : null;
+    }
+}
+
+// Auto-heal missing columns on incidents table with case-insensitivity to avoid 500 crashes
 try {
-    $existingCols = $db->query("DESCRIBE incidents")->fetchAll(PDO::FETCH_COLUMN);
+    $existingCols = array_map('strtolower', $db->query("DESCRIBE incidents")->fetchAll(PDO::FETCH_COLUMN));
     $requiredCols = [
         'site_supervisor_name' => "VARCHAR(150) NULL",
         'site_supervisor_id' => "VARCHAR(100) NULL",
@@ -42,10 +54,12 @@ try {
         'witness_3' => "TEXT NULL"
     ];
     foreach ($requiredCols as $col => $def) {
-        if (!in_array($col, $existingCols)) {
+        if (!in_array(strtolower($col), $existingCols)) {
             $db->exec("ALTER TABLE incidents ADD COLUMN `{$col}` {$def}");
         }
     }
+    // Widen status to VARCHAR(50) so custom/transition statuses never fail on strict MySQL enums
+    $db->exec("ALTER TABLE incidents MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Submitted'");
 } catch (Exception $e) {}
 
 // Fetch Incident Record upfront so existing signatures and status are preserved
@@ -68,17 +82,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_management'])
     $newStatus = trim($_POST['status'] ?? ($incident['status'] ?? 'Submitted'));
     $supervisorName = trim($_POST['site_supervisor_name'] ?? '');
     $supervisorId = trim($_POST['site_supervisor_id'] ?? '');
-    $supervisorDate = !empty($_POST['site_supervisor_date']) ? $_POST['site_supervisor_date'] : null;
+    $supervisorDate = safe_mysql_date($_POST['site_supervisor_date'] ?? null);
     $recommendationAction = trim($_POST['recommendation_action_taken'] ?? '');
     
     $opsManagerName = trim($_POST['operations_manager_name'] ?? '');
     $opsManagerId = trim($_POST['operations_manager_id'] ?? '');
-    $opsManagerDate = !empty($_POST['operations_manager_date']) ? $_POST['operations_manager_date'] : null;
+    $opsManagerDate = safe_mysql_date($_POST['operations_manager_date'] ?? null);
 
     $clientManagerName = trim($_POST['client_manager_name'] ?? '');
     $clientManagerId = trim($_POST['client_manager_id'] ?? '');
     $clientManagerAction = trim($_POST['client_manager_action_taken'] ?? '');
-    $clientManagerDate = !empty($_POST['client_manager_date']) ? $_POST['client_manager_date'] : null;
+    $clientManagerDate = safe_mysql_date($_POST['client_manager_date'] ?? null);
 
     $supSig = !empty($_POST['remove_supervisor_sig']) ? null : ($incident['site_supervisor_signature'] ?? null);
     $opsSig = !empty($_POST['remove_ops_sig']) ? null : ($incident['operations_manager_signature'] ?? null);
@@ -480,7 +494,8 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="card" style="margin-bottom: 24px;">
             <h3 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Official Management Sign-Off</h3>
 
-            <form method="POST" action="" enctype="multipart/form-data">
+            <form method="POST" action="incident_view.php?id=<?= $id ?>" enctype="multipart/form-data">
+                <input type="hidden" name="id" value="<?= $id ?>">
                 <input type="hidden" name="update_management" value="1">
                 <input type="hidden" name="save_signoff" value="1">
 
@@ -664,7 +679,7 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 14px; font-weight: 800;">
+                <button type="submit" name="save_signoff" value="1" class="btn btn-primary" style="width: 100%; margin-top: 14px; font-weight: 800;">
                     Save Management Sign-Off
                 </button>
             </form>
