@@ -52,6 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $incOther = trim($_POST['incident_other_text'] ?? '');
     $notifiedOther = trim($_POST['notified_other_text'] ?? '');
 
+    $witness1 = trim($_POST['witness_1'] ?? '');
+    $witness2 = trim($_POST['witness_2'] ?? '');
+    $witness3 = trim($_POST['witness_3'] ?? '');
+
     $supName = trim($_POST['site_supervisor_name'] ?? '');
     $supId = trim($_POST['site_supervisor_id'] ?? '');
     $supDate = !empty($_POST['site_supervisor_date']) ? $_POST['site_supervisor_date'] : null;
@@ -85,6 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 incident_other_text = ?,
                 who_notified = ?,
                 notified_other_text = ?,
+                witness_1 = ?,
+                witness_2 = ?,
+                witness_3 = ?,
                 updated_at = NOW()
             WHERE id = ?
         ");
@@ -103,6 +110,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $incOther,
             $notified,
             $notifiedOther,
+            $witness1,
+            $witness2,
+            $witness3,
             $id
         ]);
 
@@ -340,6 +350,23 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php endforeach; ?>
                 </div>
                 <input type="text" name="notified_other_text" class="form-control" style="margin-top: 8px;" placeholder="Other authorities notified details..." value="<?= htmlspecialchars($incident['notified_other_text'] ?? '') ?>">
+            </div>
+
+            <!-- People who saw the Incident (Witnesses) -->
+            <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important; font-style: italic;"><?= htmlspecialchars($settings['witness_section_title'] ?? 'People who saw the Incident') ?></h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label"><?= htmlspecialchars($settings['witness_1_label'] ?? 'Witness 1') ?></label>
+                    <input type="text" name="witness_1" class="form-control" value="<?= htmlspecialchars($incident['witness_1'] ?? '') ?>" placeholder="Name, Contact No., ID / Details">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?= htmlspecialchars($settings['witness_2_label'] ?? 'Witness 2') ?></label>
+                    <input type="text" name="witness_2" class="form-control" value="<?= htmlspecialchars($incident['witness_2'] ?? '') ?>" placeholder="Name, Contact No., ID / Details">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?= htmlspecialchars($settings['witness_3_label'] ?? 'Witness 3') ?></label>
+                    <input type="text" name="witness_3" class="form-control" value="<?= htmlspecialchars($incident['witness_3'] ?? '') ?>" placeholder="Name, Contact No., ID / Details">
+                </div>
             </div>
 
                         <!-- Section Heading 3: Executive Summary & Narrative -->

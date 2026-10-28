@@ -11,40 +11,58 @@ Write-Host ">>> Starting Hostinger All-in-One Deployment Packaging..."
 Copy-Item -Path "$destDeployment\assets\*" -Destination "$destUpload\assets" -Recurse -Force
 Write-Host "Copied assets to UPLOAD_TO_HOSTINGER\assets"
 
-# 2. Sync Includes (Theme Picker & Bootstrapper)
+# 2. Sync Includes (Theme Picker, Bootstrapper & Functions)
 Copy-Item -Path "$destDeployment\includes\*" -Destination "$destUpload\includes" -Recurse -Force
 Write-Host "Copied includes to UPLOAD_TO_HOSTINGER\includes"
 
-# 3. Sync Attendance module
+# 3. Sync Admin Module (Settings, Incident Edit, Incident View, Incident PDF)
+Copy-Item -Path "$destDeployment\admin\*" -Destination "$destUpload\admin" -Recurse -Force
+Write-Host "Copied admin to UPLOAD_TO_HOSTINGER\admin"
+
+# 4. Sync Guard Form (submit.php)
+Copy-Item -Path "$destDeployment\g\*" -Destination "$destUpload\g" -Recurse -Force
+Write-Host "Copied g to UPLOAD_TO_HOSTINGER\g"
+
+# 5. Sync Database SQL schema
+if (Test-Path "$destDeployment\database.sql") {
+    Copy-Item -Path "$destDeployment\database.sql" -Destination "$destUpload\database.sql" -Force
+    Write-Host "Copied database.sql to UPLOAD_TO_HOSTINGER\database.sql"
+}
+
+# 6. Sync Attendance module
 $attSrc = "$destDeployment\attendance"
 $attDest = "$destUpload\attendance"
-Copy-Item -Path "$attSrc\*" -Destination $attDest -Recurse -Force
-Write-Host "Copied attendance to UPLOAD_TO_HOSTINGER\attendance"
+if (Test-Path $attSrc) {
+    Copy-Item -Path "$attSrc\*" -Destination $attDest -Recurse -Force
+    Write-Host "Copied attendance to UPLOAD_TO_HOSTINGER\attendance"
+}
 
-# 4. Sync Attendance Roster
+# 7. Sync Attendance Roster
 $rosterSrc = "$rootProject\attendance_roster"
 $rosterDestUpload = "$destUpload\attendance_roster"
 $rosterDestDeploy = "$destDeployment\attendance_roster"
 
-if (-not (Test-Path $rosterDestUpload)) {
-    New-Item -ItemType Directory -Path $rosterDestUpload -Force | Out-Null
-}
-Copy-Item -Path "$rosterSrc\*" -Destination $rosterDestUpload -Recurse -Force
-Write-Host "Copied attendance_roster to UPLOAD_TO_HOSTINGER\attendance_roster"
+if (Test-Path $rosterSrc) {
+    if (-not (Test-Path $rosterDestUpload)) {
+        New-Item -ItemType Directory -Path $rosterDestUpload -Force | Out-Null
+    }
+    Copy-Item -Path "$rosterSrc\*" -Destination $rosterDestUpload -Recurse -Force
+    Write-Host "Copied attendance_roster to UPLOAD_TO_HOSTINGER\attendance_roster"
 
-if (-not (Test-Path $rosterDestDeploy)) {
-    New-Item -ItemType Directory -Path $rosterDestDeploy -Force | Out-Null
+    if (-not (Test-Path $rosterDestDeploy)) {
+        New-Item -ItemType Directory -Path $rosterDestDeploy -Force | Out-Null
+    }
+    Copy-Item -Path "$rosterSrc\*" -Destination $rosterDestDeploy -Recurse -Force
+    Write-Host "Copied attendance_roster to hostinger_deployment\attendance_roster"
 }
-Copy-Item -Path "$rosterSrc\*" -Destination $rosterDestDeploy -Recurse -Force
-Write-Host "Copied attendance_roster to hostinger_deployment\attendance_roster"
 
-# 5. Sync to public_html if present
+# 8. Sync to public_html if present
 if (Test-Path $destPublicHtml) {
     Copy-Item -Path "$destUpload\*" -Destination $destPublicHtml -Recurse -Force
     Write-Host "Copied all root files to public_html"
 }
 
-# 6. Build Deployment ZIP packages
+# 9. Build Deployment ZIP packages
 $zipSource = $destUpload
 $zipPaths = @(
     "$rootProject\HOSTINGER_UPDATE_PATCH_LATEST.zip",

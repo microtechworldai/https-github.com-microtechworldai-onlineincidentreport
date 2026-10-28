@@ -323,6 +323,29 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
+            <!-- People who saw the Incident (Witnesses) -->
+            <?php if (!empty($incident['witness_1']) || !empty($incident['witness_2']) || !empty($incident['witness_3'])): ?>
+            <div style="margin-bottom: 24px;">
+                <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important; font-style: italic;">
+                    <?= htmlspecialchars($settings['witness_section_title'] ?? 'People who saw the Incident') ?>
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                    <div style="background: var(--bg-card-hover); border: 1px solid var(--border-subtle); padding: 12px 16px; border-radius: var(--radius-sm);">
+                        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; font-weight: 700;"><?= htmlspecialchars($settings['witness_1_label'] ?? 'Witness 1') ?></div>
+                        <div style="font-size: 13.5px; font-weight: 600; color: var(--text-main);"><?= htmlspecialchars($incident['witness_1'] ?: 'None recorded') ?></div>
+                    </div>
+                    <div style="background: var(--bg-card-hover); border: 1px solid var(--border-subtle); padding: 12px 16px; border-radius: var(--radius-sm);">
+                        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; font-weight: 700;"><?= htmlspecialchars($settings['witness_2_label'] ?? 'Witness 2') ?></div>
+                        <div style="font-size: 13.5px; font-weight: 600; color: var(--text-main);"><?= htmlspecialchars($incident['witness_2'] ?: 'None recorded') ?></div>
+                    </div>
+                    <div style="background: var(--bg-card-hover); border: 1px solid var(--border-subtle); padding: 12px 16px; border-radius: var(--radius-sm);">
+                        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; font-weight: 700;"><?= htmlspecialchars($settings['witness_3_label'] ?? 'Witness 3') ?></div>
+                        <div style="font-size: 13.5px; font-weight: 600; color: var(--text-main);"><?= htmlspecialchars($incident['witness_3'] ?: 'None recorded') ?></div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Summary & Detailed Description -->
             <div style="margin-bottom: 24px;">
                 <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Executive Summary</h4>

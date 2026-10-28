@@ -114,6 +114,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $incOther = trim($_POST['incident_other_text'] ?? '');
     $notified = isset($_POST['who_notified']) ? json_encode(array_values($_POST['who_notified']), JSON_UNESCAPED_UNICODE) : '[]';
     $notifiedOther = trim($_POST['notified_other_text'] ?? '');
+    $witness1 = trim($_POST['witness_1'] ?? '');
+    $witness2 = trim($_POST['witness_2'] ?? '');
+    $witness3 = trim($_POST['witness_3'] ?? '');
 
     if (empty($summary) || empty($description)) {
         $error = "Please provide both an executive summary and a detailed narrative description.";
@@ -141,6 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         incident_types, incident_other_text,
                         summary_line, description,
                         who_notified, notified_other_text,
+                        witness_1, witness_2, witness_3,
                         status, created_at
                     ) VALUES (
                         ?, ?, ?, ?, ?,
@@ -150,6 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ?, ?,
                         ?, ?,
                         ?, ?,
+                        ?, ?, ?,
                         'Submitted', NOW()
                     )
                 ");
@@ -161,7 +166,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $causeMain, $discReasons, $discOther,
                     $incTypes, $incOther,
                     $summary, $description,
-                    $notified, $notifiedOther
+                    $notified, $notifiedOther,
+                    $witness1, $witness2, $witness3
                 ]);
 
                 $incidentId = (int)$db->lastInsertId();
@@ -668,6 +674,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
         </div>
+
+        <!-- 7b. PEOPLE WHO SAW THE INCIDENT (WITNESSES) -->
+        <?php if (!isset($settings['witness_enabled']) || !empty($settings['witness_enabled'])): ?>
+        <div class="navy-section-frame">
+            <div class="navy-frame-header">
+                <div class="navy-frame-title" style="color: #ffffff !important; font-weight: 800 !important; font-style: italic;">
+                    <?= htmlspecialchars($settings['witness_section_title'] ?? 'People who saw the Incident') ?>
+                </div>
+                <div class="navy-frame-sub">Witness Details &amp; Contact Information</div>
+            </div>
+            <div class="navy-frame-body">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 5px; color: var(--text-dim, #64748b);">
+                            <?= htmlspecialchars($settings['witness_1_label'] ?? 'Witness 1') ?>
+                        </label>
+                        <input type="text" id="witness1Input" name="witness_1" class="guard-input" placeholder="Name, Contact No., ID / Details (Optional)" oninput="saveDraft()" style="margin-bottom: 0;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 5px; color: var(--text-dim, #64748b);">
+                            <?= htmlspecialchars($settings['witness_2_label'] ?? 'Witness 2') ?>
+                        </label>
+                        <input type="text" id="witness2Input" name="witness_2" class="guard-input" placeholder="Name, Contact No., ID / Details (Optional)" oninput="saveDraft()" style="margin-bottom: 0;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 5px; color: var(--text-dim, #64748b);">
+                            <?= htmlspecialchars($settings['witness_3_label'] ?? 'Witness 3') ?>
+                        </label>
+                        <input type="text" id="witness3Input" name="witness_3" class="guard-input" placeholder="Name, Contact No., ID / Details (Optional)" oninput="saveDraft()" style="margin-bottom: 0;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- 8. DESCRIPTION OF INCIDENT (NAVY FRAME WITH RICH FORMATTING TOOLBAR) -->
         <div class="navy-section-frame">
@@ -1181,6 +1221,12 @@ const draftKey = 'uss_guard_draft_<?= htmlspecialchars($siteCode) ?>';
 const summaryInput = document.getElementById('summaryLine');
 const descInput = document.getElementById('narrativeDesc');
 const richEditor = document.getElementById('richDescriptionEditor');
+const witness1Input = document.getElementById('witness1Input');
+const witness2Input = document.getElementById('witness2Input');
+const witness3Input = document.getElementById('witness3Input');
+const witness1Input = document.getElementById('witness1Input');
+const witness2Input = document.getElementById('witness2Input');
+const witness3Input = document.getElementById('witness3Input');
 const draftDot = document.getElementById('draftDot');
 const draftStatus = document.getElementById('draftStatus');
 const draftTimeSpan = document.getElementById('draftTime');
@@ -1194,6 +1240,9 @@ try {
             descInput.value = data.desc;
             if (richEditor) richEditor.innerHTML = data.desc;
         }
+        if (data.witness1 && witness1Input) witness1Input.value = data.witness1;
+        if (data.witness2 && witness2Input) witness2Input.value = data.witness2;
+        if (data.witness3 && witness3Input) witness3Input.value = data.witness3;
         if (data.time) {
             const d = new Date(data.time);
             draftTimeSpan.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
@@ -1209,6 +1258,9 @@ function saveDraft() {
         localStorage.setItem(draftKey, JSON.stringify({
             summary: summaryInput.value,
             desc: richEditor ? richEditor.innerHTML : descInput.value,
+            witness1: witness1Input ? witness1Input.value : '',
+            witness2: witness2Input ? witness2Input.value : '',
+            witness3: witness3Input ? witness3Input.value : '',
             time: now
         }));
         const d = new Date(now);

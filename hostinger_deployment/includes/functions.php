@@ -316,6 +316,12 @@ function get_system_settings($forceRefresh = false) {
             $row['disciplinary_options'] = json_decode($row['disciplinary_options'] ?: '[]', true) ?: ['Sleeping', 'Poor Grooming', 'Argument', 'Missing', 'Misbehavior', 'Uniform', 'Late Reporting', 'Mobile', 'Others'];
             $row['incident_options'] = json_decode($row['incident_options'] ?: '[]', true) ?: ['Move In & Out', 'Fire & Safety', 'Intrusion & Access', 'Theft and loss', 'CCTV & Systems', 'Utilities & Building', 'Accident & Medical', 'Disturbance', 'Property Damage', 'Parking & Vehicles', 'Visitors & Contractors', 'Others'];
             $row['notified_options'] = json_decode($row['notified_options'] ?: '[]', true) ?: ['Police', 'Ambulance', 'Civil Defense', 'Client Management', 'USS Management', 'Others'];
+            $row['witness_section_title'] = !empty($row['witness_section_title']) ? $row['witness_section_title'] : 'People who saw the Incident';
+            $row['witness_1_label'] = !empty($row['witness_1_label']) ? $row['witness_1_label'] : 'Witness 1';
+            $row['witness_2_label'] = !empty($row['witness_2_label']) ? $row['witness_2_label'] : 'Witness 2';
+            $row['witness_3_label'] = !empty($row['witness_3_label']) ? $row['witness_3_label'] : 'Witness 3';
+            $row['witness_options'] = json_decode($row['witness_options'] ?? '[]', true) ?: ['Security Guard', 'Resident / Tenant', 'Staff / Employee', 'Visitor / Contractor', 'Third Party / Bystander'];
+            $row['witness_enabled'] = isset($row['witness_enabled']) ? (int)$row['witness_enabled'] : 1;
             $settings = $row;
             return $settings;
         }
@@ -336,7 +342,13 @@ function get_system_settings($forceRefresh = false) {
         'disciplinary_options' => ['Sleeping', 'Poor Grooming', 'Argument', 'Missing', 'Misbehavior', 'Uniform', 'Late Reporting', 'Mobile', 'Others'],
         'incident_options' => ['Move In & Out', 'Fire & Safety', 'Intrusion & Access', 'Theft and loss', 'CCTV & Systems', 'Utilities & Building', 'Accident & Medical', 'Disturbance', 'Property Damage', 'Parking & Vehicles', 'Visitors & Contractors', 'Others'],
         'notified_options' => ['Police', 'Ambulance', 'Civil Defense', 'Client Management', 'USS Management', 'Others'],
-        'supervisor_remarks_min_length' => 20
+        'supervisor_remarks_min_length' => 20,
+        'witness_section_title' => 'People who saw the Incident',
+        'witness_1_label' => 'Witness 1',
+        'witness_2_label' => 'Witness 2',
+        'witness_3_label' => 'Witness 3',
+        'witness_options' => ['Security Guard', 'Resident / Tenant', 'Staff / Employee', 'Visitor / Contractor', 'Third Party / Bystander'],
+        'witness_enabled' => 1
     ];
 }
 

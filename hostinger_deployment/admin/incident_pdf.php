@@ -704,9 +704,9 @@ $companyDisplayName = !empty($settings['company_name'])
         }
 
         .description-box {
-            height: 96mm !important;
-            min-height: 96mm !important;
-            max-height: 96mm !important;
+            height: 86mm !important;
+            min-height: 86mm !important;
+            max-height: 86mm !important;
             padding: 4px 8px !important;
             font-size: 13px !important;
             line-height: 1.30 !important;
@@ -1023,6 +1023,35 @@ $companyDisplayName = !empty($settings['company_name'])
                 </div>
             </td>
         </tr>
+
+        <!-- Row: People who saw the Incident (Witnesses) -->
+        <?php if (!isset($settings['witness_enabled']) || !empty($settings['witness_enabled'])): ?>
+        <tr>
+            <td colspan="2" style="background: #ffffff; color: #000000; font-weight: bold; font-style: italic; font-size: 10pt; padding: 3px 8px; border-top: 1.5px solid #000; border-bottom: 1px solid #000;">
+                <?= htmlspecialchars($settings['witness_section_title'] ?? 'People who saw the Incident') ?>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" class="col-content-box" style="padding: 4px 8px; border-bottom: 1.5px solid #000;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 33.33%; font-size: 8.5pt; padding: 2px 4px; vertical-align: middle;">
+                            <strong><?= htmlspecialchars($settings['witness_1_label'] ?? 'Witness 1') ?>:</strong>
+                            <span style="border-bottom: 1px dotted #000; display: inline-block; width: calc(100% - 75px); min-height: 14px; padding-left: 4px; font-weight: normal;"><?= htmlspecialchars($incident['witness_1'] ?: '') ?></span>
+                        </td>
+                        <td style="width: 33.33%; font-size: 8.5pt; padding: 2px 4px; vertical-align: middle;">
+                            <strong><?= htmlspecialchars($settings['witness_2_label'] ?? 'Witness 2') ?>:</strong>
+                            <span style="border-bottom: 1px dotted #000; display: inline-block; width: calc(100% - 75px); min-height: 14px; padding-left: 4px; font-weight: normal;"><?= htmlspecialchars($incident['witness_2'] ?: '') ?></span>
+                        </td>
+                        <td style="width: 33.33%; font-size: 8.5pt; padding: 2px 4px; vertical-align: middle;">
+                            <strong><?= htmlspecialchars($settings['witness_3_label'] ?? 'Witness 3') ?>:</strong>
+                            <span style="border-bottom: 1px dotted #000; display: inline-block; width: calc(100% - 75px); min-height: 14px; padding-left: 4px; font-weight: normal;"><?= htmlspecialchars($incident['witness_3'] ?: '') ?></span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <?php endif; ?>
 
         <!-- Row 6: Description of Incident -->
         <tr>
