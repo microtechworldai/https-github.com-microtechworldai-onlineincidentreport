@@ -17,6 +17,35 @@ if (!$id) {
 
 $db = get_db();
 $settings = get_system_settings();
+
+// Auto-heal missing columns on incidents table
+try {
+    $existingCols = $db->query("DESCRIBE incidents")->fetchAll(PDO::FETCH_COLUMN);
+    $requiredCols = [
+        'site_supervisor_name' => "VARCHAR(150) NULL",
+        'site_supervisor_id' => "VARCHAR(100) NULL",
+        'site_supervisor_signature' => "TEXT NULL",
+        'site_supervisor_date' => "DATE NULL",
+        'recommendation_action_taken' => "TEXT NULL",
+        'operations_manager_name' => "VARCHAR(150) NULL",
+        'operations_manager_id' => "VARCHAR(100) NULL",
+        'operations_manager_signature' => "TEXT NULL",
+        'operations_manager_date' => "DATE NULL",
+        'client_manager_name' => "VARCHAR(150) NULL",
+        'client_manager_id' => "VARCHAR(100) NULL",
+        'client_manager_action_taken' => "TEXT NULL",
+        'client_manager_signature' => "TEXT NULL",
+        'client_manager_date' => "DATE NULL",
+        'witness_1' => "TEXT NULL",
+        'witness_2' => "TEXT NULL",
+        'witness_3' => "TEXT NULL"
+    ];
+    foreach ($requiredCols as $col => $def) {
+        if (!in_array($col, $existingCols)) {
+            $db->exec("ALTER TABLE incidents ADD COLUMN `{$col}` {$def}");
+        }
+    }
+} catch (Exception $e) {}
 $error = '';
 $success = '';
 
@@ -73,55 +102,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($summary) || empty($description) || empty($incidentDate) || empty($incidentTime)) {
         $error = 'Please fill all required fields (Summary, Description, Date, Time).';
     } else {
-        $updateStmt = $db->prepare("
-            UPDATE incidents SET
-                summary_line = ?,
-                description = ?,
-                incident_date = ?,
-                incident_time = ?,
-                shift = ?,
-                priority = ?,
-                status = ?,
-                cause_main = ?,
-                disciplinary_reasons = ?,
-                disciplinary_other_text = ?,
-                incident_types = ?,
-                incident_other_text = ?,
-                who_notified = ?,
-                notified_other_text = ?,
-                witness_1 = ?,
-                witness_2 = ?,
-                witness_3 = ?,
-                updated_at = NOW()
-            WHERE id = ?
-        ");
-        $updateStmt->execute([
-            $summary,
-            $description,
-            $incidentDate,
-            $incidentTime,
-            $shift,
-            $priority,
-            $status,
-            $causeMain,
-            $discReasons,
-            $discOther,
-            $incTypes,
-            $incOther,
-            $notified,
-            $notifiedOther,
-            $witness1,
-            $witness2,
-            $witness3,
-            $id
-        ]);
+        try {
+            $updateStmt = $db->prepare("
+                UPDATE incidents SET
+                    summary_line = ?,
+                    description = ?,
+                    incident_date = ?,
+                    incident_time = ?,
+                    shift = ?,
+                    priority = ?,
+                    status = ?,
+                    cause_main = ?,
+                    disciplinary_reasons = ?,
+                    disciplinary_other_text = ?,
+                    incident_types = ?,
+                    incident_other_text = ?,
+                    who_notified = ?,
+                    notified_other_text = ?,
+                    witness_1 = ?,
+                    witness_2 = ?,
+                    witness_3 = ?,
+                    site_supervisor_name = ?,
+                    site_supervisor_id = ?,
+                    site_supervisor_date = ?,
+                    recommendation_action_taken = ?,
+                    operations_manager_name = ?,
+                    operations_manager_id = ?,
+                    operations_manager_date = ?,
+                    client_manager_name = ?,
+                    client_manager_id = ?,
+                    client_manager_action_taken = ?,
+                    client_manager_date = ?,
+                    updated_at = NOW()
+                WHERE id = ?
+            ");
+            $updateStmt->execute([
+                $summary,
+                $description,
+                $incidentDate,
+                $incidentTime,
+                $shift,
+                $priority,
+                $status,
+                $causeMain,
+                $discReasons,
+                $discOther,
+                $incTypes,
+                $incOther,
+                $notified,
+                $notifiedOther,
+                $witness1,
+                $witness2,
+                $witness3,
+                $supName,
+                $supId,
+                $supDate,
+                $supRec,
+                $opsName,
+                $opsId,
+                $opsDate,
+                $clientName,
+                $clientId,
+                $clientAction,
+                $clientDate,
+                $id
+            ]);
 
-        log_audit('EDIT_INCIDENT', 'INCIDENT', $id, ['summary' => $summary]);
-        $success = 'Incident updated successfully!';
-        
-        // Refresh
-        $stmt->execute([$id]);
-        $incident = $stmt->fetch();
+            log_audit('EDIT_INCIDENT', 'INCIDENT', $id, ['summary' => $summary]);
+            $success = 'Incident updated successfully!';
+            
+            // Refresh
+            $stmt->execute([$id]);
+            $incident = $stmt->fetch();
+        } catch (Exception $e) {
+            $error = 'Failed to update incident: ' . $e->getMessage();
+        }
     }
 }
 

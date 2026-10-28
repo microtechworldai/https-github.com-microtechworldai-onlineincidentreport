@@ -19,18 +19,64 @@ $db = get_db();
 $msg = '';
 $msgType = 'success';
 
+// Auto-heal missing columns on incidents table to avoid 500 crashes
+try {
+    $existingCols = $db->query("DESCRIBE incidents")->fetchAll(PDO::FETCH_COLUMN);
+    $requiredCols = [
+        'site_supervisor_name' => "VARCHAR(150) NULL",
+        'site_supervisor_id' => "VARCHAR(100) NULL",
+        'site_supervisor_signature' => "TEXT NULL",
+        'site_supervisor_date' => "DATE NULL",
+        'recommendation_action_taken' => "TEXT NULL",
+        'operations_manager_name' => "VARCHAR(150) NULL",
+        'operations_manager_id' => "VARCHAR(100) NULL",
+        'operations_manager_signature' => "TEXT NULL",
+        'operations_manager_date' => "DATE NULL",
+        'client_manager_name' => "VARCHAR(150) NULL",
+        'client_manager_id' => "VARCHAR(100) NULL",
+        'client_manager_action_taken' => "TEXT NULL",
+        'client_manager_signature' => "TEXT NULL",
+        'client_manager_date' => "DATE NULL",
+        'witness_1' => "TEXT NULL",
+        'witness_2' => "TEXT NULL",
+        'witness_3' => "TEXT NULL"
+    ];
+    foreach ($requiredCols as $col => $def) {
+        if (!in_array($col, $existingCols)) {
+            $db->exec("ALTER TABLE incidents ADD COLUMN `{$col}` {$def}");
+        }
+    }
+} catch (Exception $e) {}
+
+// Fetch Incident Record upfront so existing signatures and status are preserved
+$stmt = $db->prepare("
+    SELECT i.*, s.client_name, s.client_contact, s.latitude as site_latitude, s.longitude as site_longitude, s.code as site_official_code
+    FROM incidents i 
+    LEFT JOIN sites s ON s.id = i.site_id 
+    WHERE i.id = ? 
+    LIMIT 1
+");
+$stmt->execute([$id]);
+$incident = $stmt->fetch();
+
+if (!$incident) {
+    die("Incident not found.");
+}
+
 // Handle Management Sign-Off & Status Update (with Signature Image Uploads)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_management']) || isset($_POST['save_signoff']))) {
-    $newStatus = trim($_POST['status'] ?? 'Submitted');
+    $newStatus = trim($_POST['status'] ?? ($incident['status'] ?? 'Submitted'));
     $supervisorName = trim($_POST['site_supervisor_name'] ?? '');
     $supervisorId = trim($_POST['site_supervisor_id'] ?? '');
     $supervisorDate = !empty($_POST['site_supervisor_date']) ? $_POST['site_supervisor_date'] : null;
     $recommendationAction = trim($_POST['recommendation_action_taken'] ?? '');
     
     $opsManagerName = trim($_POST['operations_manager_name'] ?? '');
+    $opsManagerId = trim($_POST['operations_manager_id'] ?? '');
     $opsManagerDate = !empty($_POST['operations_manager_date']) ? $_POST['operations_manager_date'] : null;
 
     $clientManagerName = trim($_POST['client_manager_name'] ?? '');
+    $clientManagerId = trim($_POST['client_manager_id'] ?? '');
     $clientManagerAction = trim($_POST['client_manager_action_taken'] ?? '');
     $clientManagerDate = !empty($_POST['client_manager_date']) ? $_POST['client_manager_date'] : null;
 
@@ -65,50 +111,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_management'])
         }
     }
 
-    $stmtUpdate = $db->prepare("
-        UPDATE incidents SET
-            status = ?,
-            site_supervisor_name = ?,
-            site_supervisor_id = ?,
-            site_supervisor_signature = ?,
-            site_supervisor_date = ?,
-            recommendation_action_taken = ?,
-            operations_manager_name = ?,
-            operations_manager_id = ?,
-            operations_manager_signature = ?,
-            operations_manager_date = ?,
-            client_manager_name = ?,
-            client_manager_id = ?,
-            client_manager_action_taken = ?,
-            client_manager_signature = ?,
-            client_manager_date = ?,
-            updated_at = NOW()
-        WHERE id = ?
-    ");
-    $stmtUpdate->execute([
-        $newStatus,
-        $supervisorName,
-        $supervisorId,
-        $supSig,
-        $supervisorDate,
-        $recommendationAction,
-        $opsManagerName,
-        $opsManagerId,
-        $opsSig,
-        $opsManagerDate,
-        $clientManagerName,
-        $clientManagerId,
-        $clientManagerAction,
-        $clientSig,
-        $clientManagerDate,
-        $id
-    ]);
+    try {
+        $stmtUpdate = $db->prepare("
+            UPDATE incidents SET
+                status = ?,
+                site_supervisor_name = ?,
+                site_supervisor_id = ?,
+                site_supervisor_signature = ?,
+                site_supervisor_date = ?,
+                recommendation_action_taken = ?,
+                operations_manager_name = ?,
+                operations_manager_id = ?,
+                operations_manager_signature = ?,
+                operations_manager_date = ?,
+                client_manager_name = ?,
+                client_manager_id = ?,
+                client_manager_action_taken = ?,
+                client_manager_signature = ?,
+                client_manager_date = ?,
+                updated_at = NOW()
+            WHERE id = ?
+        ");
+        $stmtUpdate->execute([
+            $newStatus,
+            $supervisorName,
+            $supervisorId,
+            $supSig,
+            $supervisorDate,
+            $recommendationAction,
+            $opsManagerName,
+            $opsManagerId,
+            $opsSig,
+            $opsManagerDate,
+            $clientManagerName,
+            $clientManagerId,
+            $clientManagerAction,
+            $clientSig,
+            $clientManagerDate,
+            $id
+        ]);
 
-    log_audit('UPDATE_MANAGEMENT_SIGNOFF', 'INCIDENT', $id, [
-        'status' => $newStatus,
-        'supervisor' => $supervisorName
-    ]);
-    $msg = "Management sign-off and report status updated successfully.";
+        log_audit('UPDATE_MANAGEMENT_SIGNOFF', 'INCIDENT', $id, [
+            'status' => $newStatus,
+            'supervisor' => $supervisorName
+        ]);
+        $msg = "Management sign-off and report status updated successfully.";
+        $msgType = 'success';
+
+        // Re-fetch updated incident data
+        $stmt->execute([$id]);
+        $incident = $stmt->fetch();
+    } catch (Exception $e) {
+        $msg = "Error saving sign-off: " . $e->getMessage();
+        $msgType = 'danger';
+    }
 }
 
 // Handle Updating Photo Caption (Image by Image in Dashboard)
@@ -140,20 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_note'])) {
     }
 }
 
-// Fetch Incident Record
-$stmt = $db->prepare("
-    SELECT i.*, s.client_name, s.client_contact, s.latitude as site_latitude, s.longitude as site_longitude, s.code as site_official_code
-    FROM incidents i 
-    LEFT JOIN sites s ON s.id = i.site_id 
-    WHERE i.id = ? 
-    LIMIT 1
-");
-$stmt->execute([$id]);
-$incident = $stmt->fetch();
-
-if (!$incident) {
-    die("Incident not found.");
-}
+// Incident Record already fetched and validated upfront
 
 // Decode JSON fields safely
 $causes = json_decode($incident['cause_main'] ?: '[]', true) ?: [];
