@@ -1,0 +1,374 @@
+/* ==========================================================================
+   Universal Security Services - Attendance Roster Subsystem CSS
+   WCAG AA Compliant Styling (Light & Dark Themes)
+   File: /attendance_roster/public/css/roster.css
+   ========================================================================== */
+
+:root {
+  --roster-bg: #f8fafc;
+  --roster-card-bg: #ffffff;
+  --roster-text: #0f172a;
+  --roster-text-muted: #64748b;
+  --roster-border: #cbd5e1;
+  --roster-primary: #0f766e;
+  --roster-primary-hover: #115e59;
+  
+  /* WCAG AA Color Matrix (Contrast >= 4.5:1 against black #000000 text) */
+  --deploy-ok-bg: #dff3e4;
+  --deploy-ok-text: #064e3b;
+  --deploy-less-bg: #fadbd8;
+  --deploy-less-text: #7f1d1d;
+  --deploy-over-bg: #fff3c4;
+  --deploy-over-text: #78350f;
+  --deploy-total-bg: #e5e7eb;
+  --deploy-total-text: #111827;
+
+  /* Shift Tag Colors */
+  --tag-d-bg: rgba(16, 185, 129, 0.16);
+  --tag-d-text: #047857;
+  --tag-n-bg: rgba(37, 99, 235, 0.16);
+  --tag-n-text: #1d4ed8;
+  --tag-off-bg: rgba(239, 68, 68, 0.16);
+  --tag-off-text: #b91c1c;
+  --tag-s-bg: rgba(245, 158, 11, 0.16);
+  --tag-s-text: #b45309;
+  --tag-b-bg: rgba(124, 58, 237, 0.16);
+  --tag-b-text: #6d28d9;
+}
+
+[data-theme="dark"] {
+  --roster-bg: #0b1320;
+  --roster-card-bg: #151f30;
+  --roster-text: #f1f5f9;
+  --roster-text-muted: #94a3b8;
+  --roster-border: #334155;
+  --roster-primary: #14b8a6;
+  --roster-primary-hover: #2dd4bf;
+
+  /* Dark Theme WCAG Matrix */
+  --deploy-ok-bg: #1e3a2a;
+  --deploy-ok-text: #a7f3d0;
+  --deploy-less-bg: #4a2523;
+  --deploy-less-text: #fecaca;
+  --deploy-over-bg: #4a3f16;
+  --deploy-over-text: #fef08a;
+  --deploy-total-bg: #2a343a;
+  --deploy-total-text: #f3f4f6;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--roster-bg);
+  color: var(--roster-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Arial Narrow", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.roster-header-bar {
+  background: #ffffff;
+  border-bottom: 1px solid var(--roster-border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.roster-title-block h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--roster-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roster-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.roster-select {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--roster-border);
+  font-size: 13px;
+  font-weight: 600;
+  background: #ffffff;
+  color: var(--roster-text);
+}
+
+.roster-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--roster-border);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #ffffff;
+  color: var(--roster-text);
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.roster-btn:hover {
+  background: #f1f5f9;
+}
+
+.roster-btn-primary {
+  background: var(--roster-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--roster-primary) !important;
+}
+
+.roster-btn-primary:hover {
+  background: var(--roster-primary-hover) !important;
+}
+
+.roster-btn-warning {
+  background: #d97706 !important;
+  color: #ffffff !important;
+  border-color: #d97706 !important;
+}
+
+.roster-btn-danger {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+}
+
+.roster-container {
+  padding: 16px 24px;
+}
+
+.roster-grid-wrapper {
+  background: var(--roster-card-bg);
+  border: 1px solid var(--roster-border);
+  border-radius: 8px;
+  overflow-x: auto;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: center;
+  background: #ffffff;
+}
+
+.roster-table th, .roster-table td {
+  border: 1px solid #cbd5e1;
+  padding: 0;
+  height: 20px;
+  vertical-align: middle;
+}
+
+/* Top Executive Title Banner (Height 45px) */
+.roster-banner-th {
+  height: 45px !important;
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%) !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.8px !important;
+  text-transform: uppercase !important;
+}
+
+/* Sub-headers: Days 1..31 & Emp Info */
+.roster-th-meta {
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 12px;
+  height: 28px !important;
+}
+
+.roster-th-sub {
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 800;
+  font-size: 11px;
+  height: 22px !important;
+}
+
+.roster-weekend {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  font-weight: 800 !important;
+}
+
+/* Sticky Left Columns */
+.roster-col-emp {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  font-weight: 700;
+}
+
+.roster-col-name {
+  width: 170px;
+  min-width: 170px;
+  max-width: 170px;
+  text-align: left !important;
+  padding-left: 8px !important;
+  font-weight: 700;
+}
+
+.roster-col-site {
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  text-align: left !important;
+  padding-left: 8px !important;
+  color: #0284c7;
+  font-weight: 700;
+}
+
+.roster-col-day {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+}
+
+/* Cell Input Box (Height 20px) */
+.roster-cell-input {
+  width: 100%;
+  height: 20px;
+  line-height: 20px;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: inherit;
+  box-sizing: border-box;
+}
+
+.roster-cell-input:focus {
+  outline: 2px solid #0284c7;
+  background: #e0f2fe;
+}
+
+/* Shift Badges */
+.roster-code-D { background: var(--tag-d-bg); color: var(--tag-d-text); }
+.roster-code-N { background: var(--tag-n-bg); color: var(--tag-n-text); }
+.roster-code-OFF { background: var(--tag-off-bg); color: var(--tag-off-text); }
+.roster-code-S { background: var(--tag-s-bg); color: var(--tag-s-text); }
+.roster-code-B { background: var(--tag-b-bg); color: var(--tag-b-text); }
+
+/* Forced Double Duty Highlighting */
+.roster-forced-double {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  font-weight: 900 !important;
+  position: relative;
+}
+
+.roster-forced-double::after {
+  content: '★';
+  font-size: 8px;
+  color: #dc2626;
+  position: absolute;
+  top: 1px;
+  right: 2px;
+}
+
+/* WCAG AA Deployment Comparison Cells */
+.roster-deploy-ok {
+  background-color: var(--deploy-ok-bg) !important;
+  color: var(--deploy-ok-text) !important;
+  font-weight: 800 !important;
+}
+
+.roster-deploy-less {
+  background-color: var(--deploy-less-bg) !important;
+  color: var(--deploy-less-text) !important;
+  font-weight: 800 !important;
+}
+
+.roster-deploy-over {
+  background-color: var(--deploy-over-bg) !important;
+  color: var(--deploy-over-text) !important;
+  font-weight: 800 !important;
+}
+
+.roster-deploy-total {
+  background-color: var(--deploy-total-bg) !important;
+  color: var(--deploy-total-text) !important;
+  font-weight: 800 !important;
+}
+
+/* Summary Row Headers */
+.roster-summary-lbl {
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 800;
+  text-align: right !important;
+  padding-right: 12px !important;
+  font-size: 11.5px;
+}
+
+/* Modal Overlay */
+.roster-modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(3px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.roster-modal.roster-open {
+  display: flex;
+}
+
+.roster-modal-content {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: rosterModalSlide 0.2s ease-out;
+}
+
+@keyframes rosterModalSlide {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.roster-modal-header {
+  padding: 16px 20px;
+  background: #0f766e;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.roster-modal-body {
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.roster-modal-footer {
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-top: 1px solid var(--roster-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
