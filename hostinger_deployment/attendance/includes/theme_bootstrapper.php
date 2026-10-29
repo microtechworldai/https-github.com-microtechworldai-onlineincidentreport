@@ -9,7 +9,9 @@
     try {
         var savedTheme = localStorage.getItem('uss_theme');
         var theme = savedTheme;
-        if (!theme || theme === 'system') { theme = 'dark'; }
+        if (!theme || theme === 'system') {
+            theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
         document.documentElement.setAttribute('data-theme', theme);
         document.documentElement.setAttribute('data-theme-preference', savedTheme || 'dark');
     } catch (e) {

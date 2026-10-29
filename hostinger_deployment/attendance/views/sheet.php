@@ -62,87 +62,87 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
 ?>
 
 <?php if ($sheet): ?>
-<!-- 1. EXECUTIVE KPI STATS RIBBON -->
-<div class="att-kpi-ribbon no-print">
-    <!-- Card 1: Site & Contract Details -->
-    <div class="att-kpi-card att-kpi-primary">
-        <div class="att-kpi-top">
-            <span class="att-kpi-title">Deployment Post</span>
-            <span class="att-kpi-tag att-tag-blue">Active Site</span>
+    <!-- 1. EXECUTIVE KPI STATS RIBBON -->
+    <div class="att-kpi-ribbon no-print">
+        <!-- Card 1: Site & Contract Details -->
+        <div class="att-kpi-card att-kpi-primary">
+            <div class="att-kpi-top">
+                <span class="att-kpi-title">Deployment Post</span>
+                <span class="att-kpi-tag att-tag-blue">Active Site</span>
+            </div>
+            <div class="att-kpi-value" style="font-size: 19px;">
+                🏢 <?= htmlspecialchars($sheet['site_name']) ?>
+            </div>
+            <div class="att-kpi-meta">
+                <span>📅 Contract: <strong><?= !empty($contractStart) ? htmlspecialchars($contractStart) : 'Open' ?> &rarr; <?= !empty($contractEnd) ? htmlspecialchars($contractEnd) : 'Ongoing' ?></strong></span>
+                <?php if (!empty($additionalDeployments)): ?>
+                    <span class="att-kpi-tag att-tag-amber" style="margin-left:auto;">⚡ <?= count($additionalDeployments) ?> Extra Days</span>
+                <?php endif; ?>
+            </div>
         </div>
-        <div class="att-kpi-value" style="font-size: 19px;">
-            🏢 <?= htmlspecialchars($sheet['site_name']) ?>
-        </div>
-        <div class="att-kpi-meta">
-            <span>📅 Contract: <strong><?= !empty($contractStart) ? htmlspecialchars($contractStart) : 'Open' ?> &rarr; <?= !empty($contractEnd) ? htmlspecialchars($contractEnd) : 'Ongoing' ?></strong></span>
-            <?php if (!empty($additionalDeployments)): ?>
-                <span class="att-kpi-tag att-tag-amber" style="margin-left:auto;">⚡ <?= count($additionalDeployments) ?> Extra Days</span>
-            <?php endif; ?>
-        </div>
-    </div>
 
-    <!-- Card 2: Required Post Strength -->
-    <div class="att-kpi-card att-kpi-warning">
-        <div class="att-kpi-top">
-            <span class="att-kpi-title">Post Deployment Plan</span>
-            <?php if ($netAdditionalTotal != 0): ?>
-                <span class="att-kpi-tag <?= $netAdditionalTotal > 0 ? 'att-tag-blue' : 'att-tag-amber' ?>" style="font-weight:800;">
-                    <?= $netAdditionalTotal > 0 ? ('+' . $netAdditionalTotal . ' Extra') : ($netAdditionalTotal . ' Reduced') ?>
+        <!-- Card 2: Required Post Strength -->
+        <div class="att-kpi-card att-kpi-warning">
+            <div class="att-kpi-top">
+                <span class="att-kpi-title">Post Deployment Plan</span>
+                <?php if ($netAdditionalTotal != 0): ?>
+                    <span class="att-kpi-tag <?= $netAdditionalTotal > 0 ? 'att-tag-blue' : 'att-tag-amber' ?>" style="font-weight:800;">
+                        <?= $netAdditionalTotal > 0 ? ('+' . $netAdditionalTotal . ' Extra') : ($netAdditionalTotal . ' Reduced') ?>
+                    </span>
+                <?php else: ?>
+                    <span class="att-kpi-tag att-tag-amber"><?= $siteReqTotal ?> Guards / Day</span>
+                <?php endif; ?>
+            </div>
+            <div class="att-kpi-value">
+                <span>☀️ <?= $expectedMonthDayShifts ?> Day</span>
+                <span class="att-kpi-subval">&bull;</span>
+                <span>🌙 <?= $expectedMonthNightShifts ?> Night</span>
+            </div>
+            <div class="att-kpi-meta">
+                <span>Base: <strong><?= $baseMonthlyTotal ?></strong> &bull; Total Req: <strong><?= $expectedMonthlyTotal ?> Duties</strong></span>
+            </div>
+        </div>
+
+        <!-- Card 3: Roster Fulfillment Health -->
+        <div class="att-kpi-card att-kpi-success">
+            <div class="att-kpi-top">
+                <span class="att-kpi-title">Roster Delivery Rate</span>
+                <span class="att-kpi-tag <?= $fulfillmentPct >= 100 ? 'att-tag-green' : 'att-tag-red' ?>">
+                    <?= $fulfillmentPct >= 100 ? '🟢 100% Fulfilled' : '🔴 ' . $fulfillmentPct . '% Coverage' ?>
                 </span>
-            <?php else: ?>
-                <span class="att-kpi-tag att-tag-amber"><?= $siteReqTotal ?> Guards / Day</span>
-            <?php endif; ?>
+            </div>
+            <div class="att-kpi-value" style="color: #10b981;">
+                <?= $monthTotalDuties ?> <span class="att-kpi-subval">/ <?= $expectedMonthlyTotal ?> Duties</span>
+            </div>
+            <div class="att-kpi-meta">
+                <span>Day: <strong><?= $monthTotalDayShifts ?></strong> &bull; Night: <strong><?= $monthTotalNightShifts ?></strong></span>
+            </div>
         </div>
-        <div class="att-kpi-value">
-            <span>☀️ <?= $expectedMonthDayShifts ?> Day</span>
-            <span class="att-kpi-subval">&bull;</span>
-            <span>🌙 <?= $expectedMonthNightShifts ?> Night</span>
-        </div>
-        <div class="att-kpi-meta">
-            <span>Base: <strong><?= $baseMonthlyTotal ?></strong> &bull; Total Req: <strong><?= $expectedMonthlyTotal ?> Duties</strong></span>
-        </div>
-    </div>
 
-    <!-- Card 3: Roster Fulfillment Health -->
-    <div class="att-kpi-card att-kpi-success">
-        <div class="att-kpi-top">
-            <span class="att-kpi-title">Roster Delivery Rate</span>
-            <span class="att-kpi-tag <?= $fulfillmentPct >= 100 ? 'att-tag-green' : 'att-tag-red' ?>">
-                <?= $fulfillmentPct >= 100 ? '🟢 100% Fulfilled' : '🔴 ' . $fulfillmentPct . '% Coverage' ?>
-            </span>
-        </div>
-        <div class="att-kpi-value" style="color: #10b981;">
-            <?= $monthTotalDuties ?> <span class="att-kpi-subval">/ <?= $expectedMonthlyTotal ?> Duties</span>
-        </div>
-        <div class="att-kpi-meta">
-            <span>Day: <strong><?= $monthTotalDayShifts ?></strong> &bull; Night: <strong><?= $monthTotalNightShifts ?></strong></span>
-        </div>
-    </div>
-
-    <!-- Card 4: Personnel & Roster Status -->
-    <div class="att-kpi-card att-kpi-purple">
-        <div class="att-kpi-top">
-            <span class="att-kpi-title">Assigned Personnel</span>
-            <span class="att-kpi-tag <?= $isLocked ? 'att-tag-amber' : 'att-tag-green' ?>">
-                <?= $isLocked ? '🔒 Locked' : '🔓 Live Edit' ?>
-            </span>
-        </div>
-        <div class="att-kpi-value">
-            👥 <?= count($rows) ?> <span class="att-kpi-subval">Guards Rostered</span>
-        </div>
-        <div class="att-kpi-meta">
-            <span>Period: <strong><?= $monthName ?> <?= $curYear ?></strong></span>
-            <span style="margin-left:auto; font-size:11px; color:#10b981;">● Auto-Saved</span>
+        <!-- Card 4: Personnel & Roster Status -->
+        <div class="att-kpi-card att-kpi-purple">
+            <div class="att-kpi-top">
+                <span class="att-kpi-title">Assigned Personnel</span>
+                <span class="att-kpi-tag <?= $isLocked ? 'att-tag-amber' : 'att-tag-green' ?>">
+                    <?= $isLocked ? '🔒 Locked' : '🔓 Live Edit' ?>
+                </span>
+            </div>
+            <div class="att-kpi-value">
+                👥 <?= count($rows) ?> <span class="att-kpi-subval">Guards Rostered</span>
+            </div>
+            <div class="att-kpi-meta">
+                <span>Period: <strong><?= $monthName ?> <?= $curYear ?></strong></span>
+                <span style="margin-left:auto; font-size:11px; color:#10b981;">● Auto-Saved</span>
+            </div>
         </div>
     </div>
-</div>
 <?php endif; ?>
 
 <!-- 2. MODERN CONTROL & ACTION TOOLBAR -->
 <div class="att-controlbar no-print">
     <form method="GET" action="index.php" class="att-filters">
         <input type="hidden" name="action" value="sheet">
-        
+
         <label for="att-select-site"><strong>Site:</strong></label>
         <select id="att-select-site" name="site_id" class="att-select" onchange="this.form.submit()">
             <?php if (empty($sites)): ?>
@@ -184,12 +184,12 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
             <button type="button" class="att-btn att-btn-primary" id="att-btn-add-staff">+ Add Staff</button>
             <button type="button" class="att-btn att-btn-secondary" id="att-btn-add-deployment" title="Manage additional deployment for this month or specific dates">➕ Additional Deployment</button>
             <button type="button" class="att-btn att-btn-secondary" id="att-btn-site-reqs" title="Edit site requirements & contract dates">⚙️ Requirements</button>
-            <button type="button" class="att-btn att-btn-secondary" id="att-btn-copy-prev" 
-                    data-site-id="<?= $sheet['site_id'] ?>" data-year="<?= $curYear ?>" data-month="<?= $curMonth ?>">
+            <button type="button" class="att-btn att-btn-secondary" id="att-btn-copy-prev"
+                data-site-id="<?= $sheet['site_id'] ?>" data-year="<?= $curYear ?>" data-month="<?= $curMonth ?>">
                 ↻ Copy from Prev Month
             </button>
-            <button type="button" class="att-btn <?= $isLocked ? 'att-btn-warning' : 'att-btn-secondary' ?>" id="att-btn-lock" 
-                    data-sheet-id="<?= $sheet['id'] ?>" data-lock="<?= $isLocked ? '0' : '1' ?>">
+            <button type="button" class="att-btn <?= $isLocked ? 'att-btn-warning' : 'att-btn-secondary' ?>" id="att-btn-lock"
+                data-sheet-id="<?= $sheet['id'] ?>" data-lock="<?= $isLocked ? '0' : '1' ?>">
                 <?= $isLocked ? '🔒 Unlock Sheet' : '🔓 Lock Sheet' ?>
             </button>
             <a href="index.php?action=export_excel&export_type=sheet&sheet_id=<?= $sheet['id'] ?>" class="att-btn att-btn-success">
@@ -217,481 +217,501 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
             <button type="button" class="att-btn att-btn-primary" style="padding:10px 22px;font-size:14px;" onclick="document.getElementById('att-modal-new-site').classList.add('att-open')">+ Create First Site</button>
         </div>
     <?php else: ?>
-        
-<!-- CLEAN DECENT TABLE STYLING - BACKGROUND REMOVED (Guaranteed Inline) -->
-<style>
-/* Table Wrapper */
-.att-grid-wrapper {
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
-  background: #ffffff !important;
-}
 
-.att-roster-outer-table, .att-table {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Arial Narrow", Arial, sans-serif !important;
-  border-collapse: collapse !important;
-  width: 100% !important;
-  background: #ffffff !important;
-}
+        <!-- CLEAN DECENT TABLE STYLING - BACKGROUND REMOVED (Guaranteed Inline) -->
+        <style>
+            /* Table Wrapper */
+            .att-grid-wrapper {
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 8px !important;
+                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+                background: #ffffff !important;
+            }
 
-.att-roster-outer-table th, .att-roster-outer-table td,
-.att-table th, .att-table td {
-  border: 1px solid #cbd5e1 !important;
-  vertical-align: middle !important;
-  text-align: center !important;
-}
+            .att-roster-outer-table,
+            .att-table {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Arial Narrow", Arial, sans-serif !important;
+                border-collapse: collapse !important;
+                width: 100% !important;
+                background: #ffffff !important;
+            }
 
-/* 1. MAIN TITLE BANNER: Background Removed / Clean Crisp White with Blue Accent Border */
-.att-th-banner-darkteal,
-.att-payroll-header-banner {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  font-size: 18px !important;
-  font-weight: 900 !important;
-  height: 48px !important;
-  line-height: 48px !important;
-  text-align: center !important;
-  vertical-align: middle !important;
-  letter-spacing: 0.8px !important;
-  text-transform: uppercase !important;
-  border-bottom: 3px solid #0284c7 !important;
-  text-shadow: none !important;
-}
+            .att-roster-outer-table th,
+            .att-roster-outer-table td,
+            .att-table th,
+            .att-table td {
+                border: 1px solid #cbd5e1 !important;
+                vertical-align: middle !important;
+                text-align: center !important;
+            }
 
-/* 2. SUB-HEADERS: Emp No, Guard Name, Site Name, Days 1..31 - Background Removed */
-.att-th-top-row,
-.att-th-teal-pay {
-  background: #f8fafc !important;
-  color: #0f172a !important;
-  font-weight: 900 !important;
-  font-size: 13.5px !important;
-  letter-spacing: 0.3px !important;
-  height: 32px !important;
-  border: 1px solid #cbd5e1 !important;
-  text-shadow: none !important;
-}
+            /* 1. MAIN TITLE BANNER: Background Removed / Clean Crisp White with Blue Accent Border */
+            .att-th-banner-darkteal,
+            .att-payroll-header-banner {
+                background: #ffffff !important;
+                color: #0f172a !important;
+                font-size: 18px !important;
+                font-weight: 900 !important;
+                height: 48px !important;
+                line-height: 48px !important;
+                text-align: center !important;
+                vertical-align: middle !important;
+                letter-spacing: 0.8px !important;
+                text-transform: uppercase !important;
+                border-bottom: 3px solid #0284c7 !important;
+                text-shadow: none !important;
+            }
 
-/* Weekday Sub-Header (THU, FRI, SAT...) */
-.att-th-teal-sub,
-.att-th-teal-pay-sub {
-  background: #f1f5f9 !important;
-  color: #475569 !important;
-  font-weight: 900 !important;
-  font-size: 11.5px !important;
-  letter-spacing: 0.3px !important;
-  height: 26px !important;
-  border: 1px solid #cbd5e1 !important;
-}
+            /* 2. SUB-HEADERS: Emp No, Guard Name, Site Name, Days 1..31 - Background Removed */
+            .att-th-top-row,
+            .att-th-teal-pay {
+                background: #f8fafc !important;
+                color: #0f172a !important;
+                font-weight: 900 !important;
+                font-size: 13.5px !important;
+                letter-spacing: 0.3px !important;
+                height: 32px !important;
+                border: 1px solid #cbd5e1 !important;
+                text-shadow: none !important;
+            }
 
-/* Weekend Header (FRI, SUN) - Soft Amber Accent */
-.att-th-teal-weekend {
-  background: #fef3c7 !important;
-  color: #92400e !important;
-  font-weight: 900 !important;
-}
+            /* Weekday Sub-Header (THU, FRI, SAT...) */
+            .att-th-teal-sub,
+            .att-th-teal-pay-sub {
+                background: #f1f5f9 !important;
+                color: #475569 !important;
+                font-weight: 900 !important;
+                font-size: 11.5px !important;
+                letter-spacing: 0.3px !important;
+                height: 26px !important;
+                border: 1px solid #cbd5e1 !important;
+            }
 
-/* Sticky Left Columns - Clean White */
-.att-col-emp {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  font-weight: 900 !important;
-  font-size: 13.5px !important;
-  letter-spacing: 0.5px !important;
-}
+            /* Weekend Header (FRI, SUN) - Soft Amber Accent */
+            .att-th-teal-weekend {
+                background: #fef3c7 !important;
+                color: #92400e !important;
+                font-weight: 900 !important;
+            }
 
-.att-col-name {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  font-weight: 900 !important;
-  font-size: 14px !important;
-  letter-spacing: 0.3px !important;
-  text-align: left !important;
-  padding-left: 10px !important;
-}
+            /* Sticky Left Columns - Clean White */
+            .att-col-emp {
+                background: #ffffff !important;
+                color: #0f172a !important;
+                font-weight: 900 !important;
+                font-size: 13.5px !important;
+                letter-spacing: 0.5px !important;
+            }
 
-.att-col-site {
-  background: #ffffff !important;
-  color: #0284c7 !important;
-  font-weight: 800 !important;
-  font-size: 13px !important;
-  text-align: left !important;
-  padding-left: 10px !important;
-}
+            .att-col-name {
+                background: #ffffff !important;
+                color: #0f172a !important;
+                font-weight: 900 !important;
+                font-size: 14px !important;
+                letter-spacing: 0.3px !important;
+                text-align: left !important;
+                padding-left: 10px !important;
+            }
 
-.att-th-top-row.att-col-emp,
-.att-th-top-row.att-col-name,
-.att-th-top-row.att-col-site {
-  background: #f8fafc !important;
-  color: #0f172a !important;
-  text-align: center !important;
-}
+            .att-col-site {
+                background: #ffffff !important;
+                color: #0284c7 !important;
+                font-weight: 800 !important;
+                font-size: 13px !important;
+                text-align: left !important;
+                padding-left: 10px !important;
+            }
 
-.att-col-day {
-  width: 38px !important;
-  min-width: 38px !important;
-  max-width: 38px !important;
-  font-weight: 900 !important;
-}
+            .att-th-top-row.att-col-emp,
+            .att-th-top-row.att-col-name,
+            .att-th-top-row.att-col-site {
+                background: #f8fafc !important;
+                color: #0f172a !important;
+                text-align: center !important;
+            }
 
-/* 3. CELL INPUTS & SHIFT CODES (Crisp & Bold) */
-.att-cell-input {
-  width: 100% !important;
-  height: 26px !important;
-  border: none !important;
-  background: transparent !important;
-  text-align: center !important;
-  font-size: 14px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.5px !important;
-  text-transform: uppercase !important;
-}
+            .att-col-day {
+                width: 38px !important;
+                min-width: 38px !important;
+                max-width: 38px !important;
+                font-weight: 900 !important;
+            }
 
-.att-code-D {
-  color: #059669 !important;
-  background: rgba(16, 185, 129, 0.14) !important;
-  font-weight: 900 !important;
-  border-radius: 4px !important;
-}
+            /* 3. CELL INPUTS & SHIFT CODES (Crisp & Bold) */
+            .att-cell-input {
+                width: 100% !important;
+                height: 26px !important;
+                border: none !important;
+                background: transparent !important;
+                text-align: center !important;
+                font-size: 14px !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.5px !important;
+                text-transform: uppercase !important;
+            }
 
-.att-code-N {
-  color: #2563eb !important;
-  background: rgba(37, 99, 235, 0.14) !important;
-  font-weight: 900 !important;
-  border-radius: 4px !important;
-}
+            .att-code-D {
+                color: #059669 !important;
+                background: rgba(16, 185, 129, 0.14) !important;
+                font-weight: 900 !important;
+                border-radius: 4px !important;
+            }
 
-.att-code-OFF {
-  color: #dc2626 !important;
-  background: rgba(220, 38, 38, 0.16) !important;
-  font-weight: 900 !important;
-  border-radius: 4px !important;
-}
+            .att-code-N {
+                color: #2563eb !important;
+                background: rgba(37, 99, 235, 0.14) !important;
+                font-weight: 900 !important;
+                border-radius: 4px !important;
+            }
 
-.att-code-S {
-  color: #d97706 !important;
-  background: rgba(217, 119, 6, 0.16) !important;
-  font-weight: 900 !important;
-  border-radius: 4px !important;
-}
+            .att-code-OFF {
+                color: #dc2626 !important;
+                background: rgba(220, 38, 38, 0.16) !important;
+                font-weight: 900 !important;
+                border-radius: 4px !important;
+            }
 
-.att-code-B {
-  color: #7c3aed !important;
-  background: rgba(124, 58, 237, 0.14) !important;
-  font-weight: 900 !important;
-  border-radius: 4px !important;
-}
+            .att-code-S {
+                color: #d97706 !important;
+                background: rgba(217, 119, 6, 0.16) !important;
+                font-weight: 900 !important;
+                border-radius: 4px !important;
+            }
 
-/* ====================================================================
+            .att-code-B {
+                color: #7c3aed !important;
+                background: rgba(124, 58, 237, 0.14) !important;
+                font-weight: 900 !important;
+                border-radius: 4px !important;
+            }
+
+            /* ====================================================================
  * 4. SUMMARY ROWS: DAY, NIGHT, AND TOTAL ON DUTY - COMPLETELY WITHOUT COLOUR
  * Strictly NO Background Color: Pure Crisp White / Clean Monochrome
  * ==================================================================== */
-.att-tr-day-total,
-.att-tr-night-total,
-.att-tr-grand-total {
-  height: 28px !important;
-  font-size: 14px !important;
-  background: #ffffff !important;
-  background-color: #ffffff !important;
-  border-top: 2px solid #cbd5e1 !important;
-}
+            .att-tr-day-total,
+            .att-tr-night-total,
+            .att-tr-grand-total {
+                height: 28px !important;
+                font-size: 14px !important;
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                border-top: 2px solid #cbd5e1 !important;
+            }
 
-.att-tr-day-total td,
-.att-tr-night-total td,
-.att-tr-grand-total td,
-.att-tr-day-total .att-summary-label,
-.att-tr-night-total .att-summary-label,
-.att-tr-grand-total .att-summary-label,
-.att-summary-label {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  text-align: center !important;
-  padding: 0 10px !important;
-  font-weight: 900 !important;
-  font-size: 13.5px !important;
-  letter-spacing: 0.5px !important;
-  border: 1px solid #cbd5e1 !important;
-  text-shadow: none !important;
-  box-shadow: none !important;
-}
+            .att-tr-day-total td,
+            .att-tr-night-total td,
+            .att-tr-grand-total td,
+            .att-tr-day-total .att-summary-label,
+            .att-tr-night-total .att-summary-label,
+            .att-tr-grand-total .att-summary-label,
+            .att-summary-label {
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                text-align: center !important;
+                padding: 0 10px !important;
+                font-weight: 900 !important;
+                font-size: 13.5px !important;
+                letter-spacing: 0.5px !important;
+                border: 1px solid #cbd5e1 !important;
+                text-shadow: none !important;
+                box-shadow: none !important;
+            }
 
-.att-col-total-d,
-.att-col-total-n,
-.att-col-total-grand,
-.att-roster-outer-table .att-deploy-ok,
-.att-roster-outer-table .att-deploy-less,
-.att-roster-outer-table .att-deploy-over,
-.att-roster-outer-table .att-deploy-neutral {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  text-align: center !important;
-  vertical-align: middle !important;
-  font-weight: 900 !important;
-  font-size: 14px !important;
-  border: 1px solid #cbd5e1 !important;
-  text-shadow: none !important;
-  box-shadow: none !important;
-}
+            .att-col-total-d,
+            .att-col-total-n,
+            .att-col-total-grand,
+            .att-roster-outer-table .att-deploy-ok,
+            .att-roster-outer-table .att-deploy-less,
+            .att-roster-outer-table .att-deploy-over,
+            .att-roster-outer-table .att-deploy-neutral {
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                text-align: center !important;
+                vertical-align: middle !important;
+                font-weight: 900 !important;
+                font-size: 14px !important;
+                border: 1px solid #cbd5e1 !important;
+                text-shadow: none !important;
+                box-shadow: none !important;
+            }
 
-/* Legend Pills */
-.att-legend-pills .att-pill-badge {
-  padding: 4px 12px !important;
-  border-radius: 20px !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-}
+            /* Legend Pills */
+            .att-legend-pills .att-pill-badge {
+                padding: 4px 12px !important;
+                border-radius: 20px !important;
+                font-size: 12px !important;
+                font-weight: 900 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 6px !important;
+            }
 
-.att-legend-pills .att-pill-badge.att-deploy-ok {
-  background: #dcfce7 !important;
-  color: #15803d !important;
-  border: 1px solid #86efac !important;
-  box-shadow: none !important;
-}
+            .att-legend-pills .att-pill-badge.att-deploy-ok {
+                background: #dcfce7 !important;
+                color: #15803d !important;
+                border: 1px solid #86efac !important;
+                box-shadow: none !important;
+            }
 
-.att-legend-pills .att-pill-badge.att-deploy-less {
-  background: #fee2e2 !important;
-  color: #b91c1c !important;
-  border: 1px solid #fca5a5 !important;
-  box-shadow: none !important;
-}
+            .att-legend-pills .att-pill-badge.att-deploy-less {
+                background: #fee2e2 !important;
+                color: #b91c1c !important;
+                border: 1px solid #fca5a5 !important;
+                box-shadow: none !important;
+            }
 
-.att-legend-pills .att-pill-badge.att-deploy-over {
-  background: #fef3c7 !important;
-  color: #b45309 !important;
-  border: 1px solid #fcd34d !important;
-  box-shadow: none !important;
-}
+            .att-legend-pills .att-pill-badge.att-deploy-over {
+                background: #fef3c7 !important;
+                color: #b45309 !important;
+                border: 1px solid #fcd34d !important;
+                box-shadow: none !important;
+            }
 
-/* 5. PAYROLL COUNTS & TOTAL CONSOLIDATED ROW - Background Removed */
-.att-col-stat {
-  font-weight: 900 !important;
-  font-size: 14px !important;
-  width: 46px !important;
-  min-width: 46px !important;
-}
+            /* 5. PAYROLL COUNTS & TOTAL CONSOLIDATED ROW - Background Removed */
+            .att-col-stat {
+                font-weight: 900 !important;
+                font-size: 14px !important;
+                width: 46px !important;
+                min-width: 46px !important;
+            }
 
-.att-col-total {
-  font-weight: 900 !important;
-  font-size: 14.5px !important;
-  width: 80px !important;
-  min-width: 80px !important;
-}
+            .att-col-total {
+                font-weight: 900 !important;
+                font-size: 14.5px !important;
+                width: 80px !important;
+                min-width: 80px !important;
+            }
 
-.att-payroll-row td {
-  font-size: 13.5px !important;
-  font-weight: 800 !important;
-  background: #ffffff !important;
-}
+            .att-payroll-row td {
+                font-size: 13.5px !important;
+                font-weight: 800 !important;
+                background: #ffffff !important;
+            }
 
-.att-payroll-total-row {
-  background: #f8fafc !important;
-  color: #0f172a !important;
-  border-top: 2px solid #cbd5e1 !important;
-}
+            .att-payroll-total-row {
+                background: #f8fafc !important;
+                color: #0f172a !important;
+                border-top: 2px solid #cbd5e1 !important;
+            }
 
-.att-payroll-total-row td {
-  background: #f8fafc !important;
-  color: #0f172a !important;
-  font-weight: 900 !important;
-}
-</style>
+            .att-payroll-total-row td {
+                background: #f8fafc !important;
+                color: #0f172a !important;
+                font-weight: 900 !important;
+            }
+        </style>
 
-<!-- EXECUTIVE DECENT HEADER STYLING (Royal Navy & Gold Weekend Highlights) -->
-<style>
-/* 1. MAIN TITLE BANNER: Deep Executive Navy with Cyan Sheen */
-.att-th-banner-darkteal,
-.att-payroll-header-banner {
-  background: linear-gradient(135deg, #0f2744 0%, #16365c 50%, #1f4575 100%) !important;
-  color: #ffffff !important;
-  font-size: 17.5px !important;
-  font-weight: 800 !important;
-  height: 48px !important;
-  line-height: 48px !important;
-  text-align: center !important;
-  vertical-align: middle !important;
-  letter-spacing: 1px !important;
-  text-transform: uppercase !important;
-  border-bottom: 3px solid #38bdf8 !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
-}
+        <!-- EXECUTIVE DECENT HEADER STYLING (Royal Navy & Gold Weekend Highlights) -->
+        <style>
+            /* 1. MAIN TITLE BANNER: Deep Executive Navy with Cyan Sheen */
+            .att-th-banner-darkteal,
+            .att-payroll-header-banner {
+                background: linear-gradient(135deg, #0f2744 0%, #16365c 50%, #1f4575 100%) !important;
+                color: #ffffff !important;
+                font-size: 17.5px !important;
+                font-weight: 800 !important;
+                height: 48px !important;
+                line-height: 48px !important;
+                text-align: center !important;
+                vertical-align: middle !important;
+                letter-spacing: 1px !important;
+                text-transform: uppercase !important;
+                border-bottom: 3px solid #38bdf8 !important;
+                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+            }
 
-/* 2. SUB-HEADERS: Emp No, Guard Name, Site Name, Days 1..31 */
-.att-th-top-row,
-.att-th-teal-pay {
-  background: linear-gradient(180deg, #1a365d 0%, #122844 100%) !important;
-  color: #f8fafc !important;
-  font-weight: 800 !important;
-  font-size: 13.5px !important;
-  letter-spacing: 0.3px !important;
-  height: 32px !important;
-  border: 1px solid #2d4a77 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
-}
+            /* 2. SUB-HEADERS: Emp No, Guard Name, Site Name, Days 1..31 */
+            .att-th-top-row,
+            .att-th-teal-pay {
+                background: linear-gradient(180deg, #1a365d 0%, #122844 100%) !important;
+                color: #f8fafc !important;
+                font-weight: 800 !important;
+                font-size: 13.5px !important;
+                letter-spacing: 0.3px !important;
+                height: 32px !important;
+                border: 1px solid #2d4a77 !important;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+            }
 
-/* Weekday Sub-Header (THU, FRI, SAT...) */
-.att-th-teal-sub,
-.att-th-teal-pay-sub {
-  background: #0d1e33 !important;
-  color: #cbd5e1 !important;
-  font-weight: 800 !important;
-  font-size: 11px !important;
-  letter-spacing: 0.3px !important;
-  height: 25px !important;
-  border: 1px solid #1c3554 !important;
-}
+            /* Weekday Sub-Header (THU, FRI, SAT...) */
+            .att-th-teal-sub,
+            .att-th-teal-pay-sub {
+                background: #0d1e33 !important;
+                color: #cbd5e1 !important;
+                font-weight: 800 !important;
+                font-size: 11px !important;
+                letter-spacing: 0.3px !important;
+                height: 25px !important;
+                border: 1px solid #1c3554 !important;
+            }
 
-/* Weekend Header (FRI, SUN) - Elegant Gold Standout */
-.att-th-teal-weekend {
-  background: #091726 !important;
-  color: #fbbf24 !important;
-  font-weight: 900 !important;
-  border: 1px solid #1c3554 !important;
-}
+            /* Weekend Header (FRI, SUN) - Elegant Gold Standout */
+            .att-th-teal-weekend {
+                background: #091726 !important;
+                color: #fbbf24 !important;
+                font-weight: 900 !important;
+                border: 1px solid #1c3554 !important;
+            }
 
-/* Sticky Header Left Columns (Emp No, Guard Name, Site Name) */
-.att-th-top-row.att-col-emp,
-.att-th-top-row.att-col-name,
-.att-th-top-row.att-col-site {
-  background: linear-gradient(180deg, #1a365d 0%, #122844 100%) !important;
-  color: #ffffff !important;
-  text-align: center !important;
-  border: 1px solid #2d4a77 !important;
-}
+            /* Sticky Header Left Columns (Emp No, Guard Name, Site Name) */
+            .att-th-top-row.att-col-emp,
+            .att-th-top-row.att-col-name,
+            .att-th-top-row.att-col-site {
+                background: linear-gradient(180deg, #1a365d 0%, #122844 100%) !important;
+                color: #ffffff !important;
+                text-align: center !important;
+                border: 1px solid #2d4a77 !important;
+            }
 
-.att-col-day {
-  width: 38px !important;
-  min-width: 38px !important;
-  max-width: 38px !important;
-}
+            .att-col-day {
+                width: 38px !important;
+                min-width: 38px !important;
+                max-width: 38px !important;
+            }
 
-/* Duplicate Attendance Conflict Visual Alerts */
-.att-row-conflict td {
-  background-color: rgba(239, 68, 68, 0.16) !important;
-  transition: background-color 0.3s ease !important;
-}
+            /* Duplicate Attendance Conflict Visual Alerts */
+            .att-row-conflict td {
+                background-color: rgba(239, 68, 68, 0.16) !important;
+                transition: background-color 0.3s ease !important;
+            }
 
-.att-row-conflict {
-  animation: attConflictPulse 1.2s ease-in-out infinite alternate !important;
-  outline: 2px solid #ef4444 !important;
-  outline-offset: -1px !important;
-}
+            .att-row-conflict {
+                animation: attConflictPulse 1.2s ease-in-out infinite alternate !important;
+                outline: 2px solid #ef4444 !important;
+                outline-offset: -1px !important;
+            }
 
-@keyframes attConflictPulse {
-  0% {
-    box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
-  }
-  100% {
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
-  }
-}
+            @keyframes attConflictPulse {
+                0% {
+                    box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+                }
 
-.att-cell-conflict {
-  border: 2px solid #ef4444 !important;
-  background-color: #fee2e2 !important;
-  color: #b91c1c !important;
-  animation: attCellShake 0.4s ease-in-out !important;
-}
+                100% {
+                    box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
+                }
+            }
 
-@keyframes attCellShake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-4px); }
-  40%, 80% { transform: translateX(4px); }
-}
-</style>
+            .att-cell-conflict {
+                border: 2px solid #ef4444 !important;
+                background-color: #fee2e2 !important;
+                color: #b91c1c !important;
+                animation: attCellShake 0.4s ease-in-out !important;
+            }
+
+            @keyframes attCellShake {
+
+                0%,
+                100% {
+                    transform: translateX(0);
+                }
+
+                20%,
+                60% {
+                    transform: translateX(-4px);
+                }
+
+                40%,
+                80% {
+                    transform: translateX(4px);
+                }
+            }
+        </style>
 
 
-<!-- BLACK TEXT WITHOUT BOLD FOR ATTENDANCE & PAYROLL DATA ROWS -->
-<style>
-/* Staff Data Columns: Black Text, Without Bold */
-.att-row-staff td,
-.att-payroll-row td,
-.att-col-emp,
-.att-col-name,
-.att-col-site,
-.att-col-stat,
-.att-col-total {
-  color: #000000 !important;
-  font-weight: normal !important;
-  font-size: 13px !important;
-}
+        <!-- BLACK TEXT WITHOUT BOLD FOR ATTENDANCE & PAYROLL DATA ROWS -->
+        <style>
+            /* Staff Data Columns: Black Text, Without Bold */
+            .att-row-staff td,
+            .att-payroll-row td,
+            .att-col-emp,
+            .att-col-name,
+            .att-col-site,
+            .att-col-stat,
+            .att-col-total {
+                color: #000000 !important;
+                font-weight: normal !important;
+                font-size: 13px !important;
+            }
 
-.att-col-name {
-  text-align: left !important;
-  padding-left: 10px !important;
-}
+            .att-col-name {
+                text-align: left !important;
+                padding-left: 10px !important;
+            }
 
-.att-col-site {
-  text-align: left !important;
-  padding-left: 10px !important;
-  color: #000000 !important;
-}
+            .att-col-site {
+                text-align: left !important;
+                padding-left: 10px !important;
+                color: #000000 !important;
+            }
 
-/* Interactive Input inside table: Black Text, Without Bold */
-.att-cell-input {
-  color: #000000 !important;
-  font-weight: normal !important;
-  font-size: 13px !important;
-}
+            /* Interactive Input inside table: Black Text, Without Bold */
+            .att-cell-input {
+                color: #000000 !important;
+                font-weight: normal !important;
+                font-size: 13px !important;
+            }
 
-/* Shift tags: keep subtle background, black text without bold */
-.att-code-D, .att-code-N, .att-code-OFF, .att-code-S, .att-code-B {
-  font-weight: normal !important;
-}
+            /* Shift tags: keep subtle background, black text without bold */
+            .att-code-D,
+            .att-code-N,
+            .att-code-OFF,
+            .att-code-S,
+            .att-code-B {
+                font-weight: normal !important;
+            }
 
-/* Summary Rows: Black Text, Without Bold, Pure White */
-.att-tr-day-total td,
-.att-tr-night-total td,
-.att-tr-grand-total td,
-.att-tr-day-total .att-summary-label,
-.att-tr-night-total .att-summary-label,
-.att-tr-grand-total .att-summary-label,
-.att-summary-label {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  font-weight: normal !important;
-  font-size: 13px !important;
-  letter-spacing: normal !important;
-  text-align: center !important;
-  border: 1px solid #cbd5e1 !important;
-  text-shadow: none !important;
-  box-shadow: none !important;
-}
+            /* Summary Rows: Black Text, Without Bold, Pure White */
+            .att-tr-day-total td,
+            .att-tr-night-total td,
+            .att-tr-grand-total td,
+            .att-tr-day-total .att-summary-label,
+            .att-tr-night-total .att-summary-label,
+            .att-tr-grand-total .att-summary-label,
+            .att-summary-label {
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                font-weight: normal !important;
+                font-size: 13px !important;
+                letter-spacing: normal !important;
+                text-align: center !important;
+                border: 1px solid #cbd5e1 !important;
+                text-shadow: none !important;
+                box-shadow: none !important;
+            }
 
-.att-col-total-d,
-.att-col-total-n,
-.att-col-total-grand,
-.att-deploy-ok,
-.att-deploy-less,
-.att-deploy-over,
-.att-deploy-neutral {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  font-weight: normal !important;
-  font-size: 13px !important;
-  text-align: center !important;
-  border: 1px solid #cbd5e1 !important;
-  text-shadow: none !important;
-  box-shadow: none !important;
-}
+            .att-col-total-d,
+            .att-col-total-n,
+            .att-col-total-grand,
+            .att-deploy-ok,
+            .att-deploy-less,
+            .att-deploy-over,
+            .att-deploy-neutral {
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                font-weight: normal !important;
+                font-size: 13px !important;
+                text-align: center !important;
+                border: 1px solid #cbd5e1 !important;
+                text-shadow: none !important;
+                box-shadow: none !important;
+            }
 
-/* Payroll Total Row */
-.att-payroll-total-row td,
-.att-payroll-total-row .att-summary-label {
-  background: #ffffff !important;
-  color: #000000 !important;
-  font-weight: normal !important;
-  font-size: 13px !important;
-}
-</style>
+            /* Payroll Total Row */
+            .att-payroll-total-row td,
+            .att-payroll-total-row .att-summary-label {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-weight: normal !important;
+                font-size: 13px !important;
+            }
+        </style>
 
-<div class="att-grid-wrapper">
+        <div class="att-grid-wrapper">
             <table class="att-roster-outer-table" id="att-roster-table" data-sheet-id="<?= $sheet['id'] ?>" data-locked="<?= $isLocked ? '1' : '0' ?>">
                 <thead>
                     <!-- Executive Title Banner -->
@@ -708,7 +728,7 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                         <th rowspan="2" class="att-th-top-row att-col-site">Site Name</th>
 
                         <!-- Days of Month (1 to 28/29/30/31) -->
-                        <?php for ($d = 1; $d <= $daysInMonth; $d++): 
+                        <?php for ($d = 1; $d <= $daysInMonth; $d++):
                             $wName = strtoupper(substr(date('D', mktime(0, 0, 0, $curMonth, $d, $curYear)), 0, 3));
                             $isWk = in_array($wName, ['FRI', 'SUN']);
                         ?>
@@ -721,7 +741,7 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
 
                     <!-- Weekday Names Row 2 (SAT, SUN, MON...) -->
                     <tr>
-                        <?php for ($d = 1; $d <= $daysInMonth; $d++): 
+                        <?php for ($d = 1; $d <= $daysInMonth; $d++):
                             $wName = strtoupper(substr(date('D', mktime(0, 0, 0, $curMonth, $d, $curYear)), 0, 3));
                             $isWk = in_array($wName, ['FRI', 'SUN']);
                         ?>
@@ -739,8 +759,8 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                             </td>
                         </tr>
                     <?php else: ?>
-                        <?php 
-                        foreach ($rows as $r): 
+                        <?php
+                        foreach ($rows as $r):
                             $displayName = $r['emp_name_snapshot'] ?? $r['staff_name'] ?? $r['emp_name'] ?? '';
                             $cellVals = $r['days'] ?? $r['cells'] ?? [];
                         ?>
@@ -750,35 +770,35 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                                 <td class="att-col-site"><?= htmlspecialchars($sheet['site_name']) ?></td>
 
                                 <!-- Day Boxes -->
-                                <?php for ($d = 1; $d <= $daysInMonth; $d++): 
+                                <?php for ($d = 1; $d <= $daysInMonth; $d++):
                                     $val = $cellVals[$d] ?? '';
                                     $wName = strtoupper(substr(date('D', mktime(0, 0, 0, $curMonth, $d, $curYear)), 0, 3));
                                     $isWk = in_array($wName, ['FRI', 'SUN']);
                                     $codeCls = in_array($val, ['D', 'N', 'OFF', 'S', 'B']) ? 'att-code-' . $val : '';
                                 ?>
                                     <td class="att-col-day <?= $isWk ? 'att-td-weekend' : '' ?>">
-                                        <input type="text" 
-                                               class="att-cell-input <?= $codeCls ?>" 
-                                               data-day="<?= $d ?>" 
-                                               value="<?= htmlspecialchars($val) ?>" 
-                                               maxlength="3"
-                                               <?= $isLocked ? 'readonly' : '' ?>
-                                               autocomplete="off">
+                                        <input type="text"
+                                            class="att-cell-input <?= $codeCls ?>"
+                                            data-day="<?= $d ?>"
+                                            value="<?= htmlspecialchars($val) ?>"
+                                            maxlength="3"
+                                            <?= $isLocked ? 'readonly' : '' ?>
+                                            autocomplete="off">
                                     </td>
                                 <?php endfor; ?>
 
                                 <!-- Action Buttons: Replace & Delete -->
                                 <td class="att-col-action no-print">
                                     <?php if (!$isLocked): ?>
-                                        <button type="button" class="att-row-btn-icon att-btn-replace-staff" 
-                                                data-row-id="<?= $r['id'] ?>" 
-                                                data-emp-no="<?= htmlspecialchars($r['emp_no'] ?? '', ENT_QUOTES) ?>" 
-                                                data-name="<?= htmlspecialchars($displayName, ENT_QUOTES) ?>" 
-                                                title="Replace Guard">🔁</button>
-                                        <button type="button" class="att-row-btn-icon att-btn-remove-staff" 
-                                                data-row-id="<?= $r['id'] ?>" 
-                                                data-staff-name="<?= htmlspecialchars($displayName, ENT_QUOTES) ?>" 
-                                                title="Delete Row">🗑️</button>
+                                        <button type="button" class="att-row-btn-icon att-btn-replace-staff"
+                                            data-row-id="<?= $r['id'] ?>"
+                                            data-emp-no="<?= htmlspecialchars($r['emp_no'] ?? '', ENT_QUOTES) ?>"
+                                            data-name="<?= htmlspecialchars($displayName, ENT_QUOTES) ?>"
+                                            title="Replace Guard">🔁</button>
+                                        <button type="button" class="att-row-btn-icon att-btn-remove-staff"
+                                            data-row-id="<?= $r['id'] ?>"
+                                            data-staff-name="<?= htmlspecialchars($displayName, ENT_QUOTES) ?>"
+                                            title="Delete Row">🗑️</button>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -799,7 +819,7 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                     <!-- Bottom Summary Row 1: Day Shift (D) -->
                     <tr class="att-tr-day-total" style="background:#ffffff !important;background-color:#ffffff !important;">
                         <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:normal !important;">DAY SHIFT (D):</td>
-                        <?php for ($d = 1; $d <= $daysInMonth; $d++): 
+                        <?php for ($d = 1; $d <= $daysInMonth; $d++):
                             $stD = $dayDeployStatuses[$d] ?? 'neutral';
                             $clsD = 'att-deploy-' . $stD;
                             $reqD = $dayRequirements[$d] ?? 0;
@@ -814,7 +834,7 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                     <!-- Bottom Summary Row 2: Night Shift (N) -->
                     <tr class="att-tr-night-total" style="background:#ffffff !important;background-color:#ffffff !important;">
                         <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:normal !important;">NIGHT SHIFT (N):</td>
-                        <?php for ($d = 1; $d <= $daysInMonth; $d++): 
+                        <?php for ($d = 1; $d <= $daysInMonth; $d++):
                             $stN = $nightDeployStatuses[$d] ?? 'neutral';
                             $clsN = 'att-deploy-' . $stN;
                             $reqN = $nightRequirements[$d] ?? 0;
@@ -829,7 +849,7 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
                     <!-- Bottom Summary Row 3: Total on Duty (D + N) -->
                     <tr class="att-tr-grand-total" style="background:#ffffff !important;background-color:#ffffff !important;">
                         <td colspan="3" class="att-summary-label" style="background:#ffffff !important;background-color:#ffffff !important;color:#000000 !important;font-weight:normal !important;">TOTAL ON DUTY (D + N):</td>
-                        <?php for ($d = 1; $d <= $daysInMonth; $d++): 
+                        <?php for ($d = 1; $d <= $daysInMonth; $d++):
                             $stTot = $totalDeployStatuses[$d] ?? 'neutral';
                             $clsTot = 'att-deploy-' . $stTot;
                             $reqTot = $totalRequirements[$d] ?? 0;
@@ -1053,7 +1073,7 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
         <form method="POST" action="index.php?action=save_site">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(att_get_csrf_token()) ?>">
             <div class="att-modal-body" style="max-height: 78vh; overflow-y: auto;">
-                
+
                 <!-- Section 1: Permanent Deployment (Contract Master) -->
                 <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -1167,374 +1187,374 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
 </div>
 
 <?php if ($sheet): ?>
-<!-- Modal: Delete Selected Site -->
-<div class="att-modal-overlay no-print" id="att-modal-delete-site">
-    <div class="att-modal">
-        <div class="att-modal-header" style="background:#dc2626;color:#ffffff;">
-            <span>🗑️ Delete Site</span>
-            <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
-        </div>
-        <form method="POST" action="index.php?action=delete_site">
-            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(att_get_csrf_token()) ?>">
-            <input type="hidden" name="site_id" value="<?= $sheet['site_id'] ?>">
-            <div class="att-modal-body">
-                <p style="font-size:14px;color:var(--att-text);margin:0 0 12px 0;">
-                    Are you sure you want to delete site <strong><?= htmlspecialchars($sheet['site_name']) ?></strong>?
-                </p>
-                <div style="background:var(--att-danger-bg);border:1px solid rgba(239,68,68,0.3);padding:14px;border-radius:6px;color:var(--att-danger);font-size:12.5px;line-height:1.4;">
-                    ⚠️ This site will be removed from the active site roster. Historical records are preserved in the MySQL database.
+    <!-- Modal: Delete Selected Site -->
+    <div class="att-modal-overlay no-print" id="att-modal-delete-site">
+        <div class="att-modal">
+            <div class="att-modal-header" style="background:#dc2626;color:#ffffff;">
+                <span>🗑️ Delete Site</span>
+                <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
+            </div>
+            <form method="POST" action="index.php?action=delete_site">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(att_get_csrf_token()) ?>">
+                <input type="hidden" name="site_id" value="<?= $sheet['site_id'] ?>">
+                <div class="att-modal-body">
+                    <p style="font-size:14px;color:var(--att-text);margin:0 0 12px 0;">
+                        Are you sure you want to delete site <strong><?= htmlspecialchars($sheet['site_name']) ?></strong>?
+                    </p>
+                    <div style="background:var(--att-danger-bg);border:1px solid rgba(239,68,68,0.3);padding:14px;border-radius:6px;color:var(--att-danger);font-size:12.5px;line-height:1.4;">
+                        ⚠️ This site will be removed from the active site roster. Historical records are preserved in the MySQL database.
+                    </div>
                 </div>
+                <div class="att-modal-footer">
+                    <button type="button" class="att-btn att-btn-secondary att-modal-close">Cancel</button>
+                    <button type="submit" class="att-btn att-btn-danger">Yes, Delete Site</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Additional Deployment Options -->
+    <div class="att-modal-overlay no-print" id="att-modal-additional-deployment">
+        <div class="att-modal" style="width: 760px; max-width: 95vw;">
+            <div class="att-modal-header">
+                <span>⚡ Deployment Configuration &amp; Additional Shifts - <?= htmlspecialchars($sheet['site_name']) ?></span>
+                <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
+            </div>
+            <div class="att-modal-body" style="max-height: 80vh; overflow-y: auto;">
+
+                <!-- Section 1: Active Permanent Contract Overview -->
+                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:13px; font-weight:800; color:#0f2744;">🏢 Permanent Base Contract Deployment</span>
+                        <span class="att-kpi-tag att-tag-blue">Base Strength: <?= $siteReqTotal ?> Guards / Day</span>
+                    </div>
+                    <div style="display:flex; gap:16px; font-size:12.5px; color:#334155;">
+                        <div>☀️ Day Required: <strong><?= $siteReqDay ?></strong></div>
+                        <div>🌙 Night Required: <strong><?= $siteReqNight ?></strong></div>
+                        <div>📅 Contract: <strong><?= !empty($contractStart) ? htmlspecialchars($contractStart) : 'Open' ?> &rarr; <?= !empty($contractEnd) ? htmlspecialchars($contractEnd) : 'Ongoing' ?></strong></div>
+                        <div style="margin-left:auto;">Base Month Total: <strong><?= $baseMonthlyTotal ?> Duties</strong> (<?= $baseMonthlyDayShifts ?> Day + <?= $baseMonthlyNightShifts ?> Night)</div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Form to Configure Additional Shift Deployment -->
+                <form method="POST" action="index.php?action=save_additional_deployment" style="background:#ffffff; border:1.5px solid #0284c7; border-radius:8px; padding:16px; margin-bottom:16px; box-shadow: 0 2px 6px rgba(2,132,199,0.08);">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(att_get_csrf_token()) ?>">
+                    <input type="hidden" name="sheet_id" value="<?= $sheet['id'] ?>">
+                    <input type="hidden" name="site_id" value="<?= $sheet['site_id'] ?>">
+                    <input type="hidden" name="month" value="<?= $curMonth ?>">
+                    <input type="hidden" name="year" value="<?= $curYear ?>">
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <h4 style="margin:0; font-size:13.5px; color:#0284c7; font-weight:800;">+ Configure Additional Shift Deployment</h4>
+                        <span class="att-kpi-tag att-tag-amber" style="font-size:11px;">Add or Reduce Extra Guards</span>
+                    </div>
+                    <p style="font-size:12px; color:#64748b; margin:0 0 12px 0;">
+                        Select the date range and guard change (+1 to add extra guard, -1 to reduce guard) with reason.
+                    </p>
+
+                    <div style="display:flex; gap:12px; margin-bottom:10px;">
+                        <div style="flex:1;">
+                            <label style="display:block; font-size:11.5px; font-weight:bold; margin-bottom:4px;">From Date:</label>
+                            <input type="date" id="att-sheet-from" name="from_date" class="att-input" value="<?= sprintf('%04d-%02d-01', $curYear, $curMonth) ?>" onchange="calcSheetPreview()">
+                        </div>
+                        <div style="flex:1;">
+                            <label style="display:block; font-size:11.5px; font-weight:bold; margin-bottom:4px;">End Date:</label>
+                            <input type="date" id="att-sheet-end" name="end_date" class="att-input" value="<?= sprintf('%04d-%02d-%02d', $curYear, $curMonth, $daysInMonth) ?>" onchange="calcSheetPreview()">
+                        </div>
+                        <div style="width:130px;">
+                            <label style="display:block; font-size:11.5px; font-weight:bold; margin-bottom:4px;">Day (+ / -):</label>
+                            <input type="number" id="att-sheet-add-day" name="add_day" class="att-input" value="1" step="1" placeholder="+1 or -1" oninput="calcSheetPreview()">
+                        </div>
+                        <div style="width:130px;">
+                            <label style="display:block; font-size:11.5px; font-weight:bold; margin-bottom:4px;">Night (+ / -):</label>
+                            <input type="number" id="att-sheet-add-night" name="add_night" class="att-input" value="0" step="1" placeholder="+1 or -1" oninput="calcSheetPreview()">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:14px;">
+                        <div style="flex:1;">
+                            <label style="display:block; font-size:11.5px; font-weight:bold; margin-bottom:4px;">Reason / Order Reference:</label>
+                            <input type="text" name="notes" class="att-input" placeholder="e.g. VIP Visit, Event Security, Customer Request, Temporary Reduction" required>
+                        </div>
+                        <button type="submit" class="att-btn att-btn-primary" style="white-space:nowrap; padding: 8px 18px;">Save Deployment</button>
+                    </div>
+
+                    <!-- Section 3: Live Preview inside Sheet Modal -->
+                    <div style="background: #0f2744; color: #ffffff; border-radius: 6px; padding: 12px 14px;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; color:#e2e8f0;">
+                            <span>🏢 Permanent Contract Base:</span>
+                            <strong id="att-sheet-preview-perm" style="color:#ffffff;"><?= $siteReqDay ?> Day + <?= $siteReqNight ?> Night (<?= $daysInMonth ?> Days = <?= $baseMonthlyTotal ?> Duties)</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; color:#e2e8f0;">
+                            <span>⚡ Selected Shift Adjustment:</span>
+                            <strong id="att-sheet-preview-add" style="color:#fcd34d;">Calculating...</strong>
+                        </div>
+                        <div style="border-top:1px solid #2d4a77; padding-top:4px; margin-top:4px; display:flex; justify-content:space-between; font-size:13px; font-weight:800;">
+                            <span style="color:#38bdf8;">🎯 Resulting Month Expected Duties:</span>
+                            <span id="att-sheet-preview-total" style="color:#4ade80;">Calculating...</span>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Section 4: Active Additional Deployments for Period -->
+                <h4 style="margin:0 0 8px 0; font-size:12.5px; color:var(--att-text); font-weight:800;">
+                    Active Additional &amp; Modified Deployments for <?= $monthName ?> <?= $curYear ?>:
+                </h4>
+                <?php if (empty($additionalDeployments)): ?>
+                    <div style="padding:16px; background:var(--att-bg); border-radius:6px; text-align:center; color:var(--att-text-muted); font-size:12px;">
+                        No additional deployments active for this period. Standard contract requirements apply.
+                    </div>
+                <?php else: ?>
+                    <div style="max-height:220px; overflow-y:auto; border:1px solid var(--att-card-border); border-radius:6px;">
+                        <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:center;">
+                            <thead>
+                                <tr style="background:#f1f5f9; font-weight:800; color:#0f2744;">
+                                    <th style="padding:8px; border-bottom:1px solid #cbd5e1;">Day</th>
+                                    <th style="padding:8px; border-bottom:1px solid #cbd5e1;">Day Shift (+ / -)</th>
+                                    <th style="padding:8px; border-bottom:1px solid #cbd5e1;">Night Shift (+ / -)</th>
+                                    <th style="padding:8px; border-bottom:1px solid #cbd5e1;">Reason / Notes</th>
+                                    <th style="padding:8px; border-bottom:1px solid #cbd5e1;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($additionalDeployments as $ad):
+                                    $adDay = (int)$ad['add_day'];
+                                    $adNight = (int)$ad['add_night'];
+                                ?>
+                                    <tr style="border-bottom:1px solid #e2e8f0;">
+                                        <td style="padding:8px; font-weight:700;">Day <?= $ad['day_number'] ?></td>
+                                        <td style="padding:8px; font-weight:800; color:<?= $adDay > 0 ? '#10b981' : ($adDay < 0 ? '#ef4444' : '#64748b') ?>;">
+                                            <?= $adDay > 0 ? ('+' . $adDay) : $adDay ?>
+                                        </td>
+                                        <td style="padding:8px; font-weight:800; color:<?= $adNight > 0 ? '#3b82f6' : ($adNight < 0 ? '#ef4444' : '#64748b') ?>;">
+                                            <?= $adNight > 0 ? ('+' . $adNight) : $adNight ?>
+                                        </td>
+                                        <td style="padding:8px; color:var(--att-text-muted); text-align:left;"><?= htmlspecialchars($ad['notes'] ?: '-') ?></td>
+                                        <td style="padding:8px;">
+                                            <form method="POST" action="index.php?action=delete_additional_deployment" style="display:inline;" onsubmit="return confirm('Remove deployment adjustment for Day <?= $ad['day_number'] ?>?');">
+                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(att_get_csrf_token()) ?>">
+                                                <input type="hidden" name="deploy_id" value="<?= $ad['id'] ?>">
+                                                <input type="hidden" name="sheet_id" value="<?= $sheet['id'] ?>">
+                                                <input type="hidden" name="site_id" value="<?= $sheet['site_id'] ?>">
+                                                <input type="hidden" name="day_number" value="<?= $ad['day_number'] ?>">
+                                                <input type="hidden" name="month" value="<?= $curMonth ?>">
+                                                <input type="hidden" name="year" value="<?= $curYear ?>">
+                                                <button type="submit" class="att-row-btn-icon" style="color:#ef4444;" title="Remove">🗑️</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
             </div>
             <div class="att-modal-footer">
-                <button type="button" class="att-btn att-btn-secondary att-modal-close">Cancel</button>
-                <button type="submit" class="att-btn att-btn-danger">Yes, Delete Site</button>
+                <button type="button" class="att-btn att-btn-secondary att-modal-close">Close</button>
             </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal: Additional Deployment Options -->
-<div class="att-modal-overlay no-print" id="att-modal-additional-deployment">
-    <div class="att-modal" style="width: 760px; max-width: 95vw;">
-        <div class="att-modal-header">
-            <span>⚡ Deployment Configuration &amp; Additional Shifts - <?= htmlspecialchars($sheet['site_name']) ?></span>
-            <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
         </div>
-        <div class="att-modal-body" style="max-height: 80vh; overflow-y: auto;">
-            
-            <!-- Section 1: Active Permanent Contract Overview -->
-            <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <span style="font-size:13px; font-weight:800; color:#0f2744;">🏢 Permanent Base Contract Deployment</span>
-                    <span class="att-kpi-tag att-tag-blue">Base Strength: <?= $siteReqTotal ?> Guards / Day</span>
-                </div>
-                <div style="display:flex; gap:16px; font-size:12.5px; color:#334155;">
-                    <div>☀️ Day Required: <strong><?= $siteReqDay ?></strong></div>
-                    <div>🌙 Night Required: <strong><?= $siteReqNight ?></strong></div>
-                    <div>📅 Contract: <strong><?= !empty($contractStart) ? htmlspecialchars($contractStart) : 'Open' ?> &rarr; <?= !empty($contractEnd) ? htmlspecialchars($contractEnd) : 'Ongoing' ?></strong></div>
-                    <div style="margin-left:auto;">Base Month Total: <strong><?= $baseMonthlyTotal ?> Duties</strong> (<?= $baseMonthlyDayShifts ?> Day + <?= $baseMonthlyNightShifts ?> Night)</div>
-                </div>
-            </div>
+    </div>
 
-            <!-- Section 2: Form to Configure Additional Shift Deployment -->
-            <form method="POST" action="index.php?action=save_additional_deployment" style="background:#ffffff; border:1.5px solid #0284c7; border-radius:8px; padding:16px; margin-bottom:16px; box-shadow: 0 2px 6px rgba(2,132,199,0.08);">
+    <!-- Modal: Site Requirements & Contract Dates -->
+    <div class="att-modal-overlay no-print" id="att-modal-site-reqs">
+        <div class="att-modal" style="width: 600px; max-width: 95vw;">
+            <div class="att-modal-header">
+                <span>⚙️ Site Contract &amp; Shift Requirements</span>
+                <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
+            </div>
+            <form method="POST" action="index.php?action=update_site_requirements">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(att_get_csrf_token()) ?>">
-                <input type="hidden" name="sheet_id" value="<?= $sheet['id'] ?>">
                 <input type="hidden" name="site_id" value="<?= $sheet['site_id'] ?>">
                 <input type="hidden" name="month" value="<?= $curMonth ?>">
                 <input type="hidden" name="year" value="<?= $curYear ?>">
+                <div class="att-modal-body">
+                    <div class="att-form-group">
+                        <label>Site Name:</label>
+                        <input type="text" class="att-input" value="<?= htmlspecialchars($sheet['site_name']) ?>" disabled style="opacity:0.8;">
+                    </div>
+                    <div style="display:flex;gap:12px;">
+                        <div class="att-form-group" style="flex:1;">
+                            <label for="att-edit-site-req-day">Required Day Deployment (D): *</label>
+                            <input type="number" id="att-edit-site-req-day" name="req_day" class="att-input" min="0" value="<?= $siteReqDay ?>" required>
+                        </div>
+                        <div class="att-form-group" style="flex:1;">
+                            <label for="att-edit-site-req-night">Required Night Deployment (N): *</label>
+                            <input type="number" id="att-edit-site-req-night" name="req_night" class="att-input" min="0" value="<?= $siteReqNight ?>" required>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;">
+                        <div class="att-form-group" style="flex:1;">
+                            <label for="att-edit-site-contract-start">Contract Start Date:</label>
+                            <input type="date" id="att-edit-site-contract-start" name="contract_start" class="att-input" value="<?= htmlspecialchars($contractStart) ?>">
+                        </div>
+                        <div class="att-form-group" style="flex:1;">
+                            <label for="att-edit-site-contract-end">Contract End Date:</label>
+                            <input type="date" id="att-edit-site-contract-end" name="contract_end" class="att-input" value="<?= htmlspecialchars($contractEnd) ?>">
+                        </div>
+                    </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <h4 style="margin:0; font-size:13.5px; color:#0284c7; font-weight:800;">+ Configure Additional Shift Deployment</h4>
-                    <span class="att-kpi-tag att-tag-amber" style="font-size:11px;">Add or Reduce Extra Guards</span>
+                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:6px; margin-top:8px; font-size:12px; color:#166534;">
+                        💡 Need temporary extra guards or reduced guards for specific dates? Use the <strong>➕ Additional Deployment</strong> button to configure date ranges and reason.
+                    </div>
                 </div>
-                <p style="font-size:12px; color:#64748b; margin:0 0 12px 0;">
-                    Select the date range and guard change (+1 to add extra guard, -1 to reduce guard) with reason.
-                </p>
-
-                <div style="display:flex; gap:12px; margin-bottom:10px;">
-                    <div style="flex:1;">
-                        <label style="display:block; font-size:11.5px; font-weight:bold; margin-bottom:4px;">From Date:</label>
-                        <input type="date" id="att-sheet-from" name="from_date" class="att-input" value="<?= sprintf('%04d-%02d-01', $curYear, $curMonth) ?>" onchange="calcSheetPreview()">
-                    </div>
-                    <div style="flex:1;">
-                        <label style="display:block; font-size:11.5px; font-weight:bold; margin-bottom:4px;">End Date:</label>
-                        <input type="date" id="att-sheet-end" name="end_date" class="att-input" value="<?= sprintf('%04d-%02d-%02d', $curYear, $curMonth, $daysInMonth) ?>" onchange="calcSheetPreview()">
-                    </div>
-                    <div style="width:130px;">
-                        <label style="display:block; font-size:11.5px; font-weight:bold; margin-bottom:4px;">Day (+ / -):</label>
-                        <input type="number" id="att-sheet-add-day" name="add_day" class="att-input" value="1" step="1" placeholder="+1 or -1" oninput="calcSheetPreview()">
-                    </div>
-                    <div style="width:130px;">
-                        <label style="display:block; font-size:11.5px; font-weight:bold; margin-bottom:4px;">Night (+ / -):</label>
-                        <input type="number" id="att-sheet-add-night" name="add_night" class="att-input" value="0" step="1" placeholder="+1 or -1" oninput="calcSheetPreview()">
-                    </div>
-                </div>
-
-                <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:14px;">
-                    <div style="flex:1;">
-                        <label style="display:block; font-size:11.5px; font-weight:bold; margin-bottom:4px;">Reason / Order Reference:</label>
-                        <input type="text" name="notes" class="att-input" placeholder="e.g. VIP Visit, Event Security, Customer Request, Temporary Reduction" required>
-                    </div>
-                    <button type="submit" class="att-btn att-btn-primary" style="white-space:nowrap; padding: 8px 18px;">Save Deployment</button>
-                </div>
-
-                <!-- Section 3: Live Preview inside Sheet Modal -->
-                <div style="background: #0f2744; color: #ffffff; border-radius: 6px; padding: 12px 14px;">
-                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; color:#e2e8f0;">
-                        <span>🏢 Permanent Contract Base:</span>
-                        <strong id="att-sheet-preview-perm" style="color:#ffffff;"><?= $siteReqDay ?> Day + <?= $siteReqNight ?> Night (<?= $daysInMonth ?> Days = <?= $baseMonthlyTotal ?> Duties)</strong>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; color:#e2e8f0;">
-                        <span>⚡ Selected Shift Adjustment:</span>
-                        <strong id="att-sheet-preview-add" style="color:#fcd34d;">Calculating...</strong>
-                    </div>
-                    <div style="border-top:1px solid #2d4a77; padding-top:4px; margin-top:4px; display:flex; justify-content:space-between; font-size:13px; font-weight:800;">
-                        <span style="color:#38bdf8;">🎯 Resulting Month Expected Duties:</span>
-                        <span id="att-sheet-preview-total" style="color:#4ade80;">Calculating...</span>
-                    </div>
+                <div class="att-modal-footer">
+                    <button type="button" class="att-btn att-btn-secondary att-modal-close">Cancel</button>
+                    <button type="submit" class="att-btn att-btn-primary">Update Requirements</button>
                 </div>
             </form>
-
-            <!-- Section 4: Active Additional Deployments for Period -->
-            <h4 style="margin:0 0 8px 0; font-size:12.5px; color:var(--att-text); font-weight:800;">
-                Active Additional &amp; Modified Deployments for <?= $monthName ?> <?= $curYear ?>:
-            </h4>
-            <?php if (empty($additionalDeployments)): ?>
-                <div style="padding:16px; background:var(--att-bg); border-radius:6px; text-align:center; color:var(--att-text-muted); font-size:12px;">
-                    No additional deployments active for this period. Standard contract requirements apply.
-                </div>
-            <?php else: ?>
-                <div style="max-height:220px; overflow-y:auto; border:1px solid var(--att-card-border); border-radius:6px;">
-                    <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:center;">
-                        <thead>
-                            <tr style="background:#f1f5f9; font-weight:800; color:#0f2744;">
-                                <th style="padding:8px; border-bottom:1px solid #cbd5e1;">Day</th>
-                                <th style="padding:8px; border-bottom:1px solid #cbd5e1;">Day Shift (+ / -)</th>
-                                <th style="padding:8px; border-bottom:1px solid #cbd5e1;">Night Shift (+ / -)</th>
-                                <th style="padding:8px; border-bottom:1px solid #cbd5e1;">Reason / Notes</th>
-                                <th style="padding:8px; border-bottom:1px solid #cbd5e1;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($additionalDeployments as $ad): 
-                                $adDay = (int)$ad['add_day'];
-                                $adNight = (int)$ad['add_night'];
-                            ?>
-                                <tr style="border-bottom:1px solid #e2e8f0;">
-                                    <td style="padding:8px; font-weight:700;">Day <?= $ad['day_number'] ?></td>
-                                    <td style="padding:8px; font-weight:800; color:<?= $adDay > 0 ? '#10b981' : ($adDay < 0 ? '#ef4444' : '#64748b') ?>;">
-                                        <?= $adDay > 0 ? ('+' . $adDay) : $adDay ?>
-                                    </td>
-                                    <td style="padding:8px; font-weight:800; color:<?= $adNight > 0 ? '#3b82f6' : ($adNight < 0 ? '#ef4444' : '#64748b') ?>;">
-                                        <?= $adNight > 0 ? ('+' . $adNight) : $adNight ?>
-                                    </td>
-                                    <td style="padding:8px; color:var(--att-text-muted); text-align:left;"><?= htmlspecialchars($ad['notes'] ?: '-') ?></td>
-                                    <td style="padding:8px;">
-                                        <form method="POST" action="index.php?action=delete_additional_deployment" style="display:inline;" onsubmit="return confirm('Remove deployment adjustment for Day <?= $ad['day_number'] ?>?');">
-                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(att_get_csrf_token()) ?>">
-                                            <input type="hidden" name="deploy_id" value="<?= $ad['id'] ?>">
-                                            <input type="hidden" name="sheet_id" value="<?= $sheet['id'] ?>">
-                                            <input type="hidden" name="site_id" value="<?= $sheet['site_id'] ?>">
-                                            <input type="hidden" name="day_number" value="<?= $ad['day_number'] ?>">
-                                            <input type="hidden" name="month" value="<?= $curMonth ?>">
-                                            <input type="hidden" name="year" value="<?= $curYear ?>">
-                                            <button type="submit" class="att-row-btn-icon" style="color:#ef4444;" title="Remove">🗑️</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-        </div>
-        <div class="att-modal-footer">
-            <button type="button" class="att-btn att-btn-secondary att-modal-close">Close</button>
         </div>
     </div>
-</div>
-
-<!-- Modal: Site Requirements & Contract Dates -->
-<div class="att-modal-overlay no-print" id="att-modal-site-reqs">
-    <div class="att-modal" style="width: 600px; max-width: 95vw;">
-        <div class="att-modal-header">
-            <span>⚙️ Site Contract &amp; Shift Requirements</span>
-            <button type="button" class="att-modal-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
-        </div>
-        <form method="POST" action="index.php?action=update_site_requirements">
-            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(att_get_csrf_token()) ?>">
-            <input type="hidden" name="site_id" value="<?= $sheet['site_id'] ?>">
-            <input type="hidden" name="month" value="<?= $curMonth ?>">
-            <input type="hidden" name="year" value="<?= $curYear ?>">
-            <div class="att-modal-body">
-                <div class="att-form-group">
-                    <label>Site Name:</label>
-                    <input type="text" class="att-input" value="<?= htmlspecialchars($sheet['site_name']) ?>" disabled style="opacity:0.8;">
-                </div>
-                <div style="display:flex;gap:12px;">
-                    <div class="att-form-group" style="flex:1;">
-                        <label for="att-edit-site-req-day">Required Day Deployment (D): *</label>
-                        <input type="number" id="att-edit-site-req-day" name="req_day" class="att-input" min="0" value="<?= $siteReqDay ?>" required>
-                    </div>
-                    <div class="att-form-group" style="flex:1;">
-                        <label for="att-edit-site-req-night">Required Night Deployment (N): *</label>
-                        <input type="number" id="att-edit-site-req-night" name="req_night" class="att-input" min="0" value="<?= $siteReqNight ?>" required>
-                    </div>
-                </div>
-                <div style="display:flex;gap:12px;">
-                    <div class="att-form-group" style="flex:1;">
-                        <label for="att-edit-site-contract-start">Contract Start Date:</label>
-                        <input type="date" id="att-edit-site-contract-start" name="contract_start" class="att-input" value="<?= htmlspecialchars($contractStart) ?>">
-                    </div>
-                    <div class="att-form-group" style="flex:1;">
-                        <label for="att-edit-site-contract-end">Contract End Date:</label>
-                        <input type="date" id="att-edit-site-contract-end" name="contract_end" class="att-input" value="<?= htmlspecialchars($contractEnd) ?>">
-                    </div>
-                </div>
-
-                <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:6px; margin-top:8px; font-size:12px; color:#166534;">
-                    💡 Need temporary extra guards or reduced guards for specific dates? Use the <strong>➕ Additional Deployment</strong> button to configure date ranges and reason.
-                </div>
-            </div>
-            <div class="att-modal-footer">
-                <button type="button" class="att-btn att-btn-secondary att-modal-close">Cancel</button>
-                <button type="submit" class="att-btn att-btn-primary">Update Requirements</button>
-            </div>
-        </form>
-    </div>
-</div>
 <?php endif; ?>
 
 <script>
-// Live update of Month Total summary line on cell change
-function updateMonthTotalSummary() {
-    let totD = 0;
-    let totN = 0;
-    document.querySelectorAll('.att-cell-input').forEach(inp => {
-        const v = inp.value.trim().toUpperCase();
-        if (v === 'D') totD++;
-        else if (v === 'N') totN++;
+    // Live update of Month Total summary line on cell change
+    function updateMonthTotalSummary() {
+        let totD = 0;
+        let totN = 0;
+        document.querySelectorAll('.att-cell-input').forEach(inp => {
+            const v = inp.value.trim().toUpperCase();
+            if (v === 'D') totD++;
+            else if (v === 'N') totN++;
+        });
+        const elD = document.getElementById('att-month-total-d');
+        const elN = document.getElementById('att-month-total-n');
+        const elDuties = document.getElementById('att-month-total-duties');
+        if (elD) elD.textContent = totD;
+        if (elN) elN.textContent = totN;
+        if (elDuties) elDuties.textContent = totD + totN;
+    }
+
+    document.addEventListener('input', (e) => {
+        if (e.target.classList.contains('att-cell-input')) {
+            setTimeout(updateMonthTotalSummary, 100);
+        }
     });
-    const elD = document.getElementById('att-month-total-d');
-    const elN = document.getElementById('att-month-total-n');
-    const elDuties = document.getElementById('att-month-total-duties');
-    if (elD) elD.textContent = totD;
-    if (elN) elN.textContent = totN;
-    if (elDuties) elDuties.textContent = totD + totN;
-}
 
-document.addEventListener('input', (e) => {
-    if (e.target.classList.contains('att-cell-input')) {
-        setTimeout(updateMonthTotalSummary, 100);
-    }
-});
+    // Real-Time Deployment & Shift Calculation Preview for New Site Registration Modal
+    function calcNewSitePreview() {
+        const permDayEl = document.getElementById('att-new-req-day');
+        const permNightEl = document.getElementById('att-new-req-night');
+        const fromEl = document.getElementById('att-new-from');
+        const endEl = document.getElementById('att-new-end');
+        const addDayEl = document.getElementById('att-new-add-day');
+        const addNightEl = document.getElementById('att-new-add-night');
 
-// Real-Time Deployment & Shift Calculation Preview for New Site Registration Modal
-function calcNewSitePreview() {
-    const permDayEl = document.getElementById('att-new-req-day');
-    const permNightEl = document.getElementById('att-new-req-night');
-    const fromEl = document.getElementById('att-new-from');
-    const endEl = document.getElementById('att-new-end');
-    const addDayEl = document.getElementById('att-new-add-day');
-    const addNightEl = document.getElementById('att-new-add-night');
+        const previewPerm = document.getElementById('att-new-preview-perm');
+        const previewAdd = document.getElementById('att-new-preview-add');
+        const previewTotal = document.getElementById('att-new-preview-total');
+        if (!previewPerm || !previewTotal) return;
 
-    const previewPerm = document.getElementById('att-new-preview-perm');
-    const previewAdd = document.getElementById('att-new-preview-add');
-    const previewTotal = document.getElementById('att-new-preview-total');
-    if (!previewPerm || !previewTotal) return;
+        const permD = Math.max(0, parseInt(permDayEl?.value || '1', 10));
+        const permN = Math.max(0, parseInt(permNightEl?.value || '1', 10));
+        const addD = parseInt(addDayEl?.value || '0', 10) || 0;
+        const addN = parseInt(addNightEl?.value || '0', 10) || 0;
 
-    const permD = Math.max(0, parseInt(permDayEl?.value || '1', 10));
-    const permN = Math.max(0, parseInt(permNightEl?.value || '1', 10));
-    const addD = parseInt(addDayEl?.value || '0', 10) || 0;
-    const addN = parseInt(addNightEl?.value || '0', 10) || 0;
+        let daysInMonth = 31;
+        let diffDays = 0;
+        let fromStr = fromEl?.value || '';
+        let endStr = endEl?.value || '';
 
-    let daysInMonth = 31;
-    let diffDays = 0;
-    let fromStr = fromEl?.value || '';
-    let endStr = endEl?.value || '';
+        if (fromStr && !endStr) endStr = fromStr;
+        if (endStr && !fromStr) fromStr = endStr;
 
-    if (fromStr && !endStr) endStr = fromStr;
-    if (endStr && !fromStr) fromStr = endStr;
-
-    if (fromStr && endStr) {
-        const d1 = new Date(fromStr);
-        const d2 = new Date(endStr);
-        if (!isNaN(d1) && !isNaN(d2)) {
-            const minD = d1 <= d2 ? d1 : d2;
-            const maxD = d1 <= d2 ? d2 : d1;
-            diffDays = Math.round((maxD - minD) / (1000 * 60 * 60 * 24)) + 1;
-            daysInMonth = new Date(minD.getFullYear(), minD.getMonth() + 1, 0).getDate();
+        if (fromStr && endStr) {
+            const d1 = new Date(fromStr);
+            const d2 = new Date(endStr);
+            if (!isNaN(d1) && !isNaN(d2)) {
+                const minD = d1 <= d2 ? d1 : d2;
+                const maxD = d1 <= d2 ? d2 : d1;
+                diffDays = Math.round((maxD - minD) / (1000 * 60 * 60 * 24)) + 1;
+                daysInMonth = new Date(minD.getFullYear(), minD.getMonth() + 1, 0).getDate();
+            }
         }
-    }
 
-    const baseMonthD = permD * daysInMonth;
-    const baseMonthN = permN * daysInMonth;
-    const baseMonthTotal = baseMonthD + baseMonthN;
+        const baseMonthD = permD * daysInMonth;
+        const baseMonthN = permN * daysInMonth;
+        const baseMonthTotal = baseMonthD + baseMonthN;
 
-    previewPerm.textContent = `${permD} Day + ${permN} Night = ${permD + permN} Guards / Day (${daysInMonth} Days = ${baseMonthTotal} Duties)`;
+        previewPerm.textContent = `${permD} Day + ${permN} Night = ${permD + permN} Guards / Day (${daysInMonth} Days = ${baseMonthTotal} Duties)`;
 
-    const extraD = addD * diffDays;
-    const extraN = addN * diffDays;
-    const extraTot = extraD + extraN;
+        const extraD = addD * diffDays;
+        const extraN = addN * diffDays;
+        const extraTot = extraD + extraN;
 
-    if (diffDays > 0 && (addD !== 0 || addN !== 0)) {
-        const signD = extraD >= 0 ? '+' : '';
-        const signN = extraN >= 0 ? '+' : '';
-        const signTot = extraTot >= 0 ? '+' : '';
-        previewAdd.innerHTML = `<span style="color:#fcd34d;">${diffDays} Days (${fromStr} &rarr; ${endStr}): ${signD}${extraD} Day Shifts, ${signN}${extraN} Night Shifts (${signTot}${extraTot} Net)</span>`;
-    } else {
-        previewAdd.textContent = 'None (0 Extra / Reduced Shifts)';
-    }
-
-    const totalMonthD = Math.max(0, baseMonthD + extraD);
-    const totalMonthN = Math.max(0, baseMonthN + extraN);
-    const totalMonthDuties = totalMonthD + totalMonthN;
-
-    previewTotal.innerHTML = `☀️ <strong style="color:#ffffff;">${totalMonthD} Day Shifts</strong> + 🌙 <strong style="color:#ffffff;">${totalMonthN} Night Shifts</strong> = <strong style="color:#4ade80;">${totalMonthDuties} Total Duties Required</strong>`;
-}
-
-// Real-Time Deployment & Shift Calculation Preview for Sheet Additional Deployment Modal
-function calcSheetPreview() {
-    const fromEl = document.getElementById('att-sheet-from');
-    const endEl = document.getElementById('att-sheet-end');
-    const addDayEl = document.getElementById('att-sheet-add-day');
-    const addNightEl = document.getElementById('att-sheet-add-night');
-
-    const previewAdd = document.getElementById('att-sheet-preview-add');
-    const previewTotal = document.getElementById('att-sheet-preview-total');
-    if (!previewAdd || !previewTotal) return;
-
-    const baseD = <?= (int)$siteReqDay ?>;
-    const baseN = <?= (int)$siteReqNight ?>;
-    const daysInMonth = <?= (int)$daysInMonth ?>;
-    const baseMonthD = <?= (int)$baseMonthlyDayShifts ?>;
-    const baseMonthN = <?= (int)$baseMonthlyNightShifts ?>;
-
-    const addD = parseInt(addDayEl?.value || '0', 10) || 0;
-    const addN = parseInt(addNightEl?.value || '0', 10) || 0;
-
-    let fromStr = fromEl?.value || '';
-    let endStr = endEl?.value || '';
-    let diffDays = 0;
-
-    if (fromStr && !endStr) endStr = fromStr;
-    if (endStr && !fromStr) fromStr = endStr;
-
-    if (fromStr && endStr) {
-        const d1 = new Date(fromStr);
-        const d2 = new Date(endStr);
-        if (!isNaN(d1) && !isNaN(d2)) {
-            const minD = d1 <= d2 ? d1 : d2;
-            const maxD = d1 <= d2 ? d2 : d1;
-            diffDays = Math.round((maxD - minD) / (1000 * 60 * 60 * 24)) + 1;
+        if (diffDays > 0 && (addD !== 0 || addN !== 0)) {
+            const signD = extraD >= 0 ? '+' : '';
+            const signN = extraN >= 0 ? '+' : '';
+            const signTot = extraTot >= 0 ? '+' : '';
+            previewAdd.innerHTML = `<span style="color:#fcd34d;">${diffDays} Days (${fromStr} &rarr; ${endStr}): ${signD}${extraD} Day Shifts, ${signN}${extraN} Night Shifts (${signTot}${extraTot} Net)</span>`;
+        } else {
+            previewAdd.textContent = 'None (0 Extra / Reduced Shifts)';
         }
+
+        const totalMonthD = Math.max(0, baseMonthD + extraD);
+        const totalMonthN = Math.max(0, baseMonthN + extraN);
+        const totalMonthDuties = totalMonthD + totalMonthN;
+
+        previewTotal.innerHTML = `☀️ <strong style="color:#ffffff;">${totalMonthD} Day Shifts</strong> + 🌙 <strong style="color:#ffffff;">${totalMonthN} Night Shifts</strong> = <strong style="color:#4ade80;">${totalMonthDuties} Total Duties Required</strong>`;
     }
 
-    const extraD = addD * diffDays;
-    const extraN = addN * diffDays;
-    const extraTot = extraD + extraN;
+    // Real-Time Deployment & Shift Calculation Preview for Sheet Additional Deployment Modal
+    function calcSheetPreview() {
+        const fromEl = document.getElementById('att-sheet-from');
+        const endEl = document.getElementById('att-sheet-end');
+        const addDayEl = document.getElementById('att-sheet-add-day');
+        const addNightEl = document.getElementById('att-sheet-add-night');
 
-    if (diffDays > 0 && (addD !== 0 || addN !== 0)) {
-        const signD = extraD >= 0 ? '+' : '';
-        const signN = extraN >= 0 ? '+' : '';
-        const signTot = extraTot >= 0 ? '+' : '';
-        previewAdd.innerHTML = `<span style="color:#fcd34d;">${diffDays} Days (${fromStr} &rarr; ${endStr}): ${signD}${extraD} Day Shifts, ${signN}${extraN} Night Shifts (${signTot}${extraTot} Net)</span>`;
-    } else {
-        previewAdd.textContent = 'None (0 Extra / Reduced Shifts)';
+        const previewAdd = document.getElementById('att-sheet-preview-add');
+        const previewTotal = document.getElementById('att-sheet-preview-total');
+        if (!previewAdd || !previewTotal) return;
+
+        const baseD = <?= (int)$siteReqDay ?>;
+        const baseN = <?= (int)$siteReqNight ?>;
+        const daysInMonth = <?= (int)$daysInMonth ?>;
+        const baseMonthD = <?= (int)$baseMonthlyDayShifts ?>;
+        const baseMonthN = <?= (int)$baseMonthlyNightShifts ?>;
+
+        const addD = parseInt(addDayEl?.value || '0', 10) || 0;
+        const addN = parseInt(addNightEl?.value || '0', 10) || 0;
+
+        let fromStr = fromEl?.value || '';
+        let endStr = endEl?.value || '';
+        let diffDays = 0;
+
+        if (fromStr && !endStr) endStr = fromStr;
+        if (endStr && !fromStr) fromStr = endStr;
+
+        if (fromStr && endStr) {
+            const d1 = new Date(fromStr);
+            const d2 = new Date(endStr);
+            if (!isNaN(d1) && !isNaN(d2)) {
+                const minD = d1 <= d2 ? d1 : d2;
+                const maxD = d1 <= d2 ? d2 : d1;
+                diffDays = Math.round((maxD - minD) / (1000 * 60 * 60 * 24)) + 1;
+            }
+        }
+
+        const extraD = addD * diffDays;
+        const extraN = addN * diffDays;
+        const extraTot = extraD + extraN;
+
+        if (diffDays > 0 && (addD !== 0 || addN !== 0)) {
+            const signD = extraD >= 0 ? '+' : '';
+            const signN = extraN >= 0 ? '+' : '';
+            const signTot = extraTot >= 0 ? '+' : '';
+            previewAdd.innerHTML = `<span style="color:#fcd34d;">${diffDays} Days (${fromStr} &rarr; ${endStr}): ${signD}${extraD} Day Shifts, ${signN}${extraN} Night Shifts (${signTot}${extraTot} Net)</span>`;
+        } else {
+            previewAdd.textContent = 'None (0 Extra / Reduced Shifts)';
+        }
+
+        const totalMonthD = Math.max(0, baseMonthD + extraD);
+        const totalMonthN = Math.max(0, baseMonthN + extraN);
+        const totalMonthDuties = totalMonthD + totalMonthN;
+
+        previewTotal.innerHTML = `☀️ <strong style="color:#ffffff;">${totalMonthD} Day Shifts</strong> + 🌙 <strong style="color:#ffffff;">${totalMonthN} Night Shifts</strong> = <strong style="color:#4ade80;">${totalMonthDuties} Total Duties Required</strong>`;
     }
 
-    const totalMonthD = Math.max(0, baseMonthD + extraD);
-    const totalMonthN = Math.max(0, baseMonthN + extraN);
-    const totalMonthDuties = totalMonthD + totalMonthN;
-
-    previewTotal.innerHTML = `☀️ <strong style="color:#ffffff;">${totalMonthD} Day Shifts</strong> + 🌙 <strong style="color:#ffffff;">${totalMonthN} Night Shifts</strong> = <strong style="color:#4ade80;">${totalMonthDuties} Total Duties Required</strong>`;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    calcNewSitePreview();
-    calcSheetPreview();
-});
+    document.addEventListener('DOMContentLoaded', () => {
+        calcNewSitePreview();
+        calcSheetPreview();
+    });
 </script>
 
 <?php require __DIR__ . '/layout/footer.php'; ?>

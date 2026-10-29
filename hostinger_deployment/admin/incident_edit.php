@@ -17,6 +17,35 @@ if (!$id) {
 
 $db = get_db();
 $settings = get_system_settings();
+
+// Auto-heal missing columns on incidents table
+try {
+    $existingCols = $db->query("DESCRIBE incidents")->fetchAll(PDO::FETCH_COLUMN);
+    $requiredCols = [
+        'site_supervisor_name' => "VARCHAR(150) NULL",
+        'site_supervisor_id' => "VARCHAR(100) NULL",
+        'site_supervisor_signature' => "TEXT NULL",
+        'site_supervisor_date' => "DATE NULL",
+        'recommendation_action_taken' => "TEXT NULL",
+        'operations_manager_name' => "VARCHAR(150) NULL",
+        'operations_manager_id' => "VARCHAR(100) NULL",
+        'operations_manager_signature' => "TEXT NULL",
+        'operations_manager_date' => "DATE NULL",
+        'client_manager_name' => "VARCHAR(150) NULL",
+        'client_manager_id' => "VARCHAR(100) NULL",
+        'client_manager_action_taken' => "TEXT NULL",
+        'client_manager_signature' => "TEXT NULL",
+        'client_manager_date' => "DATE NULL",
+        'witness_1' => "TEXT NULL",
+        'witness_2' => "TEXT NULL",
+        'witness_3' => "TEXT NULL"
+    ];
+    foreach ($requiredCols as $col => $def) {
+        if (!in_array($col, $existingCols)) {
+            $db->exec("ALTER TABLE incidents ADD COLUMN `{$col}` {$def}");
+        }
+    }
+} catch (Exception $e) {}
 $error = '';
 $success = '';
 
@@ -52,66 +81,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $incOther = trim($_POST['incident_other_text'] ?? '');
     $notifiedOther = trim($_POST['notified_other_text'] ?? '');
 
+    $witness1 = trim($_POST['witness_1'] ?? '');
+    $witness2 = trim($_POST['witness_2'] ?? '');
+    $witness3 = trim($_POST['witness_3'] ?? '');
+
     $supName = trim($_POST['site_supervisor_name'] ?? '');
     $supId = trim($_POST['site_supervisor_id'] ?? '');
-    $supDate = !empty($_POST['site_supervisor_date']) ? $_POST['site_supervisor_date'] : null;
+    $supDate = safe_mysql_date($_POST['site_supervisor_date'] ?? null);
     $supRec = trim($_POST['recommendation_action_taken'] ?? '');
 
     $opsName = trim($_POST['operations_manager_name'] ?? '');
     $opsId = trim($_POST['operations_manager_id'] ?? '');
-    $opsDate = !empty($_POST['operations_manager_date']) ? $_POST['operations_manager_date'] : null;
+    $opsDate = safe_mysql_date($_POST['operations_manager_date'] ?? null);
 
     $clientName = trim($_POST['client_manager_name'] ?? '');
     $clientId = trim($_POST['client_manager_id'] ?? '');
     $clientAction = trim($_POST['client_manager_action_taken'] ?? '');
-    $clientDate = !empty($_POST['client_manager_date']) ? $_POST['client_manager_date'] : null;
+    $clientDate = safe_mysql_date($_POST['client_manager_date'] ?? null);
 
     if (empty($summary) || empty($description) || empty($incidentDate) || empty($incidentTime)) {
         $error = 'Please fill all required fields (Summary, Description, Date, Time).';
     } else {
-        $updateStmt = $db->prepare("
-            UPDATE incidents SET
-                summary_line = ?,
-                description = ?,
-                incident_date = ?,
-                incident_time = ?,
-                shift = ?,
-                priority = ?,
-                status = ?,
-                cause_main = ?,
-                disciplinary_reasons = ?,
-                disciplinary_other_text = ?,
-                incident_types = ?,
-                incident_other_text = ?,
-                who_notified = ?,
-                notified_other_text = ?,
-                updated_at = NOW()
-            WHERE id = ?
-        ");
-        $updateStmt->execute([
-            $summary,
-            $description,
-            $incidentDate,
-            $incidentTime,
-            $shift,
-            $priority,
-            $status,
-            $causeMain,
-            $discReasons,
-            $discOther,
-            $incTypes,
-            $incOther,
-            $notified,
-            $notifiedOther,
-            $id
-        ]);
+        try {
+            $updateStmt = $db->prepare("
+                UPDATE incidents SET
+                    summary_line = ?,
+                    description = ?,
+                    incident_date = ?,
+                    incident_time = ?,
+                    shift = ?,
+                    priority = ?,
+                    status = ?,
+                    cause_main = ?,
+                    disciplinary_reasons = ?,
+                    disciplinary_other_text = ?,
+                    incident_types = ?,
+                    incident_other_text = ?,
+                    who_notified = ?,
+                    notified_other_text = ?,
+                    witness_1 = ?,
+                    witness_2 = ?,
+                    witness_3 = ?,
+                    site_supervisor_name = ?,
+                    site_supervisor_id = ?,
+                    site_supervisor_date = ?,
+                    recommendation_action_taken = ?,
+                    operations_manager_name = ?,
+                    operations_manager_id = ?,
+                    operations_manager_date = ?,
+                    client_manager_name = ?,
+                    client_manager_id = ?,
+                    client_manager_action_taken = ?,
+                    client_manager_date = ?,
+                    updated_at = NOW()
+                WHERE id = ?
+            ");
+            $updateStmt->execute([
+                $summary,
+                $description,
+                $incidentDate,
+                $incidentTime,
+                $shift,
+                $priority,
+                $status,
+                $causeMain,
+                $discReasons,
+                $discOther,
+                $incTypes,
+                $incOther,
+                $notified,
+                $notifiedOther,
+                $witness1,
+                $witness2,
+                $witness3,
+                $supName,
+                $supId,
+                $supDate,
+                $supRec,
+                $opsName,
+                $opsId,
+                $opsDate,
+                $clientName,
+                $clientId,
+                $clientAction,
+                $clientDate,
+                $id
+            ]);
 
-        log_audit('EDIT_INCIDENT', 'INCIDENT', $id, ['summary' => $summary]);
-        $success = 'Incident updated successfully!';
-        
-        // Refresh
-        $stmt->execute([$id]);
-        $incident = $stmt->fetch();
+            log_audit('EDIT_INCIDENT', 'INCIDENT', $id, ['summary' => $summary]);
+            $success = 'Incident updated successfully!';
+            
+            // Refresh
+            $stmt->execute([$id]);
+            $incident = $stmt->fetch();
+        } catch (\Throwable $e) {
+            $error = 'Failed to update incident: ' . $e->getMessage();
+        }
     }
 }
 
@@ -342,6 +407,23 @@ require_once __DIR__ . '/../includes/header.php';
                 <input type="text" name="notified_other_text" class="form-control" style="margin-top: 8px;" placeholder="Other authorities notified details..." value="<?= htmlspecialchars($incident['notified_other_text'] ?? '') ?>">
             </div>
 
+            <!-- People who saw the Incident (Witnesses) -->
+            <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important; font-style: italic;"><?= htmlspecialchars($settings['witness_section_title'] ?? 'People who saw the Incident') ?></h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label"><?= htmlspecialchars($settings['witness_1_label'] ?? 'Witness 1') ?></label>
+                    <input type="text" name="witness_1" class="form-control" value="<?= htmlspecialchars($incident['witness_1'] ?? '') ?>" placeholder="Name, Contact No., ID / Details">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?= htmlspecialchars($settings['witness_2_label'] ?? 'Witness 2') ?></label>
+                    <input type="text" name="witness_2" class="form-control" value="<?= htmlspecialchars($incident['witness_2'] ?? '') ?>" placeholder="Name, Contact No., ID / Details">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><?= htmlspecialchars($settings['witness_3_label'] ?? 'Witness 3') ?></label>
+                    <input type="text" name="witness_3" class="form-control" value="<?= htmlspecialchars($incident['witness_3'] ?? '') ?>" placeholder="Name, Contact No., ID / Details">
+                </div>
+            </div>
+
                         <!-- Section Heading 3: Executive Summary & Narrative -->
             <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Executive Summary</h4>
             <!-- Summary -->
@@ -442,7 +524,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="form-group">
                     <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Recommendation / Action Taken</label>
-                    <textarea name="recommendation_action_taken" class="form-control" rows="2" placeholder="Corrective actions initiated..."><?= htmlspecialchars($incident['recommendation_action_taken'] ?? '') ?></textarea>
+                    <textarea name="recommendation_action_taken" class="form-control" rows="2" placeholder="Corrective actions initiated at post..." style="font-weight: 700; width: 100%; box-sizing: border-box; text-align: left !important; vertical-align: top !important; padding: 8px 12px !important; line-height: 1.4 !important; font-family: inherit !important; resize: vertical;"><?= htmlspecialchars($incident['recommendation_action_taken'] ?? '') ?></textarea>
                 </div>
             </div>
 
@@ -484,7 +566,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="form-group">
                     <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Client Action Taken</label>
-                    <textarea name="client_manager_action_taken" class="form-control" rows="2" placeholder="Client action or notes..."><?= htmlspecialchars($incident['client_manager_action_taken'] ?? '') ?></textarea>
+                    <textarea name="client_manager_action_taken" class="form-control" rows="2" placeholder="Client acknowledgement or notes..." style="font-weight: 700; width: 100%; box-sizing: border-box; text-align: left !important; vertical-align: top !important; padding: 8px 12px !important; line-height: 1.4 !important; font-family: inherit !important; resize: vertical;"><?= htmlspecialchars($incident['client_manager_action_taken'] ?? '') ?></textarea>
                 </div>
                 <div class="form-group">
                     <label class="form-label" style="color: #ffffff !important; font-weight: 800 !important;">Client Date (dd/mm/yyyy)</label>

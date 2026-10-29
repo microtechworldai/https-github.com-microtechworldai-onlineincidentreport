@@ -313,6 +313,295 @@
   --table-hover-bg: rgba(0, 0, 0, 0.06);
 }
 
+/* ====================================================================
+   ADDITIONAL THEMES (REFERENCE DESIGNS: IMAGES 1 - 5)
+   ==================================================================== */
+
+/* 11: STUDENT RESULT DASHBOARD (Navy Vibrant) - Reference Image 1 */
+[data-theme="student-navy"], [data-theme="theme-student"], [data-theme="theme-11"] {
+  --bg-main: #F3F6FC;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FAFC;
+  --bg-sidebar: #0C1427;
+  --bg-header: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --border-subtle: #E2E8F0;
+  --border-focus: #2563EB;
+
+  --sidebar-bg: #0C1427;
+  --sidebar-text: #FFFFFF;
+  --sidebar-muted: #8FA0B5;
+  --sidebar-item-text: #8FA0B5;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-hover-text: #FFFFFF;
+  --sidebar-active-bg: #2563EB;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-icon: #FFFFFF;
+  --sidebar-active-shadow: 0 4px 14px rgba(37, 99, 235, 0.40);
+  --sidebar-divider: rgba(255, 255, 255, 0.08);
+  --sidebar-footer-bg: #080D1A;
+
+  --dashboard-bg: #F3F6FC;
+  --card-bg: #FFFFFF;
+  --card-bg-hover: #F8FAFC;
+  --card-border: #E2E8F0;
+  --card-shadow: 0 1px 3px rgba(12, 20, 39, 0.04), 0 4px 12px rgba(12, 20, 39, 0.03);
+  --card-shadow-hover: 0 4px 12px rgba(12, 20, 39, 0.08);
+  --border-color: #E2E8F0;
+
+  --header-bg: #FFFFFF;
+  --header-border: #E2E8F0;
+  --header-title: #0F172A;
+  --header-sub: #64748B;
+
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --primary-text: #FFFFFF;
+  --primary-glow: rgba(37, 99, 235, 0.35);
+
+  --accent-cyan: #06B6D4;
+  --accent-emerald: #059669;
+  --accent-amber: #EA580C;
+  --accent-rose: #EF4444;
+  --accent-indigo: #8B5CF6;
+
+  --text-main: #0F172A;
+  --text-muted: #475569;
+  --text-dim: #64748B;
+
+  --table-th-bg: #F1F5F9;
+  --table-th-text: #0F172A;
+  --table-hover-bg: #F8FAFC;
+}
+
+/* 12: ORIPIOFIN (Emerald Fintech) - Reference Image 2 */
+[data-theme="oripiofin"], [data-theme="theme-oripiofin"], [data-theme="theme-12"] {
+  --bg-main: #F4F6F8;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FAFBFC;
+  --bg-sidebar: #FFFFFF;
+  --bg-header: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --border-subtle: #E5E7EB;
+  --border-focus: #059669;
+
+  --sidebar-bg: #FFFFFF;
+  --sidebar-text: #111827;
+  --sidebar-muted: #94A3B8;
+  --sidebar-item-text: #475569;
+  --sidebar-hover: #F1F5F9;
+  --sidebar-hover-text: #111827;
+  --sidebar-active-bg: #111827;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-icon: #FFFFFF;
+  --sidebar-active-shadow: 0 4px 12px rgba(17, 24, 39, 0.25);
+  --sidebar-divider: #E5E7EB;
+  --sidebar-footer-bg: #F9FAFB;
+
+  --dashboard-bg: #F4F6F8;
+  --card-bg: #FFFFFF;
+  --card-bg-hover: #FAFBFC;
+  --card-border: #E5E7EB;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02);
+  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --border-color: #E5E7EB;
+
+  --header-bg: #FFFFFF;
+  --header-border: #E5E7EB;
+  --header-title: #111827;
+  --header-sub: #6B7280;
+
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-text: #FFFFFF;
+  --primary-glow: rgba(5, 150, 105, 0.30);
+
+  --accent-cyan: #0284C7;
+  --accent-emerald: #059669;
+  --accent-amber: #D97706;
+  --accent-rose: #DC2626;
+  --accent-indigo: #4F46E5;
+
+  --text-main: #111827;
+  --text-muted: #4B5563;
+  --text-dim: #6B7280;
+
+  --table-th-bg: #F9FAFB;
+  --table-th-text: #111827;
+  --table-hover-bg: #F9FAFB;
+}
+
+/* 13: INVENTORY MANAGEMENT (Powder Blue & Slate Teal) - Reference Image 3 */
+[data-theme="inventory-slate"], [data-theme="theme-inventory"], [data-theme="theme-13"] {
+  --bg-main: #DCE7EE;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F4F8FA;
+  --bg-sidebar: #1E3A4B;
+  --bg-header: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --border-subtle: #CBDDE6;
+  --border-focus: #2D6A7D;
+
+  --sidebar-bg: #1E3A4B;
+  --sidebar-text: #FFFFFF;
+  --sidebar-muted: #8BA2B2;
+  --sidebar-item-text: #9BB3C4;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-hover-text: #FFFFFF;
+  --sidebar-active-bg: #2D6A7D;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-icon: #FFFFFF;
+  --sidebar-active-shadow: 0 4px 14px rgba(45, 106, 125, 0.40);
+  --sidebar-divider: rgba(255, 255, 255, 0.08);
+  --sidebar-footer-bg: #152A36;
+
+  --dashboard-bg: #DCE7EE;
+  --card-bg: #FFFFFF;
+  --card-bg-hover: #F4F8FA;
+  --card-border: #CBDDE6;
+  --card-shadow: 0 2px 8px rgba(30, 58, 75, 0.06), 0 6px 16px rgba(30, 58, 75, 0.04);
+  --card-shadow-hover: 0 4px 16px rgba(30, 58, 75, 0.10);
+  --border-color: #CBDDE6;
+
+  --header-bg: #FFFFFF;
+  --header-border: #CBDDE6;
+  --header-title: #1E3A4B;
+  --header-sub: #526A7A;
+
+  --primary: #2D6A7D;
+  --primary-hover: #225362;
+  --primary-text: #FFFFFF;
+  --primary-glow: rgba(45, 106, 125, 0.30);
+
+  --accent-cyan: #2D6A7D;
+  --accent-emerald: #10B981;
+  --accent-amber: #EAB308;
+  --accent-rose: #F43F5E;
+  --accent-indigo: #6366F1;
+
+  --text-main: #1E293B;
+  --text-muted: #334155;
+  --text-dim: #526A7A;
+
+  --table-th-bg: #E7EEF3;
+  --table-th-text: #1E3A4B;
+  --table-hover-bg: #F0F5F8;
+}
+
+/* 14: NEXORA CRM (Midnight Cyan) - Reference Image 4 */
+[data-theme="nexora-crm"], [data-theme="theme-nexora"], [data-theme="theme-14"] {
+  --bg-main: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F1F5F9;
+  --bg-sidebar: #0B162C;
+  --bg-header: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --border-subtle: #E2E8F0;
+  --border-focus: #0EA5E9;
+
+  --sidebar-bg: #0B162C;
+  --sidebar-text: #FFFFFF;
+  --sidebar-muted: #8FA0B5;
+  --sidebar-item-text: #8FA0B5;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-hover-text: #FFFFFF;
+  --sidebar-active-bg: #0EA5E9;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-icon: #FFFFFF;
+  --sidebar-active-shadow: 0 4px 14px rgba(14, 165, 233, 0.45);
+  --sidebar-divider: rgba(255, 255, 255, 0.08);
+  --sidebar-footer-bg: #070E1C;
+
+  --dashboard-bg: #F8FAFC;
+  --card-bg: #FFFFFF;
+  --card-bg-hover: #F1F5F9;
+  --card-border: #E2E8F0;
+  --card-shadow: 0 1px 3px rgba(11, 22, 44, 0.04), 0 4px 12px rgba(11, 22, 44, 0.03);
+  --card-shadow-hover: 0 4px 14px rgba(11, 22, 44, 0.08);
+  --border-color: #E2E8F0;
+
+  --header-bg: #FFFFFF;
+  --header-border: #E2E8F0;
+  --header-title: #0F172A;
+  --header-sub: #64748B;
+
+  --primary: #0EA5E9;
+  --primary-hover: #0284C7;
+  --primary-text: #FFFFFF;
+  --primary-glow: rgba(14, 165, 233, 0.35);
+
+  --accent-cyan: #0EA5E9;
+  --accent-emerald: #10B981;
+  --accent-amber: #F59E0B;
+  --accent-rose: #EF4444;
+  --accent-indigo: #6366F1;
+
+  --text-main: #0F172A;
+  --text-muted: #334155;
+  --text-dim: #64748B;
+
+  --table-th-bg: #F1F5F9;
+  --table-th-text: #0F172A;
+  --table-hover-bg: #F8FAFC;
+}
+
+/* 15: EDUSPHERE (Royal Indigo & Periwinkle) - Reference Image 5 */
+[data-theme="edusphere-indigo"], [data-theme="theme-edusphere"], [data-theme="theme-15"] {
+  --bg-main: #F3F4FA;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8F9FC;
+  --bg-sidebar: #0D1B3E;
+  --bg-header: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --border-subtle: #E5E7EB;
+  --border-focus: #4F46E5;
+
+  --sidebar-bg: #0D1B3E;
+  --sidebar-text: #FFFFFF;
+  --sidebar-muted: #94A3B8;
+  --sidebar-item-text: #94A3B8;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-hover-text: #FFFFFF;
+  --sidebar-active-bg: #4F46E5;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-icon: #FFFFFF;
+  --sidebar-active-shadow: 0 4px 14px rgba(79, 70, 229, 0.45);
+  --sidebar-divider: rgba(255, 255, 255, 0.08);
+  --sidebar-footer-bg: #081126;
+
+  --dashboard-bg: #F3F4FA;
+  --card-bg: #FFFFFF;
+  --card-bg-hover: #F8F9FC;
+  --card-border: #E5E7EB;
+  --card-shadow: 0 2px 8px rgba(13, 27, 62, 0.04), 0 8px 24px rgba(13, 27, 62, 0.03);
+  --card-shadow-hover: 0 4px 16px rgba(13, 27, 62, 0.08);
+  --border-color: #E5E7EB;
+
+  --header-bg: #FFFFFF;
+  --header-border: #E5E7EB;
+  --header-title: #1E1B4B;
+  --header-sub: #4338CA;
+
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --primary-text: #FFFFFF;
+  --primary-glow: rgba(79, 70, 229, 0.35);
+
+  --accent-cyan: #06B6D4;
+  --accent-emerald: #10B981;
+  --accent-amber: #F59E0B;
+  --accent-rose: #F43F5E;
+  --accent-indigo: #4F46E5;
+
+  --text-main: #1E1B4B;
+  --text-muted: #312E81;
+  --text-dim: #4338CA;
+
+  --table-th-bg: #EEF0F8;
+  --table-th-text: #1E1B4B;
+  --table-hover-bg: #F6F7FB;
+}
+
 /* Common sizing & radius tokens across all themes */
 :root {
   --sidebar-w: 275px;
@@ -324,7 +613,12 @@
   --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
-/* Dark-Text Themes Specific Typography Rules: 02 (White), 09 (Yellow), 10 (Soft Pink) */
+/* Dark-Text Themes Specific Typography Rules */
+[data-theme="student-navy"], [data-theme="theme-student"], [data-theme="theme-11"],
+[data-theme="oripiofin"], [data-theme="theme-oripiofin"], [data-theme="theme-12"],
+[data-theme="inventory-slate"], [data-theme="theme-inventory"], [data-theme="theme-13"],
+[data-theme="nexora-crm"], [data-theme="theme-nexora"], [data-theme="theme-14"],
+[data-theme="edusphere-indigo"], [data-theme="theme-edusphere"], [data-theme="theme-15"],
 [data-theme="light"], [data-theme="theme-2"], [data-theme="white-light"],
 [data-theme="yellow"], [data-theme="theme-9"],
 [data-theme="soft-pink"], [data-theme="theme-10"] {
@@ -337,8 +631,14 @@
 
 [data-theme="light"] body, [data-theme="white-light"] body,
 [data-theme="yellow"] body, [data-theme="soft-pink"] body,
+[data-theme="student-navy"] body, [data-theme="oripiofin"] body,
+[data-theme="inventory-slate"] body, [data-theme="nexora-crm"] body,
+[data-theme="edusphere-indigo"] body,
 [data-theme="light"] .app-content, [data-theme="white-light"] .app-content,
-[data-theme="yellow"] .app-content, [data-theme="soft-pink"] .app-content {
+[data-theme="yellow"] .app-content, [data-theme="soft-pink"] .app-content,
+[data-theme="student-navy"] .app-content, [data-theme="oripiofin"] .app-content,
+[data-theme="inventory-slate"] .app-content, [data-theme="nexora-crm"] .app-content,
+[data-theme="edusphere-indigo"] .app-content {
   color: #0f172a !important;
   font-weight: 550;
 }
@@ -358,12 +658,14 @@
   font-weight: 600 !important;
 }
 
-[data-theme="light"] .kpi-val, [data-theme="white-light"] .kpi-val, [data-theme="yellow"] .kpi-val, [data-theme="soft-pink"] .kpi-val {
+[data-theme="light"] .kpi-val, [data-theme="white-light"] .kpi-val, [data-theme="yellow"] .kpi-val, [data-theme="soft-pink"] .kpi-val,
+[data-theme="student-navy"] .kpi-val, [data-theme="oripiofin"] .kpi-val, [data-theme="inventory-slate"] .kpi-val, [data-theme="nexora-crm"] .kpi-val, [data-theme="edusphere-indigo"] .kpi-val {
   color: #0f172a !important;
   font-weight: 800 !important;
 }
 
-[data-theme="light"] .kpi-label, [data-theme="white-light"] .kpi-label, [data-theme="yellow"] .kpi-label, [data-theme="soft-pink"] .kpi-label {
+[data-theme="light"] .kpi-label, [data-theme="white-light"] .kpi-label, [data-theme="yellow"] .kpi-label, [data-theme="soft-pink"] .kpi-label,
+[data-theme="student-navy"] .kpi-label, [data-theme="oripiofin"] .kpi-label, [data-theme="inventory-slate"] .kpi-label, [data-theme="nexora-crm"] .kpi-label, [data-theme="edusphere-indigo"] .kpi-label {
   color: #0f172a !important;
   font-weight: 750 !important;
 }
@@ -393,21 +695,36 @@
   border-bottom: 1px solid rgba(251, 191, 36, 0.25) !important;
 }
 
-[data-theme="light"] .nav-section-title, [data-theme="white-light"] .nav-section-title, [data-theme="yellow"] .nav-section-title, [data-theme="soft-pink"] .nav-section-title {
+[data-theme="light"] .nav-section-title, [data-theme="white-light"] .nav-section-title, [data-theme="yellow"] .nav-section-title, [data-theme="soft-pink"] .nav-section-title, [data-theme="oripiofin"] .nav-section-title {
   color: #334155 !important;
   font-weight: 800 !important;
 }
 
-[data-theme="light"] .sidebar-nav .nav-item:not(.active), [data-theme="white-light"] .sidebar-nav .nav-item:not(.active), [data-theme="yellow"] .sidebar-nav .nav-item:not(.active), [data-theme="soft-pink"] .sidebar-nav .nav-item:not(.active) {
+[data-theme="light"] .sidebar-nav .nav-item:not(.active), [data-theme="white-light"] .sidebar-nav .nav-item:not(.active), [data-theme="yellow"] .sidebar-nav .nav-item:not(.active), [data-theme="soft-pink"] .sidebar-nav .nav-item:not(.active), [data-theme="oripiofin"] .sidebar-nav .nav-item:not(.active) {
   color: #0f172a !important;
   font-weight: 700 !important;
 }
 
-[data-theme="light"] .sidebar-nav .nav-item:not(.active) svg, [data-theme="white-light"] .sidebar-nav .nav-item:not(.active) svg, [data-theme="yellow"] .sidebar-nav .nav-item:not(.active) svg, [data-theme="soft-pink"] .sidebar-nav .nav-item:not(.active) svg {
+[data-theme="light"] .sidebar-nav .nav-item:not(.active) svg, [data-theme="white-light"] .sidebar-nav .nav-item:not(.active) svg, [data-theme="yellow"] .sidebar-nav .nav-item:not(.active) svg, [data-theme="soft-pink"] .sidebar-nav .nav-item:not(.active) svg, [data-theme="oripiofin"] .sidebar-nav .nav-item:not(.active) svg {
   color: #0f172a !important;
 }
 
-/* Global Table Header Design - Deep Navy #081426 & Bold Golden Yellow #FFD166 Across All Themes */
+[data-theme="student-navy"] .sidebar-nav .nav-item:not(.active),
+[data-theme="inventory-slate"] .sidebar-nav .nav-item:not(.active),
+[data-theme="nexora-crm"] .sidebar-nav .nav-item:not(.active),
+[data-theme="edusphere-indigo"] .sidebar-nav .nav-item:not(.active) {
+  color: var(--sidebar-item-text) !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="student-navy"] .sidebar-nav .nav-item:not(.active) svg,
+[data-theme="inventory-slate"] .sidebar-nav .nav-item:not(.active) svg,
+[data-theme="nexora-crm"] .sidebar-nav .nav-item:not(.active) svg,
+[data-theme="edusphere-indigo"] .sidebar-nav .nav-item:not(.active) svg {
+  color: var(--sidebar-muted) !important;
+}
+
+/* Global Table Header Design Across All Themes */
 table.data-table thead tr,
 table.data-table thead th,
 table.data-table th,
@@ -418,7 +735,7 @@ table.data-table th,
 [data-theme] table.data-table th,
 [data-theme] .table-container table thead tr,
 [data-theme] .table-container table thead th {
-  background: #081426 !important;
+  background: var(--table-th-bg, #081426) !important;
   color: #fbbf24 !important;
   font-weight: 800 !important;
   font-size: 12px !important;
@@ -496,7 +813,7 @@ table.data-table thead th:last-child,
 /* Sites Table Header Theming (Image 1 Deep Navy & Yellow Palette) */
 .sites-table thead tr, .sites-table thead th,
 [data-theme] .sites-table thead tr, [data-theme] .sites-table thead th {
-  background: #081426 !important;
+  background: var(--table-th-bg, #081426) !important;
   color: #fbbf24 !important;
   font-weight: 800 !important;
   font-size: 12px !important;
@@ -1061,7 +1378,7 @@ table.data-table {
 }
 
 table.data-table th {
-  background: #081426 !important;
+  background: var(--table-th-bg, #081426) !important;
   padding: 15px 18px;
   font-weight: 800 !important;
   color: #fbbf24 !important;
@@ -1416,7 +1733,7 @@ table.data-table thead th,
 [data-theme] table.data-table thead th,
 [data-theme] .sites-table thead th,
 [data-theme] .dashboard-table thead th {
-  background: #081426 !important;
+  background: var(--table-th-bg, #081426) !important;
   color: #fbbf24 !important;
   font-weight: 800 !important;
   font-size: 12px !important;
@@ -1735,7 +2052,7 @@ td, .table td {
    EXECUTIVE FIT-TO-SCREEN TABLES & REFERENCE STYLING (SITES & GUARDS)
    ==================================================================== */
 .dashboard-table-card {
-    background: #081426 !important;
+    background: var(--table-th-bg, #081426) !important;
     border: 1px solid rgba(255, 209, 102, 0.25) !important;
     border-radius: 12px !important;
     padding: 20px 24px !important;
@@ -1744,7 +2061,7 @@ td, .table td {
 }
 
 .table-banner-header {
-    background: #081426 !important;
+    background: var(--table-th-bg, #081426) !important;
     border: 1px solid rgba(255, 209, 102, 0.35) !important;
     padding: 16px 20px !important;
     border-radius: 10px !important;
@@ -1802,7 +2119,7 @@ td, .table td {
 }
 
 .fit-screen-table th {
-    background: #081426 !important;
+    background: var(--table-th-bg, #081426) !important;
     color: #fbbf24 !important;
     font-weight: 800 !important;
     font-size: 11.5px !important;
@@ -2879,4 +3196,22 @@ aside.app-sidebar {
 .section-header-banner, .navy-frame-title {
   color: #FFFFFF !important;
   font-weight: 800 !important;
+}
+
+/* Top-left text and placeholder alignment for sign-off textareas */
+textarea,
+textarea.form-control,
+textarea[name="recommendation_action_taken"],
+textarea[name="client_manager_action_taken"] {
+  text-align: left !important;
+  vertical-align: top !important;
+  line-height: 1.4 !important;
+  padding-top: 8px !important;
+  padding-left: 10px !important;
+}
+
+textarea::placeholder,
+textarea.form-control::placeholder {
+  text-align: left !important;
+  vertical-align: top !important;
 }

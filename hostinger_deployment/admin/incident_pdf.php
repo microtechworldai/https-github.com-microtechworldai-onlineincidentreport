@@ -704,9 +704,9 @@ $companyDisplayName = !empty($settings['company_name'])
         }
 
         .description-box {
-            height: 96mm !important;
-            min-height: 96mm !important;
-            max-height: 96mm !important;
+            height: 86mm !important;
+            min-height: 86mm !important;
+            max-height: 86mm !important;
             padding: 4px 8px !important;
             font-size: 13px !important;
             line-height: 1.30 !important;
@@ -776,8 +776,10 @@ $companyDisplayName = !empty($settings['company_name'])
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            align-items: stretch !important;
             border-bottom: 1.8px solid #000 !important;
             box-sizing: border-box !important;
+            text-align: left !important;
         }
 
         .action-text {
@@ -792,6 +794,10 @@ $companyDisplayName = !empty($settings['company_name'])
             line-height: 1.30 !important;
             max-height: 9.5mm !important;
             overflow: hidden !important;
+            text-align: left !important;
+            vertical-align: top !important;
+            align-self: flex-start !important;
+            width: 100% !important;
         }
 
         .signoff-bottom {
@@ -988,7 +994,7 @@ $companyDisplayName = !empty($settings['company_name'])
             <td class="col-side-label" rowspan="2" style="width: 16%; font-weight: bold; font-size: 10.5pt; text-align: center; vertical-align: middle; border-right: 1.5px solid #000; border-bottom: 1.5px solid #000; background: #ffffff; color: #000000; padding: 4px;">
                 Incident<br>Description
             </td>
-            <td style="background: #ffffff; color: #000000; font-weight: bold; font-style: italic; font-size: 8.5pt; padding: 3.5px 8px; border-bottom: 1px solid #000;">
+            <td style="background: #002266 !important; color: #ffffff !important; font-weight: bold; font-style: italic; font-size: 8.5pt; padding: 3.5px 8px; border-bottom: 1px solid #000;">
                 (Explain What, Where, When, Who, Why and How action taken)
             </td>
         </tr>
@@ -1023,6 +1029,35 @@ $companyDisplayName = !empty($settings['company_name'])
                 </div>
             </td>
         </tr>
+
+        <!-- Row: People who saw the Incident (Witnesses) -->
+        <?php if (!isset($settings['witness_enabled']) || !empty($settings['witness_enabled'])): ?>
+        <tr>
+            <td colspan="2" style="background: #ffffff; color: #000000; font-weight: bold; font-style: italic; font-size: 10pt; padding: 3px 8px; border-top: 1.5px solid #000; border-bottom: 1px solid #000;">
+                <?= htmlspecialchars($settings['witness_section_title'] ?? 'People who saw the Incident') ?>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" class="col-content-box" style="padding: 4px 8px; border-bottom: 1.5px solid #000;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 33.33%; font-size: 8.5pt; padding: 2px 4px; vertical-align: middle;">
+                            <strong><?= htmlspecialchars($settings['witness_1_label'] ?? 'Witness 1') ?>:</strong>
+                            <span style="border-bottom: 1px dotted #000; display: inline-block; width: calc(100% - 75px); min-height: 14px; padding-left: 4px; font-weight: normal;"><?= htmlspecialchars($incident['witness_1'] ?: '') ?></span>
+                        </td>
+                        <td style="width: 33.33%; font-size: 8.5pt; padding: 2px 4px; vertical-align: middle;">
+                            <strong><?= htmlspecialchars($settings['witness_2_label'] ?? 'Witness 2') ?>:</strong>
+                            <span style="border-bottom: 1px dotted #000; display: inline-block; width: calc(100% - 75px); min-height: 14px; padding-left: 4px; font-weight: normal;"><?= htmlspecialchars($incident['witness_2'] ?: '') ?></span>
+                        </td>
+                        <td style="width: 33.33%; font-size: 8.5pt; padding: 2px 4px; vertical-align: middle;">
+                            <strong><?= htmlspecialchars($settings['witness_3_label'] ?? 'Witness 3') ?>:</strong>
+                            <span style="border-bottom: 1px dotted #000; display: inline-block; width: calc(100% - 75px); min-height: 14px; padding-left: 4px; font-weight: normal;"><?= htmlspecialchars($incident['witness_3'] ?: '') ?></span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <?php endif; ?>
 
         <!-- Row 6: Description of Incident -->
         <tr>
@@ -1064,8 +1099,8 @@ $companyDisplayName = !empty($settings['company_name'])
         </tr>
         <tr>
             <td colspan="2" style="padding: 0; border-bottom: 1.8px solid #000;">
-                <div class="action-box">
-                    <div class="action-text">
+                <div class="action-box" style="text-align: left !important;">
+                    <div class="action-text" style="text-align: left !important; vertical-align: top !important; align-self: flex-start !important; width: 100% !important;">
                         <?= nl2br(htmlspecialchars($incident['recommendation_action_taken'] ?: '')) ?>
                     </div>
                     <div class="signoff-bottom">
@@ -1091,8 +1126,8 @@ $companyDisplayName = !empty($settings['company_name'])
         </tr>
         <tr>
             <td colspan="2" style="padding: 0; border-bottom: 1.8px solid #000;">
-                <div class="action-box">
-                    <div class="action-text">
+                <div class="action-box" style="text-align: left !important;">
+                    <div class="action-text" style="text-align: left !important; vertical-align: top !important; align-self: flex-start !important; width: 100% !important;">
                         <?= nl2br(htmlspecialchars($incident['client_manager_action_taken'] ?: '')) ?>
                     </div>
                     <div class="signoff-bottom">

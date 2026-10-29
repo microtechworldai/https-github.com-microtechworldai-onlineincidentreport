@@ -9,7 +9,7 @@ require_once __DIR__ . '/../includes/functions.php';
 
 require_admin_auth();
 
-$id = (int)($_GET['id'] ?? 0);
+$id = (int)($_GET['id'] ?? ($_POST['id'] ?? 0));
 if (!$id) {
     header("Location: " . APP_URL . "/admin/incidents.php");
     exit;
@@ -19,20 +19,124 @@ $db = get_db();
 $msg = '';
 $msgType = 'success';
 
+// Date cleaner helper to prevent MySQL 1292 Incorrect date value errors
+if (!function_exists('safe_mysql_date')) {
+    function safe_mysql_date($d) {
+        if (empty($d)) return null;
+        $d = trim((string)$d);
+        if ($d === '' || $d === '0000-00-00' || $d === '00-00-0000' || $d === 'null') return null;
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) return $d;
+        $ts = strtotime(str_replace('/', '-', $d));
+        return $ts ? date('Y-m-d', $ts) : null;
+    }
+}
+
+// Safely inspect incidents table columns and auto-heal missing fields without table locking
+$existingCols = [];
+$existingColDefs = [];
+try {
+    $describeStmt = $db->query("DESCRIBE incidents");
+    if ($describeStmt) {
+        $cols = $describeStmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($cols as $c) {
+            $cName = strtolower($c['Field'] ?? '');
+            if ($cName !== '') {
+                $existingCols[] = $cName;
+                $existingColDefs[$cName] = $c;
+            }
+        }
+        $describeStmt->closeCursor();
+    }
+} catch (\Throwable $e) {}
+
+$requiredCols = [
+    'site_supervisor_name' => "VARCHAR(150) NULL",
+    'site_supervisor_id' => "VARCHAR(100) NULL",
+    'site_supervisor_signature' => "TEXT NULL",
+    'site_supervisor_date' => "DATE NULL",
+    'recommendation_action_taken' => "TEXT NULL",
+    'operations_manager_name' => "VARCHAR(150) NULL",
+    'operations_manager_id' => "VARCHAR(100) NULL",
+    'operations_manager_signature' => "TEXT NULL",
+    'operations_manager_date' => "DATE NULL",
+    'client_manager_name' => "VARCHAR(150) NULL",
+    'client_manager_id' => "VARCHAR(100) NULL",
+    'client_manager_action_taken' => "TEXT NULL",
+    'client_manager_signature' => "TEXT NULL",
+    'client_manager_date' => "DATE NULL",
+    'witness_1' => "TEXT NULL",
+    'witness_2' => "TEXT NULL",
+    'witness_3' => "TEXT NULL"
+];
+
+foreach ($requiredCols as $col => $def) {
+    if (!empty($existingCols) && !in_array(strtolower($col), $existingCols)) {
+        try {
+            $db->exec("ALTER TABLE incidents ADD COLUMN `{$col}` {$def}");
+            $existingCols[] = strtolower($col);
+        } catch (\Throwable $te) {}
+    }
+}
+
+// Widen status to VARCHAR(50) ONLY if it is still a strict ENUM to avoid continuous ALTER locking
+if (isset($existingColDefs['status'])) {
+    $statusType = strtolower($existingColDefs['status']['Type'] ?? '');
+    if (strpos($statusType, 'enum') !== false) {
+        try {
+            $db->exec("ALTER TABLE incidents MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Submitted'");
+        } catch (\Throwable $te) {}
+    }
+}
+
+// Fetch Incident Record helper with clean cursor and fallback
+$fetchIncidentData = function($dbConn, $incId) {
+    try {
+        $st = $dbConn->prepare("
+            SELECT i.*, s.client_name, s.client_contact, s.latitude as site_latitude, s.longitude as site_longitude, s.code as site_official_code
+            FROM incidents i 
+            LEFT JOIN sites s ON s.id = i.site_id 
+            WHERE i.id = ? 
+            LIMIT 1
+        ");
+        $st->execute([$incId]);
+        $row = $st->fetch();
+        $st->closeCursor();
+        if ($row) return $row;
+    } catch (\Throwable $t) {}
+
+    // Fallback without JOIN in case sites table or site columns differ
+    try {
+        $st2 = $dbConn->prepare("SELECT * FROM incidents WHERE id = ? LIMIT 1");
+        $st2->execute([$incId]);
+        $row2 = $st2->fetch();
+        $st2->closeCursor();
+        return $row2 ?: false;
+    } catch (\Throwable $t2) {
+        return false;
+    }
+};
+
+$incident = $fetchIncidentData($db, $id);
+if (!$incident) {
+    die("Incident not found.");
+}
+
 // Handle Management Sign-Off & Status Update (with Signature Image Uploads)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_management']) || isset($_POST['save_signoff']))) {
-    $newStatus = trim($_POST['status'] ?? 'Submitted');
+    $newStatus = trim($_POST['status'] ?? ($incident['status'] ?? 'Submitted'));
     $supervisorName = trim($_POST['site_supervisor_name'] ?? '');
     $supervisorId = trim($_POST['site_supervisor_id'] ?? '');
-    $supervisorDate = !empty($_POST['site_supervisor_date']) ? $_POST['site_supervisor_date'] : null;
+    $supervisorDate = safe_mysql_date($_POST['site_supervisor_date'] ?? null);
     $recommendationAction = trim($_POST['recommendation_action_taken'] ?? '');
     
     $opsManagerName = trim($_POST['operations_manager_name'] ?? '');
-    $opsManagerDate = !empty($_POST['operations_manager_date']) ? $_POST['operations_manager_date'] : null;
+    $opsManagerId = trim($_POST['operations_manager_id'] ?? '');
+    $opsManagerDate = safe_mysql_date($_POST['operations_manager_date'] ?? null);
 
     $clientManagerName = trim($_POST['client_manager_name'] ?? '');
+    $clientManagerId = trim($_POST['client_manager_id'] ?? '');
     $clientManagerAction = trim($_POST['client_manager_action_taken'] ?? '');
-    $clientManagerDate = !empty($_POST['client_manager_date']) ? $_POST['client_manager_date'] : null;
+    $clientManagerDate = safe_mysql_date($_POST['client_manager_date'] ?? null);
 
     $supSig = !empty($_POST['remove_supervisor_sig']) ? null : ($incident['site_supervisor_signature'] ?? null);
     $opsSig = !empty($_POST['remove_ops_sig']) ? null : ($incident['operations_manager_signature'] ?? null);
@@ -46,71 +150,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_management'])
     if (!empty($_FILES['site_supervisor_sig_file']['tmp_name']) && is_uploaded_file($_FILES['site_supervisor_sig_file']['tmp_name'])) {
         $ext = strtolower(pathinfo($_FILES['site_supervisor_sig_file']['name'], PATHINFO_EXTENSION)) ?: 'png';
         $fname = 'sup_sig_' . $id . '_' . time() . '.' . $ext;
-        if (move_uploaded_file($_FILES['site_supervisor_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
+        if (@move_uploaded_file($_FILES['site_supervisor_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
             $supSig = 'uploads/signatures/' . $fname;
         }
     }
     if (!empty($_FILES['operations_manager_sig_file']['tmp_name']) && is_uploaded_file($_FILES['operations_manager_sig_file']['tmp_name'])) {
         $ext = strtolower(pathinfo($_FILES['operations_manager_sig_file']['name'], PATHINFO_EXTENSION)) ?: 'png';
         $fname = 'ops_sig_' . $id . '_' . time() . '.' . $ext;
-        if (move_uploaded_file($_FILES['operations_manager_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
+        if (@move_uploaded_file($_FILES['operations_manager_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
             $opsSig = 'uploads/signatures/' . $fname;
         }
     }
     if (!empty($_FILES['client_manager_sig_file']['tmp_name']) && is_uploaded_file($_FILES['client_manager_sig_file']['tmp_name'])) {
         $ext = strtolower(pathinfo($_FILES['client_manager_sig_file']['name'], PATHINFO_EXTENSION)) ?: 'png';
         $fname = 'client_sig_' . $id . '_' . time() . '.' . $ext;
-        if (move_uploaded_file($_FILES['client_manager_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
+        if (@move_uploaded_file($_FILES['client_manager_sig_file']['tmp_name'], $sigDir . '/' . $fname)) {
             $clientSig = 'uploads/signatures/' . $fname;
         }
     }
 
-    $stmtUpdate = $db->prepare("
-        UPDATE incidents SET
-            status = ?,
-            site_supervisor_name = ?,
-            site_supervisor_id = ?,
-            site_supervisor_signature = ?,
-            site_supervisor_date = ?,
-            recommendation_action_taken = ?,
-            operations_manager_name = ?,
-            operations_manager_id = ?,
-            operations_manager_signature = ?,
-            operations_manager_date = ?,
-            client_manager_name = ?,
-            client_manager_id = ?,
-            client_manager_action_taken = ?,
-            client_manager_signature = ?,
-            client_manager_date = ?,
-            updated_at = NOW()
-        WHERE id = ?
-    ");
-    $stmtUpdate->execute([
-        $newStatus,
-        $supervisorName,
-        $supervisorId,
-        $supSig,
-        $supervisorDate,
-        $recommendationAction,
-        $opsManagerName,
-        $opsManagerId,
-        $opsSig,
-        $opsManagerDate,
-        $clientManagerName,
-        $clientManagerId,
-        $clientManagerAction,
-        $clientSig,
-        $clientManagerDate,
-        $id
-    ]);
+    try {
+        // Build resilient dynamic SET clause based on columns that exist in DB
+        $candidateFields = [
+            'status' => $newStatus,
+            'site_supervisor_name' => $supervisorName,
+            'site_supervisor_id' => $supervisorId,
+            'site_supervisor_signature' => $supSig,
+            'site_supervisor_date' => $supervisorDate,
+            'recommendation_action_taken' => $recommendationAction,
+            'operations_manager_name' => $opsManagerName,
+            'operations_manager_id' => $opsManagerId,
+            'operations_manager_signature' => $opsSig,
+            'operations_manager_date' => $opsManagerDate,
+            'client_manager_name' => $clientManagerName,
+            'client_manager_id' => $clientManagerId,
+            'client_manager_action_taken' => $clientManagerAction,
+            'client_manager_signature' => $clientSig,
+            'client_manager_date' => $clientManagerDate
+        ];
 
-    log_audit('UPDATE_MANAGEMENT_SIGNOFF', 'INCIDENT', $id, [
-        'status' => $newStatus,
-        'supervisor' => $supervisorName
-    ]);
-    $msg = "Management sign-off and report status updated successfully.";
+        $setSql = [];
+        $params = [];
+        foreach ($candidateFields as $colKey => $colVal) {
+            if (empty($existingCols) || in_array(strtolower($colKey), $existingCols)) {
+                $setSql[] = "`{$colKey}` = ?";
+                $params[] = $colVal;
+            }
+        }
+
+        if (empty($existingCols) || in_array('updated_at', $existingCols)) {
+            $setSql[] = "`updated_at` = NOW()";
+        }
+
+        if (empty($setSql)) {
+            $setSql[] = "`status` = ?";
+            $params[] = $newStatus;
+        }
+
+        $params[] = $id;
+        $stmtUpdate = $db->prepare("UPDATE incidents SET " . implode(', ', $setSql) . " WHERE id = ?");
+        $stmtUpdate->execute($params);
+        $stmtUpdate->closeCursor();
+
+        log_audit('UPDATE_MANAGEMENT_SIGNOFF', 'INCIDENT', $id, [
+            'status' => $newStatus,
+            'supervisor' => $supervisorName
+        ]);
+        $msg = "Management sign-off and report status updated successfully.";
+        $msgType = 'success';
+
+        // Re-fetch updated incident data cleanly
+        $updatedData = $fetchIncidentData($db, $id);
+        if ($updatedData) {
+            $incident = $updatedData;
+        }
+    } catch (\Throwable $e) {
+        $msg = "Notice: Sign-off saved with notice: " . $e->getMessage();
+        $msgType = 'danger';
+        error_log("Error saving sign-off: " . $e->getMessage());
+    }
 }
-
 // Handle Updating Photo Caption (Image by Image in Dashboard)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_photo_caption'])) {
     $photoId = (int)($_POST['photo_id'] ?? 0);
@@ -140,20 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_note'])) {
     }
 }
 
-// Fetch Incident Record
-$stmt = $db->prepare("
-    SELECT i.*, s.client_name, s.client_contact, s.latitude as site_latitude, s.longitude as site_longitude, s.code as site_official_code
-    FROM incidents i 
-    LEFT JOIN sites s ON s.id = i.site_id 
-    WHERE i.id = ? 
-    LIMIT 1
-");
-$stmt->execute([$id]);
-$incident = $stmt->fetch();
-
-if (!$incident) {
-    die("Incident not found.");
-}
+// Incident Record already fetched and validated upfront
 
 // Decode JSON fields safely
 $causes = json_decode($incident['cause_main'] ?: '[]', true) ?: [];
@@ -323,6 +429,29 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
+            <!-- People who saw the Incident (Witnesses) -->
+            <?php if (!empty($incident['witness_1']) || !empty($incident['witness_2']) || !empty($incident['witness_3'])): ?>
+            <div style="margin-bottom: 24px;">
+                <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important; font-style: italic;">
+                    <?= htmlspecialchars($settings['witness_section_title'] ?? 'People who saw the Incident') ?>
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                    <div style="background: var(--bg-card-hover); border: 1px solid var(--border-subtle); padding: 12px 16px; border-radius: var(--radius-sm);">
+                        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; font-weight: 700;"><?= htmlspecialchars($settings['witness_1_label'] ?? 'Witness 1') ?></div>
+                        <div style="font-size: 13.5px; font-weight: 600; color: var(--text-main);"><?= htmlspecialchars($incident['witness_1'] ?: 'None recorded') ?></div>
+                    </div>
+                    <div style="background: var(--bg-card-hover); border: 1px solid var(--border-subtle); padding: 12px 16px; border-radius: var(--radius-sm);">
+                        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; font-weight: 700;"><?= htmlspecialchars($settings['witness_2_label'] ?? 'Witness 2') ?></div>
+                        <div style="font-size: 13.5px; font-weight: 600; color: var(--text-main);"><?= htmlspecialchars($incident['witness_2'] ?: 'None recorded') ?></div>
+                    </div>
+                    <div style="background: var(--bg-card-hover); border: 1px solid var(--border-subtle); padding: 12px 16px; border-radius: var(--radius-sm);">
+                        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; font-weight: 700;"><?= htmlspecialchars($settings['witness_3_label'] ?? 'Witness 3') ?></div>
+                        <div style="font-size: 13.5px; font-weight: 600; color: var(--text-main);"><?= htmlspecialchars($incident['witness_3'] ?: 'None recorded') ?></div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Summary & Detailed Description -->
             <div style="margin-bottom: 24px;">
                 <h4 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Executive Summary</h4>
@@ -415,6 +544,7 @@ require_once __DIR__ . '/../includes/header.php';
             <h3 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Official Management Sign-Off</h3>
 
             <form method="POST" action="" enctype="multipart/form-data">
+                <input type="hidden" name="id" value="<?= $id ?>">
                 <input type="hidden" name="update_management" value="1">
                 <input type="hidden" name="save_signoff" value="1">
 
@@ -485,7 +615,7 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="form-group">
                         <label class="form-label" style="font-weight: 800; color: #000000 !important;">Recommendation / Action Taken</label>
-                        <textarea name="recommendation_action_taken" class="form-control" rows="2" placeholder="Corrective actions initiated at post..." style="font-weight: 700; width: 100%; box-sizing: border-box;"><?= htmlspecialchars($incident['recommendation_action_taken'] ?? '') ?></textarea>
+                        <textarea name="recommendation_action_taken" class="form-control" rows="2" placeholder="Corrective actions initiated at post..." style="font-weight: 700; width: 100%; box-sizing: border-box; text-align: left !important; vertical-align: top !important; padding: 8px 12px !important; line-height: 1.4 !important; font-family: inherit !important; resize: vertical;"><?= htmlspecialchars($incident['recommendation_action_taken'] ?? '') ?></textarea>
                     </div>
                 </div>
 
@@ -557,7 +687,7 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="form-group">
                         <label class="form-label" style="font-weight: 800; color: #000000 !important;">Client Action Taken</label>
-                        <textarea name="client_manager_action_taken" class="form-control" rows="2" placeholder="Client acknowledgement or notes..." style="font-weight: 700; width: 100%; box-sizing: border-box;"><?= htmlspecialchars($incident['client_manager_action_taken'] ?? '') ?></textarea>
+                        <textarea name="client_manager_action_taken" class="form-control" rows="2" placeholder="Client acknowledgement or notes..." style="font-weight: 700; width: 100%; box-sizing: border-box; text-align: left !important; vertical-align: top !important; padding: 8px 12px !important; line-height: 1.4 !important; font-family: inherit !important; resize: vertical;"><?= htmlspecialchars($incident['client_manager_action_taken'] ?? '') ?></textarea>
                     </div>
 
                     <div class="form-group">
@@ -598,7 +728,7 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 14px; font-weight: 800;">
+                <button type="submit" name="save_signoff" value="1" class="btn btn-primary" style="width: 100%; margin-top: 14px; font-weight: 800;">
                     Save Management Sign-Off
                 </button>
             </form>

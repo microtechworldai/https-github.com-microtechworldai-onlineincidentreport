@@ -55,6 +55,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
     
         } catch (Exception $e) {}
 
+        try {
+            $db->exec("ALTER TABLE system_settings ADD COLUMN witness_section_title VARCHAR(255) NOT NULL DEFAULT 'People who saw the Incident'");
+        } catch (Exception $e) {}
+        try {
+            $db->exec("ALTER TABLE system_settings ADD COLUMN witness_1_label VARCHAR(255) NOT NULL DEFAULT 'Witness 1'");
+        } catch (Exception $e) {}
+        try {
+            $db->exec("ALTER TABLE system_settings ADD COLUMN witness_2_label VARCHAR(255) NOT NULL DEFAULT 'Witness 2'");
+        } catch (Exception $e) {}
+        try {
+            $db->exec("ALTER TABLE system_settings ADD COLUMN witness_3_label VARCHAR(255) NOT NULL DEFAULT 'Witness 3'");
+        } catch (Exception $e) {}
+        try {
+            $db->exec("ALTER TABLE system_settings ADD COLUMN witness_options TEXT NULL");
+        } catch (Exception $e) {}
+        try {
+            $db->exec("ALTER TABLE system_settings ADD COLUMN witness_enabled TINYINT(1) NOT NULL DEFAULT 1");
+        } catch (Exception $e) {}
+
+        try {
+            $db->exec("ALTER TABLE incidents ADD COLUMN witness_1 TEXT NULL");
+        } catch (Exception $e) {}
+        try {
+            $db->exec("ALTER TABLE incidents ADD COLUMN witness_2 TEXT NULL");
+        } catch (Exception $e) {}
+        try {
+            $db->exec("ALTER TABLE incidents ADD COLUMN witness_3 TEXT NULL");
+        } catch (Exception $e) {}
+
         // 3. Ensure the 'default-settings' row exists
         $stmtChk = $db->query("SELECT id, logo_url FROM system_settings WHERE id = 'default-settings' LIMIT 1");
         $existingRow = $stmtChk ? $stmtChk->fetch() : null;
@@ -82,6 +111,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
         $disciplinary = array_filter(array_map('trim', explode("\n", $_POST['disciplinary_options'] ?? '')));
         $incidents = array_filter(array_map('trim', explode("\n", $_POST['incident_options'] ?? '')));
         $notified = array_filter(array_map('trim', explode("\n", $_POST['notified_options'] ?? '')));
+        $witnessSectionTitle = trim($_POST['witness_section_title'] ?? 'People who saw the Incident');
+        if (empty($witnessSectionTitle)) $witnessSectionTitle = 'People who saw the Incident';
+        $witness1Label = trim($_POST['witness_1_label'] ?? 'Witness 1');
+        $witness2Label = trim($_POST['witness_2_label'] ?? 'Witness 2');
+        $witness3Label = trim($_POST['witness_3_label'] ?? 'Witness 3');
+        $witnessOptions = array_filter(array_map('trim', explode("\n", $_POST['witness_options'] ?? '')));
+        $witnessEnabled = isset($_POST['witness_enabled']) ? 1 : 0;
 
         // Handle Logo Replacement (Upload, Custom URL, or Reset)
         $logoUrl = $existingRow['logo_url'] ?: 'assets/images/logo.png';
@@ -159,6 +195,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
                 disciplinary_options = ?,
                 incident_options = ?,
                 notified_options = ?,
+                witness_section_title = ?,
+                witness_1_label = ?,
+                witness_2_label = ?,
+                witness_3_label = ?,
+                witness_options = ?,
+                witness_enabled = ?,
                 logo_url = ?,
                 updated_at = NOW()
             WHERE id = 'default-settings'
@@ -178,6 +220,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
             json_encode(array_values($disciplinary), JSON_UNESCAPED_UNICODE),
             json_encode(array_values($incidents), JSON_UNESCAPED_UNICODE),
             json_encode(array_values($notified), JSON_UNESCAPED_UNICODE),
+            $witnessSectionTitle,
+            $witness1Label,
+            $witness2Label,
+            $witness3Label,
+            json_encode(array_values($witnessOptions), JSON_UNESCAPED_UNICODE),
+            $witnessEnabled,
             $logoUrl
         ]);
 
@@ -322,6 +370,59 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="form-group">
                 <label class="form-label">Authorities Notified</label>
                 <textarea name="notified_options" class="form-control" rows="3"><?= htmlspecialchars(implode("\n", $settings['notified_options'])) ?></textarea>
+            </div>
+        </div>
+
+        <!-- Bottom Span: People Who Saw The Incident (Witness Configuration) -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+                <h3 style="font-size: 16px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <span>👥</span> People Who Saw The Incident (Witness Configuration)
+                </h3>
+                <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--bg-card-hover); padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                    <input type="checkbox" name="witness_enabled" value="1" <?= (!empty($settings['witness_enabled'])) ? 'checked' : '' ?>>
+                    <span>Enable Witness Section in Forms &amp; Official PDF</span>
+                </label>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-dim); margin-bottom: 18px;">
+                Configure the section title, labels for Witness 1, Witness 2, and Witness 3, and default witness categories for the online incident report form, admin review, and official PDF export.
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div>
+                    <div class="form-group">
+                        <label class="form-label">Section Title (Header text on form &amp; PDF)</label>
+                        <input type="text" name="witness_section_title" class="form-control" value="<?= htmlspecialchars($settings['witness_section_title'] ?? 'People who saw the Incident') ?>" placeholder="People who saw the Incident" required>
+                        <span style="font-size: 11.5px; color: var(--text-dim); display: block; margin-top: 4px;">
+                            Appears in bold italic format (e.g. <em>People who saw the Incident</em>) matching official dossier standard.
+                        </span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label class="form-label">Witness 1 Label</label>
+                            <input type="text" name="witness_1_label" class="form-control" value="<?= htmlspecialchars($settings['witness_1_label'] ?? 'Witness 1') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Witness 2 Label</label>
+                            <input type="text" name="witness_2_label" class="form-control" value="<?= htmlspecialchars($settings['witness_2_label'] ?? 'Witness 2') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Witness 3 Label</label>
+                            <input type="text" name="witness_3_label" class="form-control" value="<?= htmlspecialchars($settings['witness_3_label'] ?? 'Witness 3') ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="form-group">
+                        <label class="form-label">Default Witness Types / Categories (One per line)</label>
+                        <textarea name="witness_options" class="form-control" rows="4"><?= htmlspecialchars(implode("\n", $settings['witness_options'] ?? ['Security Guard', 'Resident / Tenant', 'Staff / Employee', 'Visitor / Contractor', 'Third Party / Bystander'])) ?></textarea>
+                        <span style="font-size: 11.5px; color: var(--text-dim); display: block; margin-top: 4px;">
+                            Enter witness categories to guide patrol officers when logging witnesses.
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
 
