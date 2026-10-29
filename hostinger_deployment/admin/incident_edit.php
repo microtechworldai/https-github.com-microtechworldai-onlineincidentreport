@@ -295,7 +295,13 @@ require_once __DIR__ . '/../includes/header.php';
     border: 1.5px solid #0f172a !important;
     font-weight: 500 !important;
     font-size: 14px !important;
-    min-height: 180px !important;
+    min-height: 360px !important;
+    height: 360px !important;
+    max-height: 360px !important;
+    line-height: 1.5 !important;
+    padding: 14px 16px !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
 }
 
 .incident-edit-card .rich-toolbar {
@@ -449,13 +455,26 @@ require_once __DIR__ . '/../includes/header.php';
                         </select>
 
                         <!-- Font Size -->
-                        <select class="rt-select" onchange="applyRichFontSize(this.value)" title="Change Font Size">
+                        <select id="richFontSizeSelect" class="rt-select" onchange="applyRichFontSize(this.value)" title="Change Font Size">
                             <option value="14px">Size: 14px</option>
+                            <option value="11px">11px (Tiny)</option>
                             <option value="12px">12px (Small)</option>
+                            <option value="14px">14px (Standard)</option>
                             <option value="16px">16px (Medium)</option>
                             <option value="18px">18px (Large)</option>
                             <option value="22px">22px (Heading)</option>
+                            <option value="26px">26px (Title)</option>
                         </select>
+
+                        <!-- Font Size Increase / Decrease Symbols -->
+                        <div class="rt-btn-group" title="Increase or Decrease Font Size">
+                            <button type="button" class="rt-btn" onclick="stepRichFontSize(1)" title="Increase Font Size (A▲)">
+                                <span style="font-weight: 800; font-size: 13px; line-height: 1;">A</span><span style="font-size: 10px; font-weight: 900; margin-left: 1px;">▲</span>
+                            </button>
+                            <button type="button" class="rt-btn" onclick="stepRichFontSize(-1)" title="Decrease Font Size (A▼)">
+                                <span style="font-weight: 800; font-size: 13px; line-height: 1;">A</span><span style="font-size: 10px; font-weight: 900; margin-left: 1px;">▼</span>
+                            </button>
+                        </div>
 
                         <!-- Bold & Italic -->
                         <div class="rt-btn-group">
@@ -495,7 +514,7 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <!-- Editable Box pre-populated with rendered content -->
                     <div id="richDescriptionEditor" class="rich-editor-box" contenteditable="true" oninput="syncAdminRichEditor()" onblur="syncAdminRichEditor()"><?= render_rich_description($incident['description']) ?></div>
-                    <textarea id="narrativeDesc" name="description" style="display: none;" required><?= htmlspecialchars($incident['description']) ?></textarea>
+                    <textarea id="narrativeDesc" name="description" rows="15" style="display: none;" required><?= htmlspecialchars($incident['description']) ?></textarea>
                 </div>
             </div>
 
@@ -600,12 +619,47 @@ function applyRichFont(font) {
     syncAdminRichEditor();
 }
 
+const FONT_SIZES_LADDER = [10, 11, 12, 13, 14, 16, 18, 20, 22, 26, 30];
+
+function getCurrentRichFontSize() {
+    const editor = document.getElementById('richDescriptionEditor');
+    const sel = window.getSelection();
+    let currentPx = 14;
+    if (sel && sel.rangeCount > 0 && sel.anchorNode) {
+        let el = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+        while (el && el !== editor) {
+            if (el.style && el.style.fontSize) {
+                const parsed = parseInt(el.style.fontSize, 10);
+                if (parsed) { currentPx = parsed; break; }
+            }
+            el = el.parentElement;
+        }
+    }
+    if (!currentPx || currentPx === 14) {
+        const edSize = parseInt(editor.style.fontSize, 10);
+        if (edSize) currentPx = edSize;
+    }
+    return currentPx;
+}
+
 function applyRichFontSize(size) {
     const editor = document.getElementById('richDescriptionEditor');
     editor.focus();
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount || sel.isCollapsed) {
         editor.style.fontSize = size;
+        if (editor.innerText.trim().length > 0) {
+            document.execCommand('selectAll', false, null);
+            document.execCommand('fontSize', false, '7');
+            const fontTags = editor.querySelectorAll('font[size="7"]');
+            fontTags.forEach(f => {
+                const span = document.createElement('span');
+                span.style.fontSize = size;
+                span.innerHTML = f.innerHTML;
+                f.parentNode.replaceChild(span, f);
+            });
+            window.getSelection().removeAllRanges();
+        }
         syncAdminRichEditor();
         return;
     }
@@ -618,6 +672,39 @@ function applyRichFontSize(size) {
         f.parentNode.replaceChild(span, f);
     });
     syncAdminRichEditor();
+}
+
+function stepRichFontSize(direction) {
+    const current = getCurrentRichFontSize();
+    let target = current;
+    if (direction > 0) {
+        for (let s of FONT_SIZES_LADDER) {
+            if (s > current) { target = s; break; }
+        }
+        if (target === current) target = Math.min(36, current + 2);
+    } else {
+        for (let i = FONT_SIZES_LADDER.length - 1; i >= 0; i--) {
+            if (FONT_SIZES_LADDER[i] < current) { target = FONT_SIZES_LADDER[i]; break; }
+        }
+        if (target === current) target = Math.max(9, current - 2);
+    }
+    const sizeStr = target + 'px';
+    applyRichFontSize(sizeStr);
+    
+    const selDropdown = document.getElementById('richFontSizeSelect');
+    if (selDropdown) {
+        let matched = false;
+        for (let i = 0; i < selDropdown.options.length; i++) {
+            if (selDropdown.options[i].value === sizeStr) {
+                selDropdown.selectedIndex = i;
+                matched = true;
+                break;
+            }
+        }
+        if (!matched) {
+            selDropdown.value = '';
+        }
+    }
 }
 
 function applyRichColor(color) {

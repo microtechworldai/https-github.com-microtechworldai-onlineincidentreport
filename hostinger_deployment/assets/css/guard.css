@@ -1349,14 +1349,17 @@ body.guard-body {
 }
 
 .rich-editor-box {
-  min-height: 140px;
-  padding: 14px;
+  min-height: 360px;
+  height: 360px;
+  max-height: 360px;
+  padding: 14px 16px;
   outline: none;
-  line-height: 1.65;
+  line-height: 1.5;
   font-size: 14.5px;
   color: var(--g-text);
   background: transparent;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 [data-theme="light"] .rich-editor-box {

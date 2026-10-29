@@ -1702,14 +1702,16 @@ table.data-table tr:hover td {
 }
 
 .rich-editor-box {
-  min-height: 150px;
-  padding: 12px 14px;
+  min-height: 360px;
+  height: 360px;
+  max-height: 360px;
+  padding: 14px 16px;
   outline: none;
-  line-height: 1.65;
+  line-height: 1.5;
   font-size: 14px;
   color: var(--text-main);
-  background: transparent;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 [data-theme="light"] .rich-editor-box {
