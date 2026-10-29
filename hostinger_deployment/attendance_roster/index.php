@@ -89,6 +89,32 @@ try {
             header("Location: index.php?site_id=$siteId&year=$year&month=$month");
             exit;
 
+        
+        // Assign Staff to Site (Rules R1 & R2: Creates deployment plan without altering past attendance)
+        case 'assign_staff':
+            $staffId = (int)($_POST['staff_id'] ?? 0);
+            $siteId = (int)($_POST['site_id'] ?? 0);
+            $dateFrom = trim($_POST['date_from'] ?? date('Y-m-01'));
+            $dateTo = !empty($_POST['date_to']) ? trim($_POST['date_to']) : null;
+
+            if ($staffId <= 0 || $siteId <= 0) {
+                throw new InvalidArgumentException("Staff member and Site are required.");
+            }
+
+            $db = roster_get_db();
+            $stmtIns = $db->prepare("
+                INSERT INTO roster_assignments (staff_id, site_id, date_from, date_to)
+                VALUES (?, ?, ?, ?)
+            ");
+            $stmtIns->execute([$staffId, $siteId, $dateFrom, $dateTo]);
+
+            RosterAudit::log('ASSIGN_STAFF', $staffId, $siteId, $dateFrom, null, [
+                'date_from' => $dateFrom, 'date_to' => $dateTo
+            ], 'Assigned guard to site (strictly preserves historical attendance per R1/R2)');
+
+            header("Location: index.php?site_id=$siteId");
+            exit;
+
         // Remove Guard from Site (Rule R9: De-links future dates; historical entries remain untouched)
         case 'remove_staff':
             $staffId = (int)($_POST['staff_id'] ?? 0);
