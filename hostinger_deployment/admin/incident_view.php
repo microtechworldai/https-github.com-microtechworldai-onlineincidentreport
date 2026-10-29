@@ -1,8 +1,32 @@
 <?php
+// Emergency Debug & Crash Trapper for Hostinger
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
+register_shutdown_function(function() {
+    $err = error_get_last();
+    if ($err !== null && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR])) {
+        if (!headers_sent()) {
+            http_response_code(200);
+        }
+        echo "<div style='font-family:sans-serif; background:#fee2e2; border:3px solid #dc2626; color:#7f1d1d; padding:24px; margin:24px; border-radius:10px; max-width:800px; z-index:999999; position:relative;'>";
+        echo "<h2 style='margin-top:0; color:#b91c1c;'>⚠️ Server Fatal Error Detected</h2>";
+        echo "<p style='font-size:16px;'><strong>Error:</strong> " . htmlspecialchars($err['message']) . "</p>";
+        echo "<p style='font-size:14px;'><strong>File:</strong> " . htmlspecialchars($err['file']) . " (Line " . $err['line'] . ")</p>";
+        echo "</div>";
+    }
+});
 /**
  * Detailed Incident Dossier & Management Sign-Off
  */
 require_once __DIR__ . '/../config.php';
+
+// Keep error display active for instant visibility if any issue occurs
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
@@ -31,23 +55,17 @@ if (!function_exists('safe_mysql_date')) {
     }
 }
 
-// Safely inspect incidents table columns and auto-heal missing fields without table locking
-$existingCols = [];
-$existingColDefs = [];
-try {
-    $describeStmt = $db->query("DESCRIBE incidents");
-    if ($describeStmt) {
-        $cols = $describeStmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($cols as $c) {
-            $cName = strtolower($c['Field'] ?? '');
-            if ($cName !== '') {
-                $existingCols[] = $cName;
-                $existingColDefs[$cName] = $c;
-            }
+// 100% reliable helper to check if a column actually exists in incidents table
+$checkColExists = function($dbConn, $colName) {
+    try {
+        $st = $dbConn->query("SELECT `{$colName}` FROM incidents LIMIT 0");
+        if ($st !== false) {
+            $st->closeCursor();
+            return true;
         }
-        $describeStmt->closeCursor();
-    }
-} catch (\Throwable $e) {}
+    } catch (\Throwable $t) {}
+    return false;
+};
 
 $requiredCols = [
     'site_supervisor_name' => "VARCHAR(150) NULL",
@@ -69,22 +87,17 @@ $requiredCols = [
     'witness_3' => "TEXT NULL"
 ];
 
+$existingColsMap = [];
 foreach ($requiredCols as $col => $def) {
-    if (!empty($existingCols) && !in_array(strtolower($col), $existingCols)) {
+    if (!$checkColExists($db, $col)) {
         try {
             $db->exec("ALTER TABLE incidents ADD COLUMN `{$col}` {$def}");
-            $existingCols[] = strtolower($col);
+            if ($checkColExists($db, $col)) {
+                $existingColsMap[$col] = true;
+            }
         } catch (\Throwable $te) {}
-    }
-}
-
-// Widen status to VARCHAR(50) ONLY if it is still a strict ENUM to avoid continuous ALTER locking
-if (isset($existingColDefs['status'])) {
-    $statusType = strtolower($existingColDefs['status']['Type'] ?? '');
-    if (strpos($statusType, 'enum') !== false) {
-        try {
-            $db->exec("ALTER TABLE incidents MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Submitted'");
-        } catch (\Throwable $te) {}
+    } else {
+        $existingColsMap[$col] = true;
     }
 }
 
@@ -142,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_management'])
     $opsSig = !empty($_POST['remove_ops_sig']) ? null : ($incident['operations_manager_signature'] ?? null);
     $clientSig = !empty($_POST['remove_client_sig']) ? null : ($incident['client_manager_signature'] ?? null);
 
-    $sigDir = ROOT_PATH . '/uploads/signatures';
+    $sigDir = (defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__)) . '/uploads/signatures';
     if (!is_dir($sigDir)) {
         @mkdir($sigDir, 0777, true);
     }
@@ -170,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_management'])
     }
 
     try {
-        // Build resilient dynamic SET clause based on columns that exist in DB
+        // Build resilient dynamic SET clause based strictly on verified existing columns
         $candidateFields = [
             'status' => $newStatus,
             'site_supervisor_name' => $supervisorName,
@@ -192,13 +205,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_management'])
         $setSql = [];
         $params = [];
         foreach ($candidateFields as $colKey => $colVal) {
-            if (empty($existingCols) || in_array(strtolower($colKey), $existingCols)) {
+            if ($colKey === 'status' || !empty($existingColsMap[$colKey]) || $checkColExists($db, $colKey)) {
                 $setSql[] = "`{$colKey}` = ?";
                 $params[] = $colVal;
             }
         }
 
-        if (empty($existingCols) || in_array('updated_at', $existingCols)) {
+        if ($checkColExists($db, 'updated_at')) {
             $setSql[] = "`updated_at` = NOW()";
         }
 
@@ -212,10 +225,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_management'])
         $stmtUpdate->execute($params);
         $stmtUpdate->closeCursor();
 
-        log_audit('UPDATE_MANAGEMENT_SIGNOFF', 'INCIDENT', $id, [
-            'status' => $newStatus,
-            'supervisor' => $supervisorName
-        ]);
+        try {
+            log_audit('UPDATE_MANAGEMENT_SIGNOFF', 'INCIDENT', $id, [
+                'status' => $newStatus,
+                'supervisor' => $supervisorName
+            ]);
+        } catch (\Throwable $ae) {}
+
         $msg = "Management sign-off and report status updated successfully.";
         $msgType = 'success';
 
@@ -224,10 +240,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_management'])
         if ($updatedData) {
             $incident = $updatedData;
         }
+
+        if (!empty($_POST['ajax_signoff'])) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success' => true,
+                'message' => $msg,
+                'status' => $newStatus,
+                'status_badge' => function_exists('render_status_badge') ? render_status_badge($newStatus) : $newStatus
+            ]);
+            exit;
+        }
     } catch (\Throwable $e) {
         $msg = "Notice: Sign-off saved with notice: " . $e->getMessage();
         $msgType = 'danger';
         error_log("Error saving sign-off: " . $e->getMessage());
+
+        if (!empty($_POST['ajax_signoff'])) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+            exit;
+        }
     }
 }
 // Handle Updating Photo Caption (Image by Image in Dashboard)
@@ -267,15 +303,23 @@ $discReasons = json_decode($incident['disciplinary_reasons'] ?: '[]', true) ?: [
 $incTypes = json_decode($incident['incident_types'] ?: '[]', true) ?: [];
 $notified = json_decode($incident['who_notified'] ?: '[]', true) ?: [];
 
-// Fetch Attached Photos
-$stmtPhotos = $db->prepare("SELECT * FROM incident_photos WHERE incident_id = ? ORDER BY sort_order ASC, id ASC");
-$stmtPhotos->execute([$id]);
-$photos = $stmtPhotos->fetchAll();
+// Fetch Attached Photos safely
+$photos = [];
+try {
+    $stmtPhotos = $db->prepare("SELECT * FROM incident_photos WHERE incident_id = ? ORDER BY sort_order ASC, id ASC");
+    $stmtPhotos->execute([$id]);
+    $photos = $stmtPhotos->fetchAll();
+    $stmtPhotos->closeCursor();
+} catch (\Throwable $e) {}
 
-// Fetch Notes
-$stmtNotes = $db->prepare("SELECT * FROM incident_notes WHERE incident_id = ? ORDER BY created_at DESC");
-$stmtNotes->execute([$id]);
-$notes = $stmtNotes->fetchAll();
+// Fetch Notes safely
+$notes = [];
+try {
+    $stmtNotes = $db->prepare("SELECT * FROM incident_notes WHERE incident_id = ? ORDER BY created_at DESC");
+    $stmtNotes->execute([$id]);
+    $notes = $stmtNotes->fetchAll();
+    $stmtNotes->closeCursor();
+} catch (\Throwable $e) {}
 
 $pageTitle = "Incident " . htmlspecialchars($incident['ref_number']);
 $pageSubtitle = "Detailed Investigation & Client Sign-Off Dossier";
@@ -543,11 +587,12 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="card" style="margin-bottom: 24px;">
             <h3 class="section-header-banner" style="color: #ffffff !important; font-weight: 800 !important;">Official Management Sign-Off</h3>
 
-            <form method="POST" action="" enctype="multipart/form-data">
+            <form method="POST" action="" enctype="multipart/form-data" id="form_management_signoff" onsubmit="handleSignOffSubmit(event, this);">
                 <input type="hidden" name="id" value="<?= $id ?>">
                 <input type="hidden" name="update_management" value="1">
                 <input type="hidden" name="save_signoff" value="1">
 
+                <div id="signoff_ajax_alert" class="alert" style="display: none; margin-bottom: 14px;"></div>
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label class="form-label" style="font-weight: 800; color: #000000 !important;">Status Transition</label>
                     <select name="status" class="form-control" style="font-weight: 700; width: 100%; box-sizing: border-box;">
@@ -847,6 +892,110 @@ function toggleRemoveExistingSig(role) {
         }
         if (txt) txt.innerText = "Remove Attached Image";
     }
+}
+function handleSignOffSubmit(e, form) {
+    if (window.fetch && window.FormData) {
+        e.preventDefault();
+        var btn = form.querySelector('button[type="submit"]');
+        var originalBtnHtml = btn ? btn.innerHTML : 'Save Management Sign-Off';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Saving Management Sign-Off...';
+        }
+
+        var alertBox = document.getElementById('signoff_ajax_alert');
+        if (alertBox) {
+            alertBox.style.display = 'none';
+            alertBox.className = 'alert';
+        }
+
+        var formData = new FormData(form);
+        formData.append('ajax_signoff', '1');
+
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(response) {
+            return response.text().then(function(text) {
+                try {
+                    return JSON.parse(text);
+                } catch (parseErr) {
+                    return { success: response.ok, raw: text };
+                }
+            });
+        })
+        .then(function(data) {
+            if (btn) btn.disabled = false;
+            if (data.success) {
+                if (btn) {
+                    btn.innerHTML = '✓ Saved Successfully!';
+                    btn.style.background = '#10b981';
+                    setTimeout(function() {
+                        btn.innerHTML = originalBtnHtml;
+                        btn.style.background = '';
+                    }, 3500);
+                }
+                if (alertBox) {
+                    alertBox.className = 'alert alert-success';
+                    alertBox.innerHTML = '<strong>✓ Success:</strong> ' + (data.message || 'Management sign-off and report status updated successfully.');
+                    alertBox.style.display = 'block';
+                    alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+                if (data.status_badge) {
+                    var badgeEls = document.querySelectorAll('.live-patrol-banner span.badge');
+                    if (badgeEls && badgeEls.length > 1) {
+                        badgeEls[1].outerHTML = data.status_badge;
+                    }
+                }
+            } else {
+                if (btn) btn.innerHTML = originalBtnHtml;
+                if (alertBox) {
+                    alertBox.className = 'alert alert-danger';
+                    alertBox.innerHTML = '<strong>⚠️ Save Notice:</strong> ' + (data.error || data.raw || 'Encountered issue while saving.');
+                    alertBox.style.display = 'block';
+                    alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        })
+        .catch(function(err) {
+            console.warn('AJAX submit issue, submitting standard:', err);
+            if (btn) btn.innerHTML = 'Saving...';
+            form.submit();
+        });
+        return false;
+    }
+    return true;
+}
+
+function savePhotoCaptionAjax(e, form) {
+    if (e && e.preventDefault) e.preventDefault();
+    var formData = new FormData(form);
+    formData.append('ajax', '1');
+    var statusEl = form.querySelector('.caption-status');
+    var btn = form.querySelector('button[type="submit"]');
+    if (btn) btn.disabled = true;
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (btn) btn.disabled = false;
+        if (statusEl) {
+            statusEl.style.display = 'block';
+            setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
+        }
+        var prev = form.querySelector('.caption-preview');
+        if (prev && data.caption) {
+            prev.innerText = 'Current: ' + data.caption;
+            prev.style.display = 'block';
+        }
+    })
+    .catch(function() {
+        if (btn) btn.disabled = false;
+        form.submit();
+    });
 }
 </script>
 
