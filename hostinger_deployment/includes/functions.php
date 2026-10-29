@@ -41,6 +41,21 @@ function validate_csrf_token($token) {
 }
 
 /**
+ * Clean & Format date string safely for MySQL DATE columns.
+ * Prevents 1292 Incorrect date value errors and strict mode crashes.
+ */
+if (!function_exists('safe_mysql_date')) {
+    function safe_mysql_date($d) {
+        if (empty($d)) return null;
+        $d = trim((string)$d);
+        if ($d === '' || $d === '0000-00-00' || $d === '00-00-0000' || $d === 'null') return null;
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) return $d;
+        $ts = strtotime(str_replace('/', '-', $d));
+        return $ts ? date('Y-m-d', $ts) : null;
+    }
+}
+
+/**
  * Generate unique incident reference code
  * Format: INC-<SITECODE>-YYYYMMDD-0001
  */
@@ -229,8 +244,17 @@ function log_audit($action, $targetType = null, $targetId = null, $details = nul
         $timestamp = date('Y-m-d H:i:s');
 
         // Fetch the hash of the latest audit record for chain continuity
-        $lastRow = $db->query("SELECT record_hash FROM audit_logs ORDER BY id DESC LIMIT 1")->fetch();
-        $previousHash = (!empty($lastRow) && !empty($lastRow['record_hash'])) ? $lastRow['record_hash'] : 'GENESIS_USS_CHAIN_2026';
+        $previousHash = 'GENESIS_USS_CHAIN_2026';
+        try {
+            $lastQ = $db->query("SELECT record_hash FROM audit_logs ORDER BY id DESC LIMIT 1");
+            if ($lastQ) {
+                $lastRow = $lastQ->fetch();
+                $lastQ->closeCursor();
+                if (!empty($lastRow) && !empty($lastRow['record_hash'])) {
+                    $previousHash = $lastRow['record_hash'];
+                }
+            }
+        } catch (\Throwable $e) {}
 
         // Compute current record's cryptographic hash
         $recordPayload = implode('|', [
@@ -265,7 +289,8 @@ function log_audit($action, $targetType = null, $targetId = null, $details = nul
             substr($ua, 0, 500),
             $timestamp
         ]);
-    } catch (Exception $e) {
+        $stmt->closeCursor();
+    } catch (\Throwable $e) {
         error_log("Audit log failed: " . $e->getMessage());
     }
 }

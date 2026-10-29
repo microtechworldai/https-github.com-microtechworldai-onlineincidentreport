@@ -87,17 +87,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $supName = trim($_POST['site_supervisor_name'] ?? '');
     $supId = trim($_POST['site_supervisor_id'] ?? '');
-    $supDate = !empty($_POST['site_supervisor_date']) ? $_POST['site_supervisor_date'] : null;
+    $supDate = safe_mysql_date($_POST['site_supervisor_date'] ?? null);
     $supRec = trim($_POST['recommendation_action_taken'] ?? '');
 
     $opsName = trim($_POST['operations_manager_name'] ?? '');
     $opsId = trim($_POST['operations_manager_id'] ?? '');
-    $opsDate = !empty($_POST['operations_manager_date']) ? $_POST['operations_manager_date'] : null;
+    $opsDate = safe_mysql_date($_POST['operations_manager_date'] ?? null);
 
     $clientName = trim($_POST['client_manager_name'] ?? '');
     $clientId = trim($_POST['client_manager_id'] ?? '');
     $clientAction = trim($_POST['client_manager_action_taken'] ?? '');
-    $clientDate = !empty($_POST['client_manager_date']) ? $_POST['client_manager_date'] : null;
+    $clientDate = safe_mysql_date($_POST['client_manager_date'] ?? null);
 
     if (empty($summary) || empty($description) || empty($incidentDate) || empty($incidentTime)) {
         $error = 'Please fill all required fields (Summary, Description, Date, Time).';
@@ -174,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Refresh
             $stmt->execute([$id]);
             $incident = $stmt->fetch();
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $error = 'Failed to update incident: ' . $e->getMessage();
         }
     }
