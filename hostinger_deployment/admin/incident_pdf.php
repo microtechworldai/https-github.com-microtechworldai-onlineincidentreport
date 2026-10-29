@@ -703,13 +703,13 @@ $companyDisplayName = !empty($settings['company_name'])
             background: #ffffff !important;
         }
 
-        .description-box {
+                .description-box {
             height: 86mm !important;
             min-height: 86mm !important;
             max-height: 86mm !important;
-            padding: 4px 8px !important;
-            font-size: 13px !important;
-            line-height: 1.30 !important;
+            padding: 5px 8px !important;
+            font-size: 13px;
+            line-height: 1.32;
             vertical-align: top !important;
             border-bottom: 1.5px solid #000 !important;
             overflow: hidden !important;
@@ -720,36 +720,18 @@ $companyDisplayName = !empty($settings['company_name'])
             box-sizing: border-box !important;
         }
 
-        .description-box,
-        .description-box * {
-            font-size: 13px !important;
-            line-height: 1.30 !important;
-            box-sizing: border-box !important;
-        }
-
         .description-box p, 
         .description-box div {
             margin: 0 !important;
             padding: 0 !important;
-            font-size: 13px !important;
-            line-height: 1.30 !important;
+            line-height: 1.32;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
             word-break: break-word !important;
         }
 
-        .description-box p + p,
-        .description-box div + div {
-            margin-top: 0 !important;
-        }
-
         .description-box br {
-            line-height: 1.30 !important;
-        }
-
-        .description-box span {
-            font-size: 13px !important;
-            line-height: 1.30 !important;
+            line-height: 1.32;
         }
 
         .signoff-row {
