@@ -989,7 +989,7 @@ $fulfillmentPct = $expectedMonthlyTotal > 0 ? round(($monthTotalDuties / $expect
 
             <div style="margin-bottom:12px;background:var(--att-bg);padding:8px 12px;border-radius:6px;border:1px solid var(--att-card-border);">
                 <label style="font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;">
-                    <input type="checkbox" id="att-replace-clear-codes"> Clear row's day codes (Unchecked keeps existing shift assignments)
+                    <input type="checkbox" id="att-replace-clear-codes" checked> Clear row's day codes (Recommended: starts replacement guard with clean blank attendance)
                 </label>
             </div>
 
