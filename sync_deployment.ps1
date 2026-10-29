@@ -7,6 +7,13 @@ $destPublicHtml = 'C:\Users\micro\OneDrive\Desktop\public_html'
 
 Write-Host ">>> Starting Hostinger All-in-One Deployment Packaging..."
 
+# 0. Sync Root Files & Configuration
+Copy-Item -Path "$destDeployment\*.php" -Destination "$destUpload" -Force
+if (Test-Path "$destDeployment\.htaccess") {
+    Copy-Item -Path "$destDeployment\.htaccess" -Destination "$destUpload\.htaccess" -Force
+}
+Write-Host "Copied root PHP files and .htaccess to UPLOAD_TO_HOSTINGER"
+
 # 1. Sync Core Assets & Styles
 Copy-Item -Path "$destDeployment\assets\*" -Destination "$destUpload\assets" -Recurse -Force
 Write-Host "Copied assets to UPLOAD_TO_HOSTINGER\assets"
