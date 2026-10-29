@@ -20,6 +20,7 @@ $staffList = $data['staffList'];
 $entries = $data['entries'];
 $isLocked = $data['isLocked'];
 $monthName = strtoupper(date('F', mktime(0, 0, 0, $curMonth, 1, $curYear)));
+$allStaff = RosterStaff::search('', 500);
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -64,6 +65,7 @@ $monthName = strtoupper(date('F', mktime(0, 0, 0, $curMonth, 1, $curYear)));
     </form>
 
     <div class="roster-controls">
+        <button type="button" class="roster-btn roster-btn-primary" onclick="openModal('modal-assign-staff')">➕ Assign Staff</button>
         <button type="button" class="roster-btn" onclick="openModal('modal-additional-deployment')">➕ Additional Deployment</button>
         <button type="button" class="roster-btn" onclick="openModal('modal-find-replacement')">🔍 Find Replacement</button>
         <button type="button" class="roster-btn" onclick="openModal('modal-audit-trail')">📜 Audit &amp; Undo</button>
