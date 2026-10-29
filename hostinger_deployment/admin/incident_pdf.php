@@ -752,33 +752,27 @@ $companyDisplayName = !empty($settings['company_name'])
         .action-box {
             height: 18mm !important;
             min-height: 18mm !important;
-            padding: 4px 8px !important;
+            padding: 0 !important;
             font-size: 9.5pt;
             font-weight: bold;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: stretch !important;
-            border-bottom: 1.8px solid #000 !important;
             box-sizing: border-box !important;
             text-align: left !important;
+            vertical-align: top !important;
         }
 
         .action-text {
             font-weight: 800 !important;
             font-size: 10pt !important;
             color: #8B0000 !important; /* Dark Red */
-            margin-bottom: 3px !important;
+            margin: 0 !important;
+            padding: 0 !important;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
             word-break: break-word !important;
-            white-space: pre-wrap !important;
-            line-height: 1.30 !important;
-            max-height: 9.5mm !important;
-            overflow: hidden !important;
+            white-space: normal !important;
+            line-height: 1.25 !important;
             text-align: left !important;
             vertical-align: top !important;
-            align-self: flex-start !important;
             width: 100% !important;
         }
 
@@ -1080,23 +1074,31 @@ $companyDisplayName = !empty($settings['company_name'])
             </td>
         </tr>
         <tr>
-            <td colspan="2" style="padding: 0; border-bottom: 1.8px solid #000;">
-                <div class="action-box" style="text-align: left !important;">
-                    <div class="action-text" style="text-align: left !important; vertical-align: top !important; align-self: flex-start !important; width: 100% !important;">
-                        <?= nl2br(htmlspecialchars($incident['recommendation_action_taken'] ?: '')) ?>
-                    </div>
-                    <div class="signoff-bottom">
-                        <span style="display: inline-flex; align-items: center; gap: 4px;">
-                            Operations Manager: <strong style="font-weight: 800; font-size: 9.5pt; color: #000; text-decoration: underline;"><?= htmlspecialchars($incident['operations_manager_name'] ?: '                         ') ?></strong>
-                        </span>
-                        <span style="display: inline-flex; align-items: center; gap: 4px;">
-                            Signature: <?= render_signature_img($incident['operations_manager_signature'] ?? '', 'Operations Manager Signature') ?>
-                        </span>
-                        <span style="display: inline-flex; align-items: center; gap: 4px;">
-                            Date: <?= format_dmy_bold($incident['operations_manager_date'] ?? '') ?>
-                        </span>
-                    </div>
-                </div>
+            <td colspan="2" style="padding: 0; border-bottom: 1.8px solid #000; vertical-align: top !important;">
+                <table style="width: 100%; height: 18mm; border-collapse: collapse; border: none; margin: 0; padding: 0;">
+                    <tr>
+                        <td style="vertical-align: top !important; text-align: left !important; padding: 2px 6px !important; border: none !important; height: 11mm; word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: break-word !important; white-space: normal !important;">
+                            <div class="action-text" style="text-align: left !important; vertical-align: top !important; margin: 0 !important; padding: 0 !important; font-weight: 800 !important; font-size: 10pt !important; color: #8B0000 !important; line-height: 1.25 !important; word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: break-word !important; white-space: normal !important;">
+                                <?= nl2br(htmlspecialchars(trim($incident['recommendation_action_taken'] ?: ''))) ?>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: bottom !important; padding: 2px 6px !important; border: none !important; height: 6.5mm;">
+                            <div class="signoff-bottom">
+                                <span style="display: inline-flex; align-items: center; gap: 4px;">
+                                    Operations Manager: <strong style="font-weight: 800; font-size: 9.5pt; color: #000; text-decoration: underline;"><?= htmlspecialchars($incident['operations_manager_name'] ?: '                         ') ?></strong>
+                                </span>
+                                <span style="display: inline-flex; align-items: center; gap: 4px;">
+                                    Signature: <?= render_signature_img($incident['operations_manager_signature'] ?? '', 'Operations Manager Signature') ?>
+                                </span>
+                                <span style="display: inline-flex; align-items: center; gap: 4px;">
+                                    Date: <?= format_dmy_bold($incident['operations_manager_date'] ?? '') ?>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </td>
         </tr>
 
@@ -1107,23 +1109,31 @@ $companyDisplayName = !empty($settings['company_name'])
             </td>
         </tr>
         <tr>
-            <td colspan="2" style="padding: 0; border-bottom: 1.8px solid #000;">
-                <div class="action-box" style="text-align: left !important;">
-                    <div class="action-text" style="text-align: left !important; vertical-align: top !important; align-self: flex-start !important; width: 100% !important;">
-                        <?= nl2br(htmlspecialchars($incident['client_manager_action_taken'] ?: '')) ?>
-                    </div>
-                    <div class="signoff-bottom">
-                        <span style="display: inline-flex; align-items: center; gap: 4px;">
-                            Client Representative: <strong style="font-weight: 800; font-size: 9.5pt; color: #000; text-decoration: underline;"><?= htmlspecialchars($incident['client_manager_name'] ?: '                         ') ?></strong>
-                        </span>
-                        <span style="display: inline-flex; align-items: center; gap: 4px;">
-                            Signature: <?= render_signature_img($incident['client_manager_signature'] ?? '', 'Client Representative Signature') ?>
-                        </span>
-                        <span style="display: inline-flex; align-items: center; gap: 4px;">
-                            Date: <?= format_dmy_bold($incident['client_manager_date'] ?? '') ?>
-                        </span>
-                    </div>
-                </div>
+            <td colspan="2" style="padding: 0; border-bottom: 1.8px solid #000; vertical-align: top !important;">
+                <table style="width: 100%; height: 18mm; border-collapse: collapse; border: none; margin: 0; padding: 0;">
+                    <tr>
+                        <td style="vertical-align: top !important; text-align: left !important; padding: 2px 6px !important; border: none !important; height: 11mm; word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: break-word !important; white-space: normal !important;">
+                            <div class="action-text" style="text-align: left !important; vertical-align: top !important; margin: 0 !important; padding: 0 !important; font-weight: 800 !important; font-size: 10pt !important; color: #8B0000 !important; line-height: 1.25 !important; word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: break-word !important; white-space: normal !important;">
+                                <?= nl2br(htmlspecialchars(trim($incident['client_manager_action_taken'] ?: ''))) ?>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: bottom !important; padding: 2px 6px !important; border: none !important; height: 6.5mm;">
+                            <div class="signoff-bottom">
+                                <span style="display: inline-flex; align-items: center; gap: 4px;">
+                                    Client Representative: <strong style="font-weight: 800; font-size: 9.5pt; color: #000; text-decoration: underline;"><?= htmlspecialchars($incident['client_manager_name'] ?: '                         ') ?></strong>
+                                </span>
+                                <span style="display: inline-flex; align-items: center; gap: 4px;">
+                                    Signature: <?= render_signature_img($incident['client_manager_signature'] ?? '', 'Client Representative Signature') ?>
+                                </span>
+                                <span style="display: inline-flex; align-items: center; gap: 4px;">
+                                    Date: <?= format_dmy_bold($incident['client_manager_date'] ?? '') ?>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </td>
         </tr>
     </table>

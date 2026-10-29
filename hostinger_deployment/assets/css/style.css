@@ -3217,3 +3217,24 @@ textarea.form-control::placeholder {
   text-align: left !important;
   vertical-align: top !important;
 }
+
+/* Top-left text and placeholder alignment for sign-off textareas */
+textarea,
+textarea.form-control,
+textarea[name="recommendation_action_taken"],
+textarea[name="client_manager_action_taken"] {
+  text-align: left !important;
+  vertical-align: top !important;
+  line-height: 1.35 !important;
+  padding: 4px 8px !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+textarea::placeholder,
+textarea.form-control::placeholder {
+  text-align: left !important;
+  vertical-align: top !important;
+}
