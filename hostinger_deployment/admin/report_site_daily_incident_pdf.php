@@ -935,8 +935,8 @@ $printDateTime = date('d-M-Y H:i:s');
                         <?php 
                         $actionText = $inc['recommendation_action_taken'] ?? ($inc['action_taken'] ?? '');
                         if (!empty($actionText)): ?>
-                            <div style="width: 100%;">
-                                <strong>Action Taken / Recommendation:</strong> <?= htmlspecialchars($actionText) ?>
+                            <div style="width: 100%; text-align: left !important; word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: break-word !important; white-space: normal !important; margin-top: 3px;">
+                                <strong>Action Taken / Recommendation:</strong> <span style="color: #8B0000; font-weight: 700;"><?= htmlspecialchars(trim($actionText)) ?></span>
                             </div>
                         <?php endif; ?>
                     </div>

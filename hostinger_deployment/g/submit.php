@@ -861,7 +861,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div>
                         <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Recommendation / Action Taken</label>
-                        <textarea name="recommendation_action_taken" rows="2" placeholder="Corrective actions initiated at post..." style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 600; font-size: 13.5px; text-align: left !important; vertical-align: top !important; line-height: 1.4 !important; font-family: inherit !important; resize: vertical;"></textarea>
+                        <textarea name="recommendation_action_taken" rows="2" placeholder="Corrective actions initiated at post..." style="width: 100%; box-sizing: border-box; padding: 4px 8px !important; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 600; font-size: 13.5px; text-align: left !important; vertical-align: top !important; line-height: 1.35 !important; font-family: inherit !important; resize: vertical; white-space: pre-wrap !important; word-wrap: break-word !important;"></textarea>
                     </div>
                 </div>
 
@@ -907,7 +907,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div style="margin-bottom: 12px;">
                         <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Client Action Taken</label>
-                        <textarea name="client_manager_action_taken" rows="2" placeholder="Client acknowledgement or notes..." style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 600; font-size: 13.5px; text-align: left !important; vertical-align: top !important; line-height: 1.4 !important; font-family: inherit !important; resize: vertical;"></textarea>
+                        <textarea name="client_manager_action_taken" rows="2" placeholder="Client acknowledgement or notes..." style="width: 100%; box-sizing: border-box; padding: 4px 8px !important; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(15,23,42,0.6); color: #fff; font-weight: 600; font-size: 13.5px; text-align: left !important; vertical-align: top !important; line-height: 1.35 !important; font-family: inherit !important; resize: vertical; white-space: pre-wrap !important; word-wrap: break-word !important;"></textarea>
                     </div>
                     <div style="margin-bottom: 12px;">
                         <label style="display: block; font-size: 12px; font-weight: 800; color: #ffffff !important; margin-bottom: 5px;">Client Date (dd/mm/yyyy)</label>
