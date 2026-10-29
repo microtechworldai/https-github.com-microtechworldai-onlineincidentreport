@@ -191,10 +191,8 @@ class StaffDirectory {
             // Ensure row exists for this employee on this sheet
             $rowId = AttendanceSheet::ensureRowExists($sheet['id'], $empNo, $staff['emp_name']);
 
-            // Set default code for each day ONLY if day is currently empty
-            foreach ($info['days'] as $dayNum) {
-                AttendanceSheet::setCellCodeIfEmpty($rowId, $dayNum, $defaultCode);
-            }
+            // Keep day cells empty for this site so only ID & Name appear at the new site.
+            // Previous attendance at other sites remains strictly unchanged.
         }
 
         att_log_audit('STAFF_ASSIGN_SITE', 'att_site_assignments', $empNo, [

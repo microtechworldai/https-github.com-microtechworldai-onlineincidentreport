@@ -702,6 +702,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // In-row Remove Staff (site and month only with Undo note)
+    
+    // Clear Row Attendance Cells (Keep Guard ID & Name)
+    table?.querySelectorAll('.att-btn-clear-row-cells').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const rowId = btn.dataset.rowId;
+            const staffName = btn.dataset.staffName || 'this guard';
+
+            if (!confirm(`Clear all shift codes for ${staffName} on this site?\n\n(Guard ID & Name will remain on this site. Previous attendance at other sites will NOT be changed).`)) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('csrf_token', csrfToken);
+            formData.append('sheet_id', sheetId);
+            formData.append('row_id', rowId);
+
+            fetch('index.php?action=clear_row_cells', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const row = document.querySelector(`.att-row-staff[data-row-id="${rowId}"]`);
+                    if (row) {
+                        row.querySelectorAll('.att-cell-input').forEach(inp => {
+                            inp.value = '';
+                            inp.className = 'att-cell-input';
+                        });
+                        if (typeof updateMonthTotalSummary === 'function') updateMonthTotalSummary();
+                    }
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to clear shift codes'));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Network or server error while clearing row cells.');
+            });
+        });
+    });
+
     table?.querySelectorAll('.att-btn-remove-staff').forEach(btn => {
         btn.addEventListener('click', () => {
             const rowId = btn.dataset.rowId;

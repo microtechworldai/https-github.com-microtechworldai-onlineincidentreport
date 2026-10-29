@@ -221,13 +221,22 @@ class AttendanceSheet {
         $cleanNo = strtoupper(trim($empNo));
         $cleanName = trim($empName);
 
-        $stmt = $db->prepare("SELECT id FROM att_rows WHERE sheet_id = ? AND emp_no = ? LIMIT 1");
+        $stmt = $db->prepare("SELECT id, is_deleted FROM att_rows WHERE sheet_id = ? AND emp_no = ? LIMIT 1");
         $stmt->execute([$sheetId, $cleanNo]);
         $existing = $stmt->fetch();
         if ($existing) {
             // Un-delete if soft-deleted
             $stmtUndel = $db->prepare("UPDATE att_rows SET is_deleted = 0, emp_name_snapshot = ? WHERE id = ?");
             $stmtUndel->execute([$cleanName, $existing['id']]);
+
+            // If row was previously deleted, ensure any stale cells on this sheet are cleared
+            // so newly re-added staff begins with clean, empty day boxes (only ID and Name show up)
+            if (!empty($existing['is_deleted'])) {
+                $db->prepare("DELETE FROM att_cells WHERE row_id = ?")->execute([(int)$existing['id']]);
+                try {
+                    $db->prepare("DELETE FROM att_central_attendance WHERE row_id = ?")->execute([(int)$existing['id']]);
+                } catch (\Throwable $e) {}
+            }
             return (int)$existing['id'];
         }
 
@@ -241,7 +250,39 @@ class AttendanceSheet {
             VALUES (?, ?, ?, ?, 0)
         ");
         $stmtIns->execute([$sheetId, $cleanNo, $cleanName, $nextSort]);
-        return (int)$db->lastInsertId();
+        $newRowId = (int)$db->lastInsertId();
+
+        // Ensure newly created row starts 100% blank (only ID and Name show up)
+        $db->prepare("DELETE FROM att_cells WHERE row_id = ?")->execute([$newRowId]);
+
+        return $newRowId;
+    }
+
+    /**
+     * Clear all attendance shift codes for a specific row on a sheet
+     * Keeps staff ID and Name intact; previous attendance at other sites remains strictly unchanged
+     */
+    public static function clearRowCells($sheetId, $rowId, $actorName = 'Super Admin') {
+        $db = att_get_db();
+        $sheetId = (int)$sheetId;
+        $rowId = (int)$rowId;
+
+        $stmt = $db->prepare("SELECT id, emp_no FROM att_rows WHERE id = ? AND sheet_id = ? LIMIT 1");
+        $stmt->execute([$rowId, $sheetId]);
+        $row = $stmt->fetch();
+        if (!$row) return false;
+
+        $db->prepare("DELETE FROM att_cells WHERE row_id = ?")->execute([$rowId]);
+        try {
+            $db->prepare("DELETE FROM att_central_attendance WHERE row_id = ?")->execute([$rowId]);
+        } catch (\Throwable $e) {}
+
+        att_log_audit('SHEET_ROW_CLEAR_CELLS', 'att_rows', $rowId, [
+            'sheet_id' => $sheetId,
+            'emp_no' => $row['emp_no']
+        ], $actorName);
+
+        return true;
     }
 
     public static function ensureCentralAttendanceTableExists() {

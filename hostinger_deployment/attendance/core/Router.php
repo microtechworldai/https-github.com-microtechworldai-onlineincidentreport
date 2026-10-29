@@ -507,6 +507,18 @@ class Router {
         $this->jsonSuccess(['removed' => $res]);
     }
 
+
+    private function handleClearRowCells() {
+        $sheetId = (int)($_POST['sheet_id'] ?? 0);
+        $rowId = (int)($_POST['row_id'] ?? 0);
+
+        if (!$sheetId || !$rowId) {
+            $this->jsonError('Sheet ID and Row ID are required.');
+        }
+
+        $res = AttendanceSheet::clearRowCells($sheetId, $rowId, $_SESSION['admin_name'] ?? 'Super Admin');
+        $this->jsonSuccess(['cleared' => $res]);
+    }
     private function handleAssignSite() {
         $empNo = trim($_POST['emp_no'] ?? '');
         $siteId = (int)($_POST['site_id'] ?? 0);
